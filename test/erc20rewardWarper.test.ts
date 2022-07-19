@@ -879,7 +879,7 @@ describe("ERC20RewardWarper", function () {
 
     context("distributing using MockTRVTournament", () => {
       context("when caller is not an authorized caller", () => {
-        it("reverts", async () => {
+        it.only("reverts", async () => {
           await expect(
             trvTournament.connect(stranger).setWinner(tournamentId, tokenId, 2)
           ).to.be.reverted;

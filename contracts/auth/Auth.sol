@@ -18,13 +18,6 @@ contract Auth is Ownable {
         _;
     }
 
-    /// @notice Retrieve authorization status for caller.
-    /// @param caller The caller address.
-    /// @return Authorization status.
-    function isAuthorizedCaller(address caller) public view returns (bool) {
-        return _authorizedCallers[caller];
-    }
-
     /// @notice Updates authorization status for caller.
     /// @notice Can be changed only by Auth contract owner
     /// @param caller The caller address.
@@ -37,5 +30,12 @@ contract Auth is Ownable {
         // true = authorized
         // false = not authorized
         _authorizedCallers[caller] = status;
+    }
+
+    /// @notice Retrieve authorization status for caller.
+    /// @param caller The caller address.
+    /// @return Authorization status.
+    function isAuthorizedCaller(address caller) public view returns (bool) {
+        return _authorizedCallers[caller];
     }
 }

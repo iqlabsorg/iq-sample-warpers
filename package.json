@@ -16,7 +16,7 @@
     "test": "yarn compile && REPORT_GAS=true hardhat test"
   },
   "devDependencies": {
-    "@iqprotocol/solidity-contracts-nft": "^0.1.9",
+    "@iqprotocol/solidity-contracts-nft": "^0.2.0",
     "@iqprotocol/multiverse": "^0.1.0-alpha.22",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
