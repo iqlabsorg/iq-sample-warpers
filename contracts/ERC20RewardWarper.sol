@@ -63,6 +63,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         address rewardToken
     ) external onlyAuthorizedCaller {
         CachedAllocation storage allocation = _allocations[tokenId];
+        if (allocation.renter == address(0)) revert WinnerIsNotARenter();
 
         // Calculate the reward amounts
         uint256 universeReward = reward.mul(allocation.universeAllocation);
@@ -74,10 +75,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         address[4] memory receivers = [_universeTreasury, _getProtocolTreasury(), allocation.lister, allocation.renter];
         uint256[4] memory rewards = [universeReward, protocolReward, listerReward, renterReward];
         for (uint256 index = 0; index < receivers.length; index++) {
-            if (rewards[index] > 0) {
-                // Note:
-                _transferReward(rewardToken, receivers[index], rewards[index]);
-            }
+            _transferReward(rewardToken, receivers[index], rewards[index]);
         }
     }
 
@@ -136,6 +134,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         address to,
         uint256 amount
     ) internal {
+        if (amount == 0) return;
         IERC20(rewardToken).transferFrom(_rewardPool, to, amount);
     }
 }
