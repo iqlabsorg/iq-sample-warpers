@@ -21,7 +21,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     event ProtocolAllocationSet(uint16 allocation);
     event UniverseTreasurySet(address treasury);
     event RewardPoolSet(address pool);
-    event AllocationsSet(uint256 tokenId, address allocation);
+    event AllocationsSet(uint256 tokenId, CachedAllocation allocation);
 
     using Rewards for uint256;
     using Rentings for Rentings.Agreement;
@@ -94,7 +94,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         uint256, /* amount */
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
-    ) external override onlyMetahub returns (bool success, string memory) {
+    ) external override onlyMetahub returns (bool success, string memory errorMessage) {
         // Get allocation information
         CachedAllocation memory allocation = _resolveAllocations(rentalAgreement);
 
@@ -130,7 +130,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         emit RewardPoolSet(pool);
     }
 
-    function getAllocation(uint256 tokenId) external view returns (CachedAllocation) {
+    function getAllocation(uint256 tokenId) external view returns (CachedAllocation memory) {
         return _allocations[tokenId];
     }
 
@@ -179,7 +179,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     }
 
     // TODO: Metahub needs to be updated to expose such functionality.
-    function _getProtocolTreasury() internal view returns (address) {
+    function _getProtocolTreasury() internal pure returns (address) {
         return address(0);
     }
 

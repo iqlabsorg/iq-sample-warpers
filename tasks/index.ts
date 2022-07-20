@@ -10,10 +10,9 @@ import chaiAsPromised from "chai-as-promised";
 import chai from "chai";
 import { TASK_TEST_SETUP_TEST_ENVIRONMENT } from "hardhat/builtin-tasks/task-names";
 
-import { MockTRVCollection__factory } from "../typechain";
 import "./warper";
-import "./mock";
 import "./auth";
+import { ERC721Mock__factory } from "@iqprotocol/solidity-contracts-nft/typechain";
 
 //eslint-disable-next-line @typescript-eslint/require-await
 subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
@@ -21,8 +20,8 @@ subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
   chai.use(chaiAsPromised);
 });
 
-task("metahub:list-tokens", "List tokens for renting")
-  .addParam("metahub", "Metahub address", undefined, types.string, false)
+task("metahub:list-tokens-fixed-price", "List tokens for renting")
+  .addParam("metahub", "METAHUB address", undefined, types.string, false)
   .addParam(
     "original",
     "Original collection address",
@@ -72,7 +71,7 @@ task("metahub:list-tokens", "List tokens for renting")
       );
       console.log("Metahub connected!");
 
-      const nft = new MockTRVCollection__factory(deployer).attach(
+      const nft = new ERC721Mock__factory(deployer).attach(
         args.original
       );
       const setApprovalTx = await nft.setApprovalForAll(args.metahub, true);
