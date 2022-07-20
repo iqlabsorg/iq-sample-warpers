@@ -17,6 +17,12 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     /// of the renter during __onRent() and __onJoinedTournament() hook.
     error WinnerIsNotARenter();
 
+    event UniverseAllocationSet(uint16 allocation);
+    event ProtocolAllocationSet(uint16 allocation);
+    event UniverseTreasurySet(address treasury);
+    event RewardPoolSet(address pool);
+    event AllocationsSet(uint256 tokenId, address allocation);
+
     using Rewards for uint256;
     using Rentings for Rentings.Agreement;
     using Accounts for Accounts.RentalEarnings;
@@ -47,10 +53,10 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         (, , uint16 universeAllocation, uint16 protocolAllocation, address universeTreasury, address rewardPool) = abi
             .decode(config, (address, address, uint16, uint16, address, address));
 
-        _universeAllocation = universeAllocation;
-        _protocolAllocation = protocolAllocation;
-        _universeTreasury = universeTreasury;
-        _rewardPool = rewardPool;
+        setUniverseAllocation(universeAllocation);
+        setProtocolAllocation(protocolAllocation);
+        setUniverseTreasury(universeTreasury);
+        setRewardPool(rewardPool);
     }
 
     /// @dev Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
@@ -64,6 +70,9 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     ) external onlyAuthorizedCaller {
         CachedAllocation storage allocation = _allocations[tokenId];
         if (allocation.renter == address(0)) revert WinnerIsNotARenter();
+
+        // TODO consult with Metahub and make sure that the rental is still active.
+        //      Otherwise people can claim rewards for inactive rentals.
 
         // Calculate the reward amounts
         uint256 universeReward = reward.mul(allocation.universeAllocation);
@@ -84,16 +93,61 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         uint256 tokenId,
         uint256, /* amount */
         Rentings.Agreement calldata rentalAgreement,
-        Accounts.RentalEarnings calldata
+        Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyMetahub returns (bool success, string memory) {
         // Get allocation information
         CachedAllocation memory allocation = _resolveAllocations(rentalAgreement);
 
         // Cache the allocation information
         _allocations[tokenId] = allocation;
+        emit AllocationsSet(tokenId, allocation);
 
         // Inform Metahub that everything is fine
         success = true;
+    }
+
+    function setUniverseAllocation(uint16 allocation) public onlyOwner {
+        _universeAllocation = allocation;
+
+        emit UniverseAllocationSet(allocation);
+    }
+
+    function setProtocolAllocation(uint16 allocation) public onlyOwner {
+        _protocolAllocation = allocation;
+
+        emit ProtocolAllocationSet(allocation);
+    }
+
+    function setUniverseTreasury(address treasury) public onlyOwner {
+        _universeTreasury = treasury;
+
+        emit UniverseTreasurySet(treasury);
+    }
+
+    function setRewardPool(address pool) public onlyOwner {
+        _rewardPool = pool;
+
+        emit RewardPoolSet(pool);
+    }
+
+    function getAllocation(uint256 tokenId) external view returns (CachedAllocation) {
+        return _allocations[tokenId];
+    }
+
+    function getUniverseAllocation() external view returns (uint16) {
+        return _universeAllocation;
+    }
+
+    function getProtocolAllocation() external view returns (uint16) {
+        return _protocolAllocation;
+    }
+
+    function getUniverseTreasury() external view returns (address) {
+        return _universeTreasury;
+    }
+
+    function getRewardPool() external view returns (address) {
+        return _rewardPool;
     }
 
     /// @inheritdoc IERC165
