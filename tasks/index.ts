@@ -20,7 +20,7 @@ subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
   chai.use(chaiAsPromised);
 });
 
-task("metahub:list-tokens-fixed-price", "List tokens for renting")
+task("metahub:list-tokens", "List tokens for renting")
   .addParam("metahub", "METAHUB address", undefined, types.string, false)
   .addParam(
     "original",
@@ -45,6 +45,7 @@ task("metahub:list-tokens-fixed-price", "List tokens for renting")
     false
   )
   .addParam("payout", "Listing immediate payout", false, types.boolean, true)
+  .addParam("rewardPercent", "Listers reward percent", 0, types.int, true)
   .setAction(
     async (
       args: {
@@ -54,16 +55,17 @@ task("metahub:list-tokens-fixed-price", "List tokens for renting")
         lock: number;
         price: string;
         payout: boolean;
+        rewardPercent: number;
       },
       hre
     ) => {
-      const deployer = await hre.ethers.getNamedSigner("deployer");
+      const lister = await hre.ethers.getNamedSigner('lister');
 
       console.log("Listing params:", args);
 
       console.log("Connecting to metahub...");
       const multiverse = await Multiverse.init({
-        signer: deployer,
+        signer: lister,
       });
       const chainId = await multiverse.getChainId();
       const metahub = multiverse.metahub(
@@ -71,7 +73,7 @@ task("metahub:list-tokens-fixed-price", "List tokens for renting")
       );
       console.log("Metahub connected!");
 
-      const nft = new ERC721Mock__factory(deployer).attach(
+      const nft = new ERC721Mock__factory(lister).attach(
         args.original
       );
       const setApprovalTx = await nft.setApprovalForAll(args.metahub, true);
@@ -95,12 +97,19 @@ task("metahub:list-tokens-fixed-price", "List tokens for renting")
             }),
             value: 1,
           },
-          strategy: {
+          strategy: args.rewardPercent === 0 ? {
             name: "FIXED_PRICE",
             data: {
               price: BigNumber.from(args.price),
-            },
-          },
+            }
+          } : {
+            name: "FIXED_PRICE_WITH_REWARD",
+            data: {
+              price: BigNumber.from(args.price),
+              rewardPercent: BigNumber.from(args.rewardPercent),
+            }
+          }
+          ,
           maxLockPeriod: BigNumber.from(args.lock),
           immediatePayout: args.payout,
         });

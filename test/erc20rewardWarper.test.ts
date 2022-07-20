@@ -12,10 +12,69 @@ import { ERC20RewardWarper } from '../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { Fixture } from 'ethereum-waffle';
 import { parseEther } from 'ethers/lib/utils';
+import { Assertion, expect } from 'chai';
+import { BigNumber, ContractTransaction } from 'ethers';
+import { Rentings } from '@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/Metahub';
 
 function percentToAllocation(percent: number): number {
   return percent * 10_000;
 }
+
+declare global {
+  // eslint-disable-next-line @typescript-eslint/no-namespace
+  export namespace Chai {
+    interface Eventually {
+      equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): AsyncAssertion;
+    }
+    interface Assertion {
+      equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): Assertion;
+    }
+  }
+}
+
+
+Assertion.addMethod('equalStruct', async function (expectedStruct: Record<string, any>, message?: string) {
+  const cleanedUpExpectedStruct = transmuteObject(expectedStruct);
+  const cleanedUpStruct = transmuteObject(this._obj);
+
+  // Make sure that the order of keys is persisted!
+  new Assertion(Object.keys(cleanedUpStruct)).to.deep.equal(
+    Object.keys(cleanedUpExpectedStruct),
+    'The order of the keys is not preserved',
+  );
+
+  // Make sure that the actual values are equal!
+  return new Assertion(cleanedUpStruct).to.deep.equal(cleanedUpExpectedStruct, message);
+});
+
+const transmuteSingleObject = (key: string, object: any): any => {
+  // the key is not a number (only match "stringy" keys)
+  if (!/^\d+$/.test(key)) {
+    if (typeof object[key] === 'object') {
+      // Special handling for different object classes
+      if (object[key] instanceof BigNumber) {
+        // BigNumbers don't get transmuted further, return them as-is
+        return object[key];
+      }
+      return transmuteObject(object[key]);
+    }
+    return object[key];
+  }
+  return undefined;
+};
+
+const transmuteObject = (object: any): Record<string, any> => {
+  const cleanedUpStruct: Record<string, any> = {};
+  for (const key of Object.keys(object)) {
+    const cleanedUpItem = transmuteSingleObject(key, object);
+    if (cleanedUpItem !== undefined) {
+      cleanedUpStruct[key] = cleanedUpItem;
+    }
+  }
+
+  return cleanedUpStruct;
+};
+
 
 describe.only('ERC20RewardWarper', function () {
   let metahub: Metahub;
@@ -31,7 +90,6 @@ describe.only('ERC20RewardWarper', function () {
   let protocolTreasury: SignerWithAddress;
   let universeTreasury: SignerWithAddress;
   let rewardPool: SignerWithAddress;
-  let stranger: SignerWithAddress;
   let chainId: ChainId;
   let loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
   // Token Related variables
@@ -56,7 +114,6 @@ describe.only('ERC20RewardWarper', function () {
     protocolTreasury = await hre.ethers.getNamedSigner('protocolTreasury');
     universeTreasury = await hre.ethers.getNamedSigner('universeTreasury');
     rewardPool = await hre.ethers.getNamedSigner('rewardPool');
-    [stranger] = await hre.ethers.getUnnamedSigners();
 
     // ------- Metahub start ------- //
 
@@ -74,14 +131,20 @@ describe.only('ERC20RewardWarper', function () {
     metahub = infrastructure.metahub;
 
     // Instantiate the SDK
-    const multiverse = await Multiverse.init({
+    const multiverseDeployer = await Multiverse.init({
       signer: deployer,
     });
-    chainId = await multiverse.getChainId();
-    metahubSDK = multiverse.metahub(new AccountId({ chainId, address: metahub.address }));
+    const multiverseRenter = await Multiverse.init({
+      signer: renter,
+    });
+    chainId = await multiverseDeployer.getChainId();
+    const warperSDK = multiverseDeployer.warperManager(
+      new AccountId({ chainId, address: infrastructure.warperManager.address }),
+    );
+    metahubSDK = multiverseRenter.metahub(new AccountId({ chainId, address: metahub.address }));
 
     // Create a new universe
-    const universeRegistry = multiverse.universeRegistry(
+    const universeRegistry = multiverseDeployer.universeRegistry(
       new AccountId({
         chainId,
         address: infrastructure.universeRegistry.address,
@@ -101,7 +164,7 @@ describe.only('ERC20RewardWarper', function () {
     })) as ERC721Mock;
 
     // Mint the original tokens
-    for (const iterator of [...tokensIdsFixedPriceReward, tokensIdsFixedPrice]) {
+    for (const iterator of [...tokensIdsFixedPriceReward, ...tokensIdsFixedPrice]) {
       await originalCollection.mint(lister.address, iterator);
     }
 
@@ -117,7 +180,7 @@ describe.only('ERC20RewardWarper', function () {
 
     // Register the warper
     console.log('registering the warper');
-    await metahubSDK.registerWarper(
+    await warperSDK.registerWarper(
       new AssetType({
         chainId,
         assetName: `erc721:${warper.address}`,
@@ -130,7 +193,16 @@ describe.only('ERC20RewardWarper', function () {
     );
 
     // List originals
-    await hre.run('metahub:list-tokens-fixed-price', {
+    await hre.run('metahub:list-tokens', {
+      metahub: metahub.address,
+      original: originalCollection.address,
+      tokens: tokensIdsFixedPriceReward,
+      lock: 99604800,
+      price: fixedPrice.toString(),
+      rewardPercent: listerAllocation,
+    });
+
+    await hre.run('metahub:list-tokens', {
       metahub: metahub.address,
       original: originalCollection.address,
       tokens: tokensIdsFixedPrice,
@@ -140,7 +212,7 @@ describe.only('ERC20RewardWarper', function () {
 
     // Approve ERC20 tokens
     console.log('minting erc20 tokens to the renter');
-    await baseToken.mint(renter.address, parseEther('1000000'));
+    await baseToken.mint(renter.address, parseEther('10000000000'));
     console.log('approving erc20 tokens to the metahub');
     await baseToken.connect(renter).approve(metahub.address, ethers.constants.MaxUint256);
 
@@ -158,23 +230,89 @@ describe.only('ERC20RewardWarper', function () {
   });
 
   describe('constructor', () => {
-    it('sets proper universe allocation', () => {
-
+    it('sets proper universe allocation', async () => {
+      await expect(warper.getUniverseAllocation()).to.eventually.equal(universeAllocation);
     });
-    it('sets proper protocol allocation');
-    it('sets proper universe treasury');
-    it('sets proper reward pool');
+    it('sets proper protocol allocation', async () => {
+      await expect(warper.getProtocolAllocation()).to.eventually.equal(protocolAllocation);
+    });
+    it('sets proper universe treasury', async () => {
+      await expect(warper.getUniverseTreasury()).to.eventually.equal(universeTreasury.address);
+    });
+    it('sets proper reward pool', async () => {
+      await expect(warper.getRewardPool()).to.eventually.equal(rewardPool.address);
+    });
   });
 
   describe('__onRent', () => {
     context('When called by non-Metahub', () => {
-      it('reverts');
+      context('called by non-metahub address', () => {
+        const emptyRentingAgreement: Rentings.AgreementStruct = {
+          warpedAsset: {
+            id: { class: '0x00000000', data: '0x' },
+            value: BigNumber.from(0),
+          },
+          listingParams: {
+            strategy: '0x00000000',
+            data: '0x',
+          },
+          collectionId: '0x0000000000000000000000000000000000000000000000000000000000000000',
+          listingId: BigNumber.from(0),
+          renter: ethers.constants.AddressZero,
+          startTime: 0,
+          endTime: 0,
+        };
+
+        it('reverts', async () => {
+          await expect(
+            warper.__onRent(42, 15, deployer.address, emptyRentingAgreement, {
+              protocolEarningToken: baseToken.address,
+              protocolEarningValue: parseEther('1').toString(),
+              universeEarningToken: baseToken.address,
+              universeEarningValue: parseEther('1').toString(),
+              universeId: 1,
+              userEarnings: [],
+            }),
+          ).to.be.revertedWith(`CallerIsNotMetahub()`);
+        });
+      });
     });
 
     context('When called by Metahub', () => {
       context('When using `FIXED_PRICE` listing strategy', () => {
-        it('stores the allocation');
-        it('emits an event');
+        let tx: ContractTransaction;
+        const rentalPeriod = 100;
+        beforeEach(async () => {
+          tx = await metahubSDK.rent({
+            listingId: 1, // corresponds to token id 1
+            maxPaymentAmount: ethers.constants.MaxUint256,
+            paymentToken: new AssetType({
+              chainId,
+              assetName: `erc20:${baseToken.address}`,
+            }),
+            rentalPeriod: rentalPeriod,
+            renter: new AccountId({ chainId, address: renter.address }),
+            warper: new AssetType({
+              chainId,
+              assetName: `erc721:${warper.address}`,
+            }),
+          });
+        });
+
+        it('emits the AllocationsSet event', async () => {
+          await expect(tx).to.emit(warper, 'AllocationsSet');
+        });
+
+        it('stores the allocation', async () => {
+          const allocation = await warper.getAllocation(1);
+          expect(allocation).to.equalStruct({
+            protocolAllocation: protocolAllocation,
+            universeAllocation: universeAllocation,
+            listerAllocation: listerAllocation,
+            lister: lister.address,
+            renter: renter.address,
+          });
+        });
       });
 
       context('When using `FIXED_PRICE_WITH_REWARDS` listing strategy', () => {

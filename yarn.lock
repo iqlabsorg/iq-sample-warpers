@@ -602,10 +602,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@iqprotocol/multiverse@^0.1.0-alpha.22":
-  version "0.1.0-alpha.22"
-  resolved "https://registry.yarnpkg.com/@iqprotocol/multiverse/-/multiverse-0.1.0-alpha.22.tgz#c660e069ef396c014b86d3c09738bf88d6cea92b"
-  integrity sha512-JRSkjbLPauADEU9LKj7yJVenuRqBHl1oLamQrcc0xcXXjtd6nUZLGR9KEwpWeEMhLLQGkH+WI0yUUFFxrFJ9Cw==
+"@iqprotocol/multiverse@0.2.0-alpha.1":
+  version "0.2.0-alpha.1"
+  resolved "https://registry.yarnpkg.com/@iqprotocol/multiverse/-/multiverse-0.2.0-alpha.1.tgz#617218f33a39ba63c6f08d33212b907af2b24426"
+  integrity sha512-KyzbUv2OEjVaDinONkIJ8jH0IerVwFkuCIOHJrmGSWw1Xf1GwaRmSCg7j1mBv7sdZxomghKzQiMq8aPrDbLsqw==
   dependencies:
     caip "^1.1.0"
 

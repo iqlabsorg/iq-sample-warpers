@@ -17,7 +17,7 @@
   },
   "devDependencies": {
     "@iqprotocol/solidity-contracts-nft": "^0.2.0",
-    "@iqprotocol/multiverse": "^0.1.0-alpha.22",
+    "@iqprotocol/multiverse": "0.2.0-alpha.1",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",
     "@nomiclabs/hardhat-waffle": "^2.0.3",
     "@openzeppelin/contracts": "^4.6.0",
