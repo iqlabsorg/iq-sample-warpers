@@ -17,7 +17,7 @@ import { BigNumber, ContractTransaction } from 'ethers';
 import { Rentings } from '@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/Metahub';
 
 function percentToAllocation(percent: number): number {
-  return percent * 10_000;
+  return percent * 100;
 }
 
 declare global {
@@ -31,7 +31,6 @@ declare global {
     }
   }
 }
-
 
 Assertion.addMethod('equalStruct', async function (expectedStruct: Record<string, any>, message?: string) {
   const cleanedUpExpectedStruct = transmuteObject(expectedStruct);
@@ -75,8 +74,7 @@ const transmuteObject = (object: any): Record<string, any> => {
   return cleanedUpStruct;
 };
 
-
-describe.only('ERC20RewardWarper', function () {
+describe('ERC20RewardWarper', function () {
   let metahub: Metahub;
   let warper: ERC20RewardWarper;
   let baseToken: ERC20Mock;
@@ -90,6 +88,7 @@ describe.only('ERC20RewardWarper', function () {
   let protocolTreasury: SignerWithAddress;
   let universeTreasury: SignerWithAddress;
   let rewardPool: SignerWithAddress;
+  let authorizedCaller: SignerWithAddress;
   let chainId: ChainId;
   let loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
   // Token Related variables
@@ -114,6 +113,7 @@ describe.only('ERC20RewardWarper', function () {
     protocolTreasury = await hre.ethers.getNamedSigner('protocolTreasury');
     universeTreasury = await hre.ethers.getNamedSigner('universeTreasury');
     rewardPool = await hre.ethers.getNamedSigner('rewardPool');
+    [authorizedCaller] = await hre.ethers.getUnnamedSigners();
 
     // ------- Metahub start ------- //
 
@@ -316,26 +316,111 @@ describe.only('ERC20RewardWarper', function () {
       });
 
       context('When using `FIXED_PRICE_WITH_REWARDS` listing strategy', () => {
-        it('stores the allocation');
-        it('emits an event');
+        let tx: ContractTransaction;
+        const rentalPeriod = 100;
+        beforeEach(async () => {
+          tx = await metahubSDK.rent({
+            listingId: 4, // corresponds to token id 4 (tokensIdsFixedPrice[0])
+            maxPaymentAmount: ethers.constants.MaxUint256,
+            paymentToken: new AssetType({
+              chainId,
+              assetName: `erc20:${baseToken.address}`,
+            }),
+            rentalPeriod: rentalPeriod,
+            renter: new AccountId({ chainId, address: renter.address }),
+            warper: new AssetType({
+              chainId,
+              assetName: `erc721:${warper.address}`,
+            }),
+          });
+        });
+
+        it('emits the AllocationsSet event', async () => {
+          await expect(tx).to.emit(warper, 'AllocationsSet');
+        });
+
+        it('stores the allocation', async () => {
+          const allocation = await warper.getAllocation(1);
+          expect(allocation).to.equalStruct({
+            protocolAllocation: protocolAllocation,
+            universeAllocation: universeAllocation,
+            listerAllocation: 0,
+            lister: lister.address,
+            renter: renter.address,
+          });
+        });
       });
     });
   });
 
   describe('disperseRewards', () => {
+    let tx: ContractTransaction;
+    const rentalPeriod = 100;
+    const listingId = tokensIdsFixedPriceReward[0];
+    const tokenId = tokensIdsFixedPriceReward[0];
+
+    const reward = parseEther('1000');
+    beforeEach(async () => {
+      tx = await metahubSDK.rent({
+        listingId: listingId,
+        maxPaymentAmount: ethers.constants.MaxUint256,
+        paymentToken: new AssetType({
+          chainId,
+          assetName: `erc20:${baseToken.address}`,
+        }),
+        rentalPeriod: rentalPeriod,
+        renter: new AccountId({ chainId, address: renter.address }),
+        warper: new AssetType({
+          chainId,
+          assetName: `erc721:${warper.address}`,
+        }),
+      });
+
+      await warper.setAuthorizationStatus(authorizedCaller.address, true);
+    });
+
     context('When called by non-authorized caller', () => {
-      it('reverts');
+      it('reverts', async () => {
+        await expect(warper.disperseRewards(tokenId, reward, rewardToken.address)).to.be.revertedWith(
+          `CallerIsNotAuthorized()`,
+        );
+      });
     });
 
     context('When called with a token id with a rental that has not been rented', () => {
-      it('reverts');
+      const nonExistentTokenId = 42;
+      it('reverts', async () => {
+        await expect(
+          warper.connect(authorizedCaller).disperseRewards(nonExistentTokenId, reward, rewardToken.address),
+        ).to.be.revertedWith(`WinnerIsNotARenter()`);
+      });
     });
 
     context('When dispersed correctly', () => {
-      it('transfers correct % of rewards to the protocol');
-      it('transfers correct % of rewards to the universe');
-      it('transfers correct % of rewards to the lister');
-      it('transfers correct % of rewards to the renter');
+      it('transfers correct % of rewards to the protocol', async () => {
+        await expect(() =>
+          warper.connect(authorizedCaller).disperseRewards(tokenId, reward, rewardToken.address),
+        ).to.changeTokenBalance(rewardToken, metahub, reward.mul(protocolAllocation).div(10_000));
+      });
+      it('transfers correct % of rewards to the universe', async () => {
+        await expect(() =>
+          warper.connect(authorizedCaller).disperseRewards(tokenId, reward, rewardToken.address),
+        ).to.changeTokenBalance(rewardToken, universeTreasury, reward.mul(universeAllocation).div(10_000));
+      });
+      it('transfers correct % of rewards to the lister', async () => {
+        await expect(() =>
+          warper.connect(authorizedCaller).disperseRewards(tokenId, reward, rewardToken.address),
+        ).to.changeTokenBalance(rewardToken, lister, reward.mul(listerAllocation).div(10_000));
+      });
+      it('transfers correct % of rewards to the renter', async () => {
+        const renterReward = reward
+          .sub(reward.mul(listerAllocation).div(10_000))
+          .sub(reward.mul(protocolAllocation).div(10_000))
+          .sub(reward.mul(universeAllocation).div(10_000));
+        await expect(() =>
+          warper.connect(authorizedCaller).disperseRewards(tokenId, reward, rewardToken.address),
+        ).to.changeTokenBalance(rewardToken, renter, renterReward);
+      });
     });
   });
 });

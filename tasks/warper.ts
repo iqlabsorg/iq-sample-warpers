@@ -5,8 +5,8 @@ import { ERC20RewardWarper__factory } from '../typechain';
 task('deploy:erc20-reward-warper', 'Deploy the erc20-reward-warper contract')
   .addParam('original', 'Original NFT contract address', undefined, types.string, false)
   .addParam('metahub', 'Metahub contract address', undefined, types.string, false)
-  .addParam('universeAllocation', 'Universe allocation (5% = 5 * 10_000 = 50_000)', undefined, types.int, false)
-  .addParam('protocolAllocation', 'Protocol allocation (5% = 5 * 10_000 = 50_000)', undefined, types.int, false)
+  .addParam('universeAllocation', 'Universe allocation (5% = 5 * 100 = 500)', undefined, types.int, false)
+  .addParam('protocolAllocation', 'Protocol allocation (5% = 5 * 100 = 500)', undefined, types.int, false)
   .addParam(
     'universeTreasury',
     'Universe treasury address (where the rewards % will be transferred to)',

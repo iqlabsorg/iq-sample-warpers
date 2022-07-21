@@ -2,6 +2,7 @@
 // solhint-disable private-vars-leading-underscore
 pragma solidity 0.8.15;
 
+import "@iqprotocol/solidity-contracts-nft/contracts/listing/strategies/fixed-price-with-reward/IFixedPriceWithRewardListingController.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/warper/mechanics/renting-hook/IRentingHookMechanics.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/warper/ERC721/presets/ERC721PresetConfigurable.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/listing/IListingManager.sol";
@@ -17,10 +18,19 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     /// of the renter during __onRent() and __onJoinedTournament() hook.
     error WinnerIsNotARenter();
 
+    /// @dev Emitted when the universe allocation has been updated.
     event UniverseAllocationSet(uint16 allocation);
+
+    /// @dev Emitted when the protocol allocation has been updated.
     event ProtocolAllocationSet(uint16 allocation);
+
+    /// @dev Emitted when the universe treasury has been updated.
     event UniverseTreasurySet(address treasury);
+
+    /// @dev Emitted when the reward pool address has been set.
     event RewardPoolSet(address pool);
+
+    /// @dev Emitted when new allocation has been set for a token.
     event AllocationsSet(uint256 tokenId, CachedAllocation allocation);
 
     using Rewards for uint256;
@@ -41,10 +51,19 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         address renter;
     }
 
+    /// @dev The percentile allocation for the universe.
     uint16 internal _universeAllocation;
+
+    /// @dev The percentile allocation for the protocol.
     uint16 internal _protocolAllocation;
+
+    /// @dev Address where the universe rewards gets stored.
     address internal _universeTreasury;
+
+    /// @dev Address where the rewards get taken from.
     address internal _rewardPool;
+
+    /// @dev Map of cached allocations for each token.
     mapping(uint256 => CachedAllocation) internal _allocations;
 
     /// @dev Constructor for the IQNFTWarper contract.
@@ -94,7 +113,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         uint256, /* amount */
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
-    ) external override onlyMetahub returns (bool success, string memory errorMessage) {
+    ) external override onlyMetahub returns (bool, string memory) {
         // Get allocation information
         CachedAllocation memory allocation = _resolveAllocations(rentalAgreement);
 
@@ -103,7 +122,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         emit AllocationsSet(tokenId, allocation);
 
         // Inform Metahub that everything is fine
-        success = true;
+        return (true, "");
     }
 
     function setUniverseAllocation(uint16 allocation) public onlyOwner {
@@ -166,21 +185,24 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         allocation = CachedAllocation({
             protocolAllocation: _protocolAllocation,
             universeAllocation: _universeAllocation,
-            listerAllocation: 0, // NOTE: this gets set at a further step
+            listerAllocation: 0, // NOTE: this gets set at a further step if needed
             lister: listingInfo.lister,
             renter: rentalAgreement.renter
         });
 
         if (listingInfo.params.strategy == Listings.FIXED_PRICE_WITH_REWARD) {
-            // TODO communicate with the listing controller to decode the listers allocation
-            (, uint16 listerAllocation) = abi.decode(listingInfo.params.data, (uint256, uint16));
+            (, uint16 listerAllocation) = IFixedPriceWithRewardListingController(
+                IMetahub(_metahub()).listingController(listingInfo.params.strategy)
+            ).decodeStrategyParams(listingInfo.params);
+
             allocation.listerAllocation = listerAllocation;
         }
     }
 
     // TODO: Metahub needs to be updated to expose such functionality.
-    function _getProtocolTreasury() internal pure returns (address) {
-        return address(0);
+    function _getProtocolTreasury() internal view returns (address) {
+        // NOTE: using _metahub() because we cannot transfer tokens to address(0)
+        return _metahub();
     }
 
     function _transferReward(

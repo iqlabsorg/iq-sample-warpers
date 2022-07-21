@@ -7,6 +7,12 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 /// Ownable contract dependency used to setup a single owner who is deployer,
 /// in order to prevent authorization rights abuse of one authority by another
 contract Auth is Ownable {
+    /// @notice Reverted if the caller is not authorized.
+    error CallerIsNotAuthorized();
+
+    /// @notice Emitted when the authorization status has been set.
+    event AuthorizationStatusChanged(address caller, bool status);
+
     // Participations Mapping from NFT renter to Original NFT to Rental ID
     mapping(address => bool) internal _authorizedCallers;
 
@@ -14,7 +20,7 @@ contract Auth is Ownable {
      * @dev Modifier to make a function callable only by the authorized callers.
      */
     modifier onlyAuthorizedCaller() {
-        require(isAuthorizedCaller(msg.sender) == true);
+        if (!isAuthorizedCaller(msg.sender)) revert CallerIsNotAuthorized();
         _;
     }
 
@@ -30,6 +36,8 @@ contract Auth is Ownable {
         // true = authorized
         // false = not authorized
         _authorizedCallers[caller] = status;
+
+        emit AuthorizationStatusChanged(caller, status);
     }
 
     /// @notice Retrieve authorization status for caller.
