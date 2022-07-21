@@ -71,8 +71,8 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     /// @dev rentalId => allocations Map of cached allocations for each token.
     mapping(uint256 => CachedAllocation) internal _allocations;
 
-    /// @dev tournamentId => player => tokenId
-    mapping(uint256 => mapping(address => uint256)) internal _rentalsInTournament;
+    /// @dev tournamentId => player => tokenId => rentalId
+    mapping(uint256 => mapping(address => mapping(uint256 => uint256))) internal _rentalsInTournament;
 
     /// @dev tokenId => rentalId
     mapping(uint256 => uint256) internal _tokenIdsToRentals;
@@ -92,15 +92,17 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     /// @notice Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
     /// @param tournamentId represents the tournament id.
     /// @param reward The reward amount.
+    /// @param tokenId The token id.
     /// @param participant The address of the player.
     /// @param rewardToken The reward IERC20 token contract address.
     function disperseRewards(
         uint256 tournamentId,
+        uint256 tokenId,
         uint256 reward,
         address participant,
         address rewardToken
     ) external onlyAuthorizedCaller {
-        uint256 rentalId = _rentalsInTournament[tournamentId][participant];
+        uint256 rentalId = _rentalsInTournament[tournamentId][participant][tokenId];
 
         CachedAllocation storage allocation = _allocations[rentalId];
         if (allocation.renter == address(0)) revert AllocationsNotSet();
@@ -135,7 +137,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         // We don't need to worry about the `_tokenIdsToRentals` being outdated
         // because that's already implicitly checked via the ownerOf() call above.
         uint256 rentalId = _tokenIdsToRentals[tokenId];
-        _rentalsInTournament[tournamentId][participant] = rentalId;
+        _rentalsInTournament[tournamentId][participant][tokenId] = rentalId;
 
         emit JoinedTournament(tournamentId, participant, tokenId, rentalId);
     }
