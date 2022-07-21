@@ -14,9 +14,11 @@ import "./Rewards.sol";
 
 /// @title Custom Warper for ERC20 Tournament rewarding.
 contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechanics {
-    /// @dev Thrown when the tournament winner address does not match the address
-    /// of the renter during __onRent() and __onJoinedTournament() hook.
-    error WinnerIsNotARenter();
+    /// @dev Thrown when invalid parameters are provided when resolving the allocation data.
+    error AllocationsNotSet();
+
+    /// @dev Thrown when the participant address does not match the owners address of the token!
+    error ParticipantIsNotOwnerOfToken();
 
     /// @dev Emitted when the universe allocation has been updated.
     event UniverseAllocationSet(uint16 allocation);
@@ -31,7 +33,10 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     event RewardPoolSet(address pool);
 
     /// @dev Emitted when new allocation has been set for a token.
-    event AllocationsSet(uint256 tokenId, CachedAllocation allocation);
+    event AllocationsSet(uint256 rentalId, uint256 tokenId, CachedAllocation allocation);
+
+    /// @dev Emitted when a user has joined the tournament.
+    event JoinedTournament(uint256 tournamentId, address participant, uint256 tokenId, uint256 rentalId);
 
     using Rewards for uint256;
     using Rentings for Rentings.Agreement;
@@ -63,8 +68,14 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
     /// @dev Address where the rewards get taken from.
     address internal _rewardPool;
 
-    /// @dev Map of cached allocations for each token.
+    /// @dev rentalId => allocations Map of cached allocations for each token.
     mapping(uint256 => CachedAllocation) internal _allocations;
+
+    /// @dev tournamentId => player => tokenId
+    mapping(uint256 => mapping(address => uint256)) internal _rentalsInTournament;
+
+    /// @dev tokenId => rentalId
+    mapping(uint256 => uint256) internal _tokenIdsToRentals;
 
     /// @dev Constructor for the IQNFTWarper contract.
     constructor(bytes memory config) Auth() warperInitializer {
@@ -78,20 +89,21 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         setRewardPool(rewardPool);
     }
 
-    /// @dev Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
-    /// @param tokenId The token id that was used.
+    /// @notice Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
+    /// @param tournamentId represents the tournament id.
     /// @param reward The reward amount.
+    /// @param participant The address of the player.
     /// @param rewardToken The reward IERC20 token contract address.
     function disperseRewards(
-        uint256 tokenId,
+        uint256 tournamentId,
         uint256 reward,
+        address participant,
         address rewardToken
     ) external onlyAuthorizedCaller {
-        CachedAllocation storage allocation = _allocations[tokenId];
-        if (allocation.renter == address(0)) revert WinnerIsNotARenter();
+        uint256 rentalId = _rentalsInTournament[tournamentId][participant];
 
-        // TODO consult with Metahub and make sure that the rental is still active.
-        //      Otherwise people can claim rewards for inactive rentals.
+        CachedAllocation storage allocation = _allocations[rentalId];
+        if (allocation.renter == address(0)) revert AllocationsNotSet();
 
         // Calculate the reward amounts
         uint256 universeReward = reward.mul(allocation.universeAllocation);
@@ -107,10 +119,31 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         }
     }
 
+    /// @notice Must be called when a user joins the tournament with a warped asset.
+    /// @param tournamentId represents the tournament id.
+    /// @param participant The address of the player.
+    /// @param tokenId The token id of the warped asset.
+    function onJoinTournament(
+        uint256 tournamentId,
+        address participant,
+        uint256 tokenId
+    ) external onlyAuthorizedCaller {
+        // Make sure that the renal is active!
+        if (ownerOf(tokenId) != participant) revert ParticipantIsNotOwnerOfToken();
+
+        // Associate the rentalId with the participant in the tournament.
+        // We don't need to worry about the `_tokenIdsToRentals` being outdated
+        // because that's already implicitly checked via the ownerOf() call above.
+        uint256 rentalId = _tokenIdsToRentals[tokenId];
+        _rentalsInTournament[tournamentId][participant] = rentalId;
+
+        emit JoinedTournament(tournamentId, participant, tokenId, rentalId);
+    }
+
     function __onRent(
-        uint256, /* rentalId */
+        uint256 rentalId,
         uint256 tokenId,
-        uint256, /* amount */
+        uint256 /* amount */,
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyMetahub returns (bool, string memory) {
@@ -118,8 +151,10 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         CachedAllocation memory allocation = _resolveAllocations(rentalAgreement);
 
         // Cache the allocation information
-        _allocations[tokenId] = allocation;
-        emit AllocationsSet(tokenId, allocation);
+        _allocations[rentalId] = allocation;
+        _tokenIdsToRentals[tokenId] = rentalId;
+
+        emit AllocationsSet(rentalId, tokenId, allocation);
 
         // Inform Metahub that everything is fine
         return (true, "");
@@ -149,8 +184,8 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         emit RewardPoolSet(pool);
     }
 
-    function getAllocation(uint256 tokenId) external view returns (CachedAllocation memory) {
-        return _allocations[tokenId];
+    function getAllocation(uint256 rentalId) external view returns (CachedAllocation memory) {
+        return _allocations[rentalId];
     }
 
     function getUniverseAllocation() external view returns (uint16) {
