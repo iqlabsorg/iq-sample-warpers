@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable private-vars-leading-underscore
-pragma solidity 0.8.15;
+pragma solidity ^0.8.15;
 
 import "@iqprotocol/solidity-contracts-nft/contracts/listing/strategies/fixed-price-with-reward/IFixedPriceWithRewardListingController.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/warper/mechanics/renting-hook/IRentingHookMechanics.sol";
@@ -11,50 +11,13 @@ import "@iqprotocol/solidity-contracts-nft/contracts/accounting/Accounts.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/renting/Rentings.sol";
 import "./auth/Auth.sol";
 import "./Rewards.sol";
+import "./IERC20RewardWarper.sol";
 
 /// @title Custom Warper for ERC20 Tournament rewarding.
-contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechanics {
-    /// @dev Thrown when invalid parameters are provided when resolving the allocation data.
-    error AllocationsNotSet();
-
-    /// @dev Thrown when the participant address does not match the owners address of the token!
-    error ParticipantIsNotOwnerOfToken();
-
-    /// @dev Emitted when the universe allocation has been updated.
-    event UniverseAllocationSet(uint16 allocation);
-
-    /// @dev Emitted when the protocol allocation has been updated.
-    event ProtocolAllocationSet(uint16 allocation);
-
-    /// @dev Emitted when the universe treasury has been updated.
-    event UniverseTreasurySet(address treasury);
-
-    /// @dev Emitted when the reward pool address has been set.
-    event RewardPoolSet(address pool);
-
-    /// @dev Emitted when new allocation has been set for a token.
-    event AllocationsSet(uint256 rentalId, uint256 tokenId, CachedAllocation allocation);
-
-    /// @dev Emitted when a user has joined the tournament.
-    event JoinedTournament(uint256 tournamentId, address participant, uint256 tokenId, uint256 rentalId);
-
+contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721PresetConfigurable, Auth {
     using Rewards for uint256;
     using Rentings for Rentings.Agreement;
     using Accounts for Accounts.RentalEarnings;
-
-    /// @dev Cached allocation structure.
-    /// @param protocolAllocation Reward percentage allocation for protocol.
-    /// @param universeAllocation Reward percentage allocation for universe.
-    /// @param listerAllocation Reward percentage allocation for lister.
-    /// @param lister Address of NFT lister.
-    /// @param renter Address of NFT renter.
-    struct CachedAllocation {
-        uint16 protocolAllocation;
-        uint16 universeAllocation;
-        uint16 listerAllocation;
-        address lister;
-        address renter;
-    }
 
     /// @dev The percentile allocation for the universe.
     uint16 internal _universeAllocation;
@@ -89,12 +52,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         setRewardPool(rewardPool);
     }
 
-    /// @notice Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
-    /// @param tournamentId represents the tournament id.
-    /// @param reward The reward amount.
-    /// @param tokenId The token id.
-    /// @param participant The address of the player.
-    /// @param rewardToken The reward IERC20 token contract address.
+    /// @inheritdoc IERC20RewardWarper
     function disperseRewards(
         uint256 tournamentId,
         uint256 tokenId,
@@ -121,10 +79,7 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         }
     }
 
-    /// @notice Must be called when a user joins the tournament with a warped asset.
-    /// @param tournamentId represents the tournament id.
-    /// @param participant The address of the player.
-    /// @param tokenId The token id of the warped asset.
+    /// @inheritdoc IERC20RewardWarper
     function onJoinTournament(
         uint256 tournamentId,
         address participant,
@@ -142,10 +97,11 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         emit JoinedTournament(tournamentId, participant, tokenId, rentalId);
     }
 
+    /// @inheritdoc IRentingHookMechanics
     function __onRent(
         uint256 rentalId,
         uint256 tokenId,
-        uint256 /* amount */,
+        uint256, /* amount */
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyMetahub returns (bool, string memory) {
@@ -162,53 +118,65 @@ contract ERC20RewardWarper is ERC721PresetConfigurable, Auth, IRentingHookMechan
         return (true, "");
     }
 
+    /// @inheritdoc IERC20RewardWarper
+    function getAllocation(uint256 rentalId) external view returns (CachedAllocation memory) {
+        return _allocations[rentalId];
+    }
+
+    /// @inheritdoc IERC20RewardWarper
+    function getUniverseAllocation() external view returns (uint16) {
+        return _universeAllocation;
+    }
+
+    /// @inheritdoc IERC20RewardWarper
+    function getProtocolAllocation() external view returns (uint16) {
+        return _protocolAllocation;
+    }
+
+    /// @inheritdoc IERC20RewardWarper
+    function getUniverseTreasury() external view returns (address) {
+        return _universeTreasury;
+    }
+
+    /// @inheritdoc IERC20RewardWarper
+    function getRewardPool() external view returns (address) {
+        return _rewardPool;
+    }
+
+    /// @inheritdoc IERC20RewardWarper
     function setUniverseAllocation(uint16 allocation) public onlyOwner {
         _universeAllocation = allocation;
 
         emit UniverseAllocationSet(allocation);
     }
 
+    /// @inheritdoc IERC20RewardWarper
     function setProtocolAllocation(uint16 allocation) public onlyOwner {
         _protocolAllocation = allocation;
 
         emit ProtocolAllocationSet(allocation);
     }
 
+    /// @inheritdoc IERC20RewardWarper
     function setUniverseTreasury(address treasury) public onlyOwner {
         _universeTreasury = treasury;
 
         emit UniverseTreasurySet(treasury);
     }
 
+    /// @inheritdoc IERC20RewardWarper
     function setRewardPool(address pool) public onlyOwner {
         _rewardPool = pool;
 
         emit RewardPoolSet(pool);
     }
 
-    function getAllocation(uint256 rentalId) external view returns (CachedAllocation memory) {
-        return _allocations[rentalId];
-    }
-
-    function getUniverseAllocation() external view returns (uint16) {
-        return _universeAllocation;
-    }
-
-    function getProtocolAllocation() external view returns (uint16) {
-        return _protocolAllocation;
-    }
-
-    function getUniverseTreasury() external view returns (address) {
-        return _universeTreasury;
-    }
-
-    function getRewardPool() external view returns (address) {
-        return _rewardPool;
-    }
-
     /// @inheritdoc IERC165
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
-        return interfaceId == type(IRentingHookMechanics).interfaceId || super.supportsInterface(interfaceId);
+        return
+            interfaceId == type(IRentingHookMechanics).interfaceId ||
+            interfaceId == type(IERC20RewardWarper).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 
     function _resolveAllocations(Rentings.Agreement calldata rentalAgreement)

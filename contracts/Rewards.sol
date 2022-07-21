@@ -1,6 +1,6 @@
 // SPDX-License-Identifier: MIT
 // solhint-disable private-vars-leading-underscore
-pragma solidity 0.8.15;
+pragma solidity ^0.8.15;
 
 import "@iqprotocol/solidity-contracts-nft/contracts/renting/Rentings.sol";
 

@@ -19,7 +19,7 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
 
 ```solidity
   // This variables gets set somewhere in the contract, possibly the constructor.
-  ERC20RewardWarper public warper;
+  IERC20RewardWarper public warper;
 
   struct Warrior {
     address account;
