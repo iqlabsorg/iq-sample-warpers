@@ -62,7 +62,7 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
     for (uint256 i = 0; i < _warriors.length; i++) {
       require(_warriors[i].win_position > 0, "Invalid position");
       if (_warriors[i].win_position == 1) {
-        if(_isRentedWarrior(_warriors[i].address = address(warper)) {
+        if(_isRentedWarrior(_warriors[i]) {
           // NOTE: We are assuming that the `warper.getRewardPool()` is the same as `address(this)`
           IERC20(tournament.configs.currency).approve(address(warper), winnings);
 
