@@ -35,7 +35,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     mapping(uint256 => CachedAllocation) internal _allocations;
 
     /// @dev tournamentId => player => tokenId => rentalId
-    mapping(uint256 => mapping(address => mapping(uint256 => uint256))) internal _rentalsInTournament;
+    mapping(uint64 => mapping(address => mapping(uint256 => uint256))) internal _rentalsInTournament;
 
     /// @dev tokenId => rentalId
     mapping(uint256 => uint256) internal _tokenIdsToRentals;
@@ -54,7 +54,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
 
     /// @inheritdoc IERC20RewardWarper
     function disperseRewards(
-        uint256 tournamentId,
+        uint64 tournamentId,
         uint256 tokenId,
         uint256 reward,
         address participant,
@@ -81,7 +81,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
 
     /// @inheritdoc IERC20RewardWarper
     function onJoinTournament(
-        uint256 tournamentId,
+        uint64 tournamentId,
         address participant,
         uint256 tokenId
     ) external onlyAuthorizedCaller {
