@@ -35,7 +35,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     /**
      * @dev tokenId => rentalId.
      */
-    mapping(uint256 => uint256) internal _tokenIdsToRentals;
+    mapping(address => mapping (uint256 => uint256)) internal _renterTokenIdsToRentals;
 
     /**
      * @dev rentalId => listingId.
@@ -112,7 +112,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
         // Associate the rentalId with the participant in the tournament.
         // We don't need to worry about the `_tokenIdsToRentals` being outdated
         // because that's already implicitly checked via the ownerOf() call above.
-        uint256 rentalId = _tokenIdsToRentals[tokenId];
+        uint256 rentalId = _renterTokenIdsToRentals[participant][tokenId];
 
         // Retrieve listingId associated with the rentalId
         uint256 listingId = _rentalIdsToListings[rentalId];
@@ -132,12 +132,14 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
      */
     function __onRent(
         uint256 rentalId,
-        uint256 tokenId,
-        uint256, /* amount */
         IQProtocolStructsMock.Agreement calldata rentalAgreement,
         IQProtocolStructsMock.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyMetahub returns (bool, string memory) {
-        _tokenIdsToRentals[tokenId] = rentalId;
+        for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
+            (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
+            _renterTokenIdsToRentals[rentalAgreement.renter][tokenId] = rentalId;
+        }
+
         _rentalIdsToListings[rentalId] = rentalAgreement.listingId;
         // Inform Metahub that everything is fine
         return (true, "");
@@ -149,8 +151,8 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
      * @param tokenId Token ID.
      * @return Rental ID.
      */
-    function getTokenRental(uint256 tokenId) external view returns(uint256) {
-        return _tokenIdsToRentals[tokenId];
+    function getTokenRental(address renter, uint256 tokenId) external view returns(uint256) {
+        return _renterTokenIdsToRentals[renter][tokenId];
     }
 
     /**
@@ -171,5 +173,16 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
             interfaceId == type(IRentingHookMechanics).interfaceId ||
             interfaceId == type(IERC20RewardWarper).interfaceId ||
             super.supportsInterface(interfaceId);
+    }
+
+    /**
+     * @notice TO REMOVE in future, was added because missing this method in current Warper implementation
+     * @dev Decodes asset ID and extracts identification data.
+     * @param id Asset ID structure.
+     * @return token Token contract address.
+     * @return tokenId Token ID.
+     */
+    function _decodeAssetId(Assets.AssetId memory id) internal pure returns (address token, uint256 tokenId) {
+        return abi.decode(id.data, (address, uint256));
     }
 }

@@ -15,8 +15,6 @@ interface IRentingHookMechanics {
      * NOTE: This function should not revert directly and must set correct `success` value instead.
      *
      * @param rentalId Rental agreement ID.
-     * @param tokenId The token ID.
-     * @param amount The token amount.
      * @param rentalAgreement Newly registered rental agreement details.
      * @param rentalEarnings The rental earnings breakdown.
      * @return success True if hook was executed successfully.
@@ -24,8 +22,6 @@ interface IRentingHookMechanics {
      */
     function __onRent(
         uint256 rentalId,
-        uint256 tokenId,
-        uint256 amount,
         IQProtocolStructsMock.Agreement calldata rentalAgreement,
         IQProtocolStructsMock.RentalEarnings calldata rentalEarnings
     ) external returns (bool success, string memory errorMessage);

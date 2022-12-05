@@ -206,13 +206,7 @@ export function shouldBehaveLikeOnRent(): void {
       });
 
       it('reverts', async () => {
-        const callTx = erc20RewardWarper.__onRent(
-          GLOBAL_RENTAL_ID,
-          GLOBAL_TOKEN_ID,
-          BigNumber.from(0),
-          emptyRentalAgreement,
-          emptyRentalEarnings,
-        );
+        const callTx = erc20RewardWarper.__onRent(GLOBAL_RENTAL_ID, emptyRentalAgreement, emptyRentalEarnings);
 
         await expect(callTx).to.be.revertedWith(`CallerIsNotMetahub()`);
       });
@@ -227,34 +221,21 @@ export function shouldBehaveLikeOnRent(): void {
         rentalAgreement.agreementTerms.universeTaxTerms = makeTaxTermsFixedRate(GLOBAL_UNIVERSE_TAX_RATE);
         rentalAgreement.agreementTerms.protocolTaxTerms = makeTaxTermsFixedRate(GLOBAL_PROTOCOL_TAX_RATE);
 
-        erc20RewardWarperMock.__onRent
-          .whenCalledWith(
-            GLOBAL_RENTAL_ID,
-            GLOBAL_TOKEN_ID,
-            RENT_PRICE.mul(GLOBAL_RENTAL_PERIOD),
-            rentalAgreement,
-            rentalEarnings,
-          )
-          .returns({
-            success: true,
-            data: '',
-          });
+        erc20RewardWarperMock.__onRent.whenCalledWith(GLOBAL_RENTAL_ID, rentalAgreement, rentalEarnings).returns({
+          success: true,
+          data: '',
+        });
 
-        erc20RewardWarperMock.getTokenRental.whenCalledWith(GLOBAL_TOKEN_ID).returns(GLOBAL_RENTAL_ID);
+        erc20RewardWarperMock.getTokenRental.whenCalledWith(renter.address, GLOBAL_TOKEN_ID).returns(GLOBAL_RENTAL_ID);
         erc20RewardWarperMock.getRentalListing.whenCalledWith(GLOBAL_RENTAL_ID).returns(GLOBAL_LISTING_ID);
       });
 
       it('registers linking between token id, rental id and listing id', async () => {
         const onRentHookTx = erc20RewardWarperMock
           .connect(metahubMockAddress)
-          .__onRent(
-            GLOBAL_RENTAL_ID,
-            GLOBAL_TOKEN_ID,
-            RENT_PRICE.mul(GLOBAL_RENTAL_PERIOD),
-            rentalAgreement,
-            rentalEarnings,
-          );
-        const rentalId = await erc20RewardWarperMock.connect(stranger).getTokenRental(GLOBAL_TOKEN_ID);
+          .__onRent(GLOBAL_RENTAL_ID, rentalAgreement, rentalEarnings);
+
+        const rentalId = await erc20RewardWarperMock.connect(stranger).getTokenRental(renter.address, GLOBAL_TOKEN_ID);
         const listingId = await erc20RewardWarperMock.connect(stranger).getRentalListing(rentalId);
 
         await expect(onRentHookTx).to.be.fulfilled;
@@ -265,34 +246,20 @@ export function shouldBehaveLikeOnRent(): void {
 
     context('When using `FIXED_PRICE_WITH_REWARDS` listing strategy', () => {
       beforeEach(function () {
-        erc20RewardWarperMock.__onRent
-          .whenCalledWith(
-            GLOBAL_RENTAL_ID,
-            GLOBAL_TOKEN_ID,
-            RENT_PRICE.mul(GLOBAL_RENTAL_PERIOD),
-            rentalAgreement,
-            rentalEarnings,
-          )
-          .returns({
-            success: true,
-            data: '',
-          });
+        erc20RewardWarperMock.__onRent.whenCalledWith(GLOBAL_RENTAL_ID, rentalAgreement, rentalEarnings).returns({
+          success: true,
+          data: '',
+        });
 
-        erc20RewardWarperMock.getTokenRental.whenCalledWith(GLOBAL_TOKEN_ID).returns(GLOBAL_RENTAL_ID);
+        erc20RewardWarperMock.getTokenRental.whenCalledWith(renter.address, GLOBAL_TOKEN_ID).returns(GLOBAL_RENTAL_ID);
         erc20RewardWarperMock.getRentalListing.whenCalledWith(GLOBAL_RENTAL_ID).returns(GLOBAL_LISTING_ID);
       });
 
       it('registers linking between token id, rental id and listing id', async () => {
         const onRentHookTx = erc20RewardWarperMock
           .connect(metahubMockAddress)
-          .__onRent(
-            GLOBAL_RENTAL_ID,
-            GLOBAL_TOKEN_ID,
-            RENT_PRICE.mul(GLOBAL_RENTAL_PERIOD),
-            rentalAgreement,
-            rentalEarnings,
-          );
-        const rentalId = await erc20RewardWarperMock.connect(stranger).getTokenRental(GLOBAL_TOKEN_ID);
+          .__onRent(GLOBAL_RENTAL_ID, rentalAgreement, rentalEarnings);
+        const rentalId = await erc20RewardWarperMock.connect(stranger).getTokenRental(renter.address, GLOBAL_TOKEN_ID);
         const listingId = await erc20RewardWarperMock.connect(stranger).getRentalListing(rentalId);
 
         await expect(onRentHookTx).to.be.fulfilled;
