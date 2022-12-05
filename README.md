@@ -1,21 +1,25 @@
-# IQ NFT Collection
+# The Red Village ERC20 Reward Warper
 
 ## Deployment
 
 1. Create a `.env` file in the project root directory, looking at the `.env.example` file for guidance.
 2. Modify the `networks` section inside `hardhat.config.ts` to add your desired network.
+3. Warper can be verified automatically, just make sure `Etherscan API keys` are present in `.env` file
 
 ```shell
 # View docs of the warper deployment
 yarn hardhat deploy:erc20-reward-warper --help
 
 # Deploy the NFT Warper
-yarn hardhat --network [networkName] deploy:deploy:erc20-reward-warper --original 0x0000000000000000000000000000000000000000 --metahub 0x0000000000000000000000000000000000000000 --protocol-allocation	100 --reward-pool 0x0000000000000000000000000000000000000000 --universe-allocation	100 --universe-treasury	0x0000000000000000000000000000000000000000
+yarn hardhat --network [networkName] deploy:deploy:erc20-reward-warper --original 0x0000000000000000000000000000000000000000 --metahub 0x0000000000000000000000000000000000000000
+
+# Verify the NFT Warper on Etherscan
+yarn hardhat --network [networkName] verify --address 0x0000000000000000000000000000000000000000
 ```
 
 ## Potential integration
 
-Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f39aEa022Df20B17f4AA43A8C42#code
+Source code for the TournamentState contract: https://polygonscan.com/address/0x4c856111387b2cb179c841680e403d4dd27601de#code
 
 ```solidity
   // This variables gets set somewhere in the contract, possibly the constructor.
@@ -29,10 +33,23 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
     bytes data;
   }
 
-  function joinTournament(bytes memory, bytes memory _params) external virtual override onlyRoler("joinTournament") {
+  function joinTournament(bytes memory, bytes memory _params)
+    external
+    virtual
+    override
+    onlyRoler("joinTournament")
+  {
     address signer = tx.origin;
-    // NOTE: I have introduced an extra decode parameter - `origin` which would represent the address of the warrior's origin (warper or the original).
-    (uint64 _serviceID, uint64 tournamentID, address joiner, uint256 championID, uint16 stance, address origin) = abi.decode(_params, (uint64, uint64, address, uint256, uint16, address));
+    // NOTE: I have introduced an extra decode parameter - `origin` which would represent
+    // the address of the warrior's origin (warper or the original).
+    (
+      uint64 serviceID,
+      uint64 tournamentID,
+      address joiner,
+      uint256 championID,
+      uint16 stance,
+      address origin
+    ) = abi.decode(_params, (uint64, uint64, address, uint256, uint16, address));
 
     ...
 
@@ -53,6 +70,7 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
   }
 
   function completeTournament(
+    uint64 _serviceID,
     uint64 _tournamentID,
     TournamentTypes.Warrior[] memory _warriors,
     TournamentTypes.EloDto[] memory,
@@ -64,11 +82,24 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
       if (_warriors[i].win_position == 1) {
         if(_isRentedWarrior(_warriors[i]) {
           // NOTE: We are assuming that the `warper.getRewardPool()` is the same as `address(this)`
-          IERC20(tournament.configs.currency).approve(address(warper), winnings);
+          IERC20(tournament.configs.currency).approve(
+            address(warper),
+            winnings
+          );
 
-          warper.disperseRewards(_tournamentID, _warriors[i].ID, winnings, _warriors[i].account, tournament.configs.currency);
+          warper.distributeRewards(
+            _serviceID,
+            _tournamentID,
+            _warriors[i].ID,
+            winnings,
+            _warriors[i].account,
+            tournament.configs.currency
+          );
         } else {
-          IERC20(tournament.configs.currency).transfer(_warriors[i].account, winnings);
+          IERC20(tournament.configs.currency).transfer(
+            _warriors[i].account,
+            winnings
+          );
         }
         winner = _warriors[i].account;
       }
@@ -76,3 +107,8 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
     }
   }
 ```
+
+Please find diagram at: `/assets/IQ_TRV_integration.jpg`
+
+## Potential integration diagram
+![Alt text](assets/IQ_TRV_integration.jpg?raw=true "IQ Protocol & The Red Village integration")
