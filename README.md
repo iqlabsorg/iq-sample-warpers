@@ -76,3 +76,9 @@ Source code for the tournament: https://polygonscan.com/address/0x23C151747f937f
     }
   }
 ```
+
+## Potential integration diagram
+
+Please find diagram at: `/assets/IQ_TRV_integration.jpg`
+
+![Alt text](assets/IQ_TRV_integration.jpg?raw=true "IQ Protocol & The Red Village integration")
