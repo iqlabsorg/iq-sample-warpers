@@ -40,6 +40,7 @@ task('deploy:erc20-reward-warper', 'Deploy the erc20-reward-warper contract')
         from: deployer.address,
         args: [initData],
       });
+      console.log('Init data:', initData);
       console.log('Tx:', transactionHash);
       console.log('Warper address:', address);
 
