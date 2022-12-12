@@ -11,7 +11,7 @@
 yarn hardhat deploy:erc20-reward-warper --help
 
 # Deploy the NFT Warper
-yarn hardhat --network [networkName] deploy:deploy:erc20-reward-warper --original 0x0000000000000000000000000000000000000000 --metahub 0x0000000000000000000000000000000000000000
+yarn hardhat --network [networkName] deploy:erc20-reward-warper --original 0x0000000000000000000000000000000000000000 --metahub 0x0000000000000000000000000000000000000000
 
 # Verify the NFT Warper on Etherscan
 yarn hardhat --network [networkName] verify --address 0x0000000000000000000000000000000000000000
