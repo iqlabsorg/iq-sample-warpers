@@ -25,7 +25,7 @@ interface IERC20RewardWarper {
     event AllocationsSet(uint256 rentalId, uint256 tokenId, CachedAllocation allocation);
 
     /// @dev Emitted when a user has joined the tournament.
-    event JoinedTournament(uint64 tournamentId, address participant, uint256 tokenId, uint256 rentalId);
+    event JoinedTournament(uint64 serviceId, uint64 tournamentId, address participant, uint256 tokenId, uint256 rentalId);
 
     /// @dev Cached allocation structure.
     /// @param protocolAllocation Reward percentage allocation for protocol.
@@ -42,12 +42,14 @@ interface IERC20RewardWarper {
     }
 
     /// @notice Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
+    /// @param serviceId represents the service id.
     /// @param tournamentId represents the tournament id.
     /// @param reward The reward amount.
     /// @param tokenId The token id.
     /// @param participant The address of the player.
     /// @param rewardToken The reward IERC20 token contract address.
     function disperseRewards(
+        uint64 serviceId,
         uint64 tournamentId,
         uint256 tokenId,
         uint256 reward,
@@ -56,10 +58,12 @@ interface IERC20RewardWarper {
     ) external;
 
     /// @notice Must be called when a user joins the tournament with a warped asset.
+    /// @param serviceId represents the service id.
     /// @param tournamentId represents the tournament id.
     /// @param participant The address of the player.
     /// @param tokenId The token id of the warped asset.
     function onJoinTournament(
+        uint64 serviceId,
         uint64 tournamentId,
         address participant,
         uint256 tokenId

@@ -54,8 +54,9 @@ const config: HardhatUserConfig = {
     deployer: 0,
     lister: 1,
     renter: 2,
-    authorizedCaller: 3,
-    metahubMockAddress: 4,
+    protocolTreasury: 3,
+    universeTreasury: 4,
+    rewardPool: 5,
   },
   networks: {
     bscTestnet: {

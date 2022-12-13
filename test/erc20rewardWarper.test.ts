@@ -422,7 +422,7 @@ describe('ERC20RewardWarper', function () {
 
       context('when user A tries to join tournament', () => {
         it('reverts', async () => {
-          await expect(warper.connect(authorizedCaller).onJoinTournament(1, renter.address, 4)).to.be.revertedWith(
+          await expect(warper.connect(authorizedCaller).onJoinTournament(1, 1, renter.address, 4)).to.be.revertedWith(
             `ParticipantIsNotOwnerOfToken()`,
           );
         });
@@ -430,7 +430,7 @@ describe('ERC20RewardWarper', function () {
 
       context('when user B tries to join tournament', () => {
         it('emits event', async () => {
-          await expect(warper.connect(authorizedCaller).onJoinTournament(1, stranger.address, 4)).to.emit(
+          await expect(warper.connect(authorizedCaller).onJoinTournament(1, 1, stranger.address, 4)).to.emit(
             warper,
             'JoinedTournament',
           );
@@ -440,7 +440,7 @@ describe('ERC20RewardWarper', function () {
 
     context('caller of the function is not authorized', () => {
       it('reverts', async () => {
-        await expect(warper.connect(stranger).onJoinTournament(1, renter.address, 1)).to.be.revertedWith(
+        await expect(warper.connect(stranger).onJoinTournament(1, 1, renter.address, 1)).to.be.revertedWith(
           `CallerIsNotAuthorized()`,
         );
       });
@@ -455,6 +455,7 @@ describe('ERC20RewardWarper', function () {
 
     const reward = parseEther('1000');
 
+    const serviceId = 22;
     const tournamentId = 42;
 
     beforeEach(async () => {
@@ -473,13 +474,13 @@ describe('ERC20RewardWarper', function () {
         }),
       });
 
-      await warper.connect(authorizedCaller).onJoinTournament(tournamentId, renter.address, tokenId);
+      await warper.connect(authorizedCaller).onJoinTournament(serviceId, tournamentId, renter.address, tokenId);
     });
 
     context('When called by non-authorized caller', () => {
       it('reverts', async () => {
         await expect(
-          warper.disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+          warper.disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.be.revertedWith(`CallerIsNotAuthorized()`);
       });
     });
@@ -490,7 +491,7 @@ describe('ERC20RewardWarper', function () {
         await expect(
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, nonExistentTokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, nonExistentTokenId, reward, renter.address, rewardToken.address),
         ).to.be.revertedWith(`AllocationsNotSet()`);
       });
     });
@@ -500,21 +501,21 @@ describe('ERC20RewardWarper', function () {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, metahub, reward.mul(protocolAllocation).div(10_000));
       });
       it('transfers correct % of rewards to the universe', async () => {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, universeTreasury, reward.mul(universeAllocation).div(10_000));
       });
       it('transfers correct % of rewards to the lister', async () => {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, lister, reward.mul(listerAllocation).div(10_000));
       });
       it('transfers correct % of rewards to the renter', async () => {
@@ -525,7 +526,7 @@ describe('ERC20RewardWarper', function () {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, renter, renterReward);
       });
     });
@@ -556,20 +557,27 @@ describe('ERC20RewardWarper', function () {
         // Both join the tournament
         await warper
           .connect(authorizedCaller)
-          .onJoinTournament(tournamentId, stranger.address, tokensIdsFixedPriceReward[1]);
+          .onJoinTournament(serviceId, tournamentId, stranger.address, tokensIdsFixedPriceReward[1]);
       });
 
       it('disperses the rewards correctly', async () => {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokensIdsFixedPriceReward[1], reward, stranger.address, rewardToken.address),
+            .disperseRewards(
+              serviceId,
+              tournamentId,
+              tokensIdsFixedPriceReward[1],
+              reward,
+              stranger.address,
+              rewardToken.address,
+            ),
         ).to.changeTokenBalance(rewardToken, stranger, renterReward);
 
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, renter, renterReward);
       });
     });
@@ -600,20 +608,27 @@ describe('ERC20RewardWarper', function () {
         // Both join the tournament
         await warper
           .connect(authorizedCaller)
-          .onJoinTournament(tournamentId, renter.address, tokensIdsFixedPriceReward[1]);
+          .onJoinTournament(serviceId, tournamentId, renter.address, tokensIdsFixedPriceReward[1]);
       });
 
       it('disperses the rewards correctly', async () => {
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokensIdsFixedPriceReward[1], reward, renter.address, rewardToken.address),
+            .disperseRewards(
+              serviceId,
+              tournamentId,
+              tokensIdsFixedPriceReward[1],
+              reward,
+              renter.address,
+              rewardToken.address,
+            ),
         ).to.changeTokenBalance(rewardToken, renter, renterReward);
 
         await expect(() =>
           warper
             .connect(authorizedCaller)
-            .disperseRewards(tournamentId, tokenId, reward, renter.address, rewardToken.address),
+            .disperseRewards(serviceId, tournamentId, tokenId, reward, renter.address, rewardToken.address),
         ).to.changeTokenBalance(rewardToken, renter, renterReward);
       });
     });

@@ -34,8 +34,8 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     /// @dev rentalId => allocations Map of cached allocations for each token.
     mapping(uint256 => CachedAllocation) internal _allocations;
 
-    /// @dev tournamentId => player => tokenId => rentalId
-    mapping(uint64 => mapping(address => mapping(uint256 => uint256))) internal _rentalsInTournament;
+    /// @dev serviceId => tournamentId => player => tokenId => rentalId
+    mapping(uint64 => mapping(uint64 => mapping(address => mapping(uint256 => uint256)))) internal _rentalsInTournament;
 
     /// @dev tokenId => rentalId
     mapping(uint256 => uint256) internal _tokenIdsToRentals;
@@ -54,13 +54,14 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
 
     /// @inheritdoc IERC20RewardWarper
     function disperseRewards(
+        uint64 serviceId,
         uint64 tournamentId,
         uint256 tokenId,
         uint256 reward,
         address participant,
         address rewardToken
     ) external onlyAuthorizedCaller {
-        uint256 rentalId = _rentalsInTournament[tournamentId][participant][tokenId];
+        uint256 rentalId = _rentalsInTournament[serviceId][tournamentId][participant][tokenId];
 
         CachedAllocation storage allocation = _allocations[rentalId];
         if (allocation.renter == address(0)) revert AllocationsNotSet();
@@ -81,6 +82,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
 
     /// @inheritdoc IERC20RewardWarper
     function onJoinTournament(
+        uint64 serviceId,
         uint64 tournamentId,
         address participant,
         uint256 tokenId
@@ -92,9 +94,9 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
         // We don't need to worry about the `_tokenIdsToRentals` being outdated
         // because that's already implicitly checked via the ownerOf() call above.
         uint256 rentalId = _tokenIdsToRentals[tokenId];
-        _rentalsInTournament[tournamentId][participant][tokenId] = rentalId;
+        _rentalsInTournament[serviceId][tournamentId][participant][tokenId] = rentalId;
 
-        emit JoinedTournament(tournamentId, participant, tokenId, rentalId);
+        emit JoinedTournament(serviceId, tournamentId, participant, tokenId, rentalId);
     }
 
     /// @inheritdoc IRentingHookMechanics
