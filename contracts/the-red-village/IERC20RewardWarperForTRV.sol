@@ -48,7 +48,8 @@ interface IERC20RewardWarperForTRV {
     }
 
     /**
-     * @dev Executes tournament reward distribution logic after successful setWinner() execution on TRV contract.
+     * @dev Executes tournament reward distribution.
+     * The reward pool must set allowance for this Warper equal to `rewardAmount`.
      * @param serviceId represents the TRV service ID.
      * @param tournamentId represents the tournament ID.
      * @param tokenId The token ID.
@@ -78,4 +79,10 @@ interface IERC20RewardWarperForTRV {
         address participant,
         uint256 tokenId
     ) external;
+
+    /**
+     * @dev Must be set, so that rewards can be distributed.
+     * @param rewardPool Is the address where the reward funds are taken from.
+     */
+    function setRewardPool(address rewardPool) external;
 }

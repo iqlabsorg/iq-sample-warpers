@@ -1,5 +1,5 @@
 import { BASE_TOKEN_DECIMALS, HUNDRED_PERCENT, HUNDRED_PERCENT_PRECISION_4 } from "@iqprotocol/solidity-contracts-nft";
-import { BigNumberish, FixedNumber } from "ethers";
+import { BigNumber, BigNumberish, FixedNumber } from "ethers";
 import { convertToWei } from "./general-utils";
 
 export const calculateBaseRate = (

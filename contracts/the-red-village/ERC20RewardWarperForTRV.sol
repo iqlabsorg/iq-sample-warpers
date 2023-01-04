@@ -39,6 +39,9 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         super.__initialize(config);
     }
 
+    /// @dev Address where the rewards get taken from.
+    address internal _rewardPool;
+
     /**
      * @inheritdoc IERC20RewardWarperForTRV
      */
@@ -62,6 +65,8 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
 
         // Get address of ERC20RewardDistributor from Contract Registry
         address rewardDistributor = IContractRegistry(_metahub()).getContract(ERC20_REWARD_DISTRIBUTOR);
+
+        IERC20(rewardTokenAddress).transferFrom(_rewardPool, rewardDistributor, rewardAmount);
 
         // Init distribution through ERC20RewardDistributor
         Accounts.RentalEarnings memory rentalRewardFees = IERC20RewardDistributor(rewardDistributor)
@@ -133,6 +138,11 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         _rentalIdsToListings[rentalId] = rentalAgreement.listingId;
         // Inform Renting Manager that everything is fine
         return (true, "");
+    }
+
+    /// @inheritdoc IERC20RewardWarperForTRV
+    function setRewardPool(address rewardPool) external onlyOwner {
+        _rewardPool = rewardPool;
     }
 
     /**
