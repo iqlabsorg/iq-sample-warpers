@@ -9,8 +9,7 @@ export function shouldBehaveLikeIsAuthorizedCaller(): void {
 
   beforeEach(async function () {
     auth = this.contracts.auth;
-    authorizedCaller = this.signers.named.authorizedCaller;
-    stranger = this.signers.unnamed[2];
+    [authorizedCaller, stranger] = this.signers.unnamed;
 
     await auth.setAuthorizationStatus(authorizedCaller.address, true);
   });

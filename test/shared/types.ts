@@ -1,7 +1,13 @@
-import { ERC20Mock, ERC721Mock, Metahub } from '@iqprotocol/solidity-contracts-nft/typechain';
-import { ERC20RewardWarper, Auth, ContractRegistryMock, ERC20RewardDistributorMock } from '../../typechain';
+import {
+  ERC20Mock,
+  ERC721Mock,
+  IListingWizardV1,
+  IUniverseWizardV1,
+  IMetahub,
+  IRentingManager, IWarperWizardV1, IUniverseRegistry, IListingManager, IListingTermsRegistry, ITaxTermsRegistry,
+} from '@iqprotocol/solidity-contracts-nft/typechain';
+import { Auth, ERC20RewardWarperForTRV } from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import { FakeContract } from '@defi-wonderland/smock';
 import type { Fixture } from 'ethereum-waffle';
 
 declare module 'mocha' {
@@ -15,19 +21,31 @@ declare module 'mocha' {
 
 export interface Contracts {
   auth: Auth;
-  warper: ERC20RewardWarper;
+  metahub: IMetahub;
+  listingManager: IListingManager;
+  listingTermsRegistry: IListingTermsRegistry;
+  rentingManager: IRentingManager;
+  universeRegistry: IUniverseRegistry;
+  taxTermsRegistry: ITaxTermsRegistry;
+
+  wizardsV1: {
+    listingWizard: IListingWizardV1;
+    universeWizard: IUniverseWizardV1;
+    warperWizard: IWarperWizardV1;
+  };
+
+  theRedVillage: TheRedVillageContracts;
+}
+
+interface TheRedVillageContracts {
+  erc20RewardWarperForTRV: ERC20RewardWarperForTRV;
   rewardToken: ERC20Mock;
 }
 
 export interface Mocks {
-  warper: FakeContract<ERC20RewardWarper>;
-  contractRegistry: ContractRegistryMock;
-  erc20RewardDistributor: ERC20RewardDistributorMock;
-  metahub: FakeContract<Metahub>;
   assets: {
     originalCollection: ERC721Mock;
     baseToken: ERC20Mock;
-    rewardToken: ERC20Mock;
   };
 }
 

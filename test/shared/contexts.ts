@@ -1,10 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
-import hre, { ethers } from 'hardhat';
-import { smock } from '@defi-wonderland/smock';
-import { ERC20Mock, ERC721Mock, Metahub } from '@iqprotocol/solidity-contracts-nft/typechain';
-import { Metahub__factory } from '@iqprotocol/solidity-contracts-nft/typechain/factories/contracts/metahub/Metahub__factory';
-import { ERC20RewardWarper__factory, Auth, ContractRegistryMock, ERC20RewardWarper } from '../../typechain';
+import hre, { deployments, ethers, getChainId } from 'hardhat';
+import {
+  ERC20Mock,
+  ERC721Mock,
+  IMetahub,
+  IRentingManager,
+  IListingWizardV1,
+  IUniverseWizardV1,
+  IWarperWizardV1,
+  IUniverseRegistry,
+  IListingManager,
+  IListingTermsRegistry,
+  ITaxTermsRegistry,
+  ERC20
+} from '@iqprotocol/solidity-contracts-nft/typechain';
+import { Auth } from '../../typechain';
 import type { Contracts, Mocks, Signers } from './types';
+import { Contract } from "ethers";
+import { ChainId } from "@iqprotocol/iq-space-sdk-js";
 
 // eslint-disable-next-line func-style
 export function baseContext(description: string, testSuite: () => void): void {
@@ -23,44 +36,73 @@ export function baseContext(description: string, testSuite: () => void): void {
       // Fixture loader setup
       this.loadFixture = hre.waffle.createFixtureLoader();
 
-      // Auth deployment
-      const auth = (await hre.run('deploy:auth')) as Auth;
-
-      // ContractRegistryMock deployment
-      const contractRegistryMock = (await hre.run('deploy:mock:contract-registry')) as ContractRegistryMock;
-      // FakeMetahub deployment
-      const metahubMock = await smock.fake<Metahub>(Metahub__factory);
-      // Base ERC20 Base Token deployment
-      const baseToken = (await hre.run('deploy:mock:ERC20', {
-        name: 'Base Token',
-        symbol: 'BASE',
-      })) as ERC20Mock;
-      // Base ERC20 Reward Token deployment
-      const rewardToken = (await hre.run('deploy:mock:ERC20', {
-        name: 'Reward Token',
-        symbol: 'RWRD',
-      })) as ERC20Mock;
-      // Original ERC721 Asset deployment
-      const originalCollection = (await hre.run('deploy:mock:ERC721', {
-        name: 'Original NFT',
-      })) as ERC721Mock;
-      // ERC20RewardWarper deployment
-      const warper = (await hre.run('deploy:erc20-reward-warper', {
-        original: originalCollection.address,
-        metahub: metahubMock.address,
-      })) as ERC20RewardWarper;
-      // FakeMetahub deployment
-      const warperMock = await smock.fake<ERC20RewardWarper>(ERC20RewardWarper__factory);
-
-      this.contracts.auth = auth;
-      this.contracts.warper = warper;
-      this.mocks.contractRegistry = contractRegistryMock;
-      this.mocks.warper = warperMock;
-      this.mocks.metahub = metahubMock;
-      this.mocks.assets.originalCollection = originalCollection;
-      this.mocks.assets.baseToken = baseToken;
-      this.mocks.assets.rewardToken = rewardToken;
+      // await deployments.fixture();
     });
+
+    // beforeEach(async () => {
+    //   this.timeout(120000);
+    //
+    //   const { auth, baseToken, contractsInfra, originalCollection } = await this.ctx.loadFixture(
+    //     async (): Promise<any> => {
+    //       // Auth deployment
+    //       const auth = (await hre.run('deploy:auth')) as Auth;
+    //
+    //       const baseToken = (await hre.run('deploy:test:mock:erc20', {
+    //         name: 'Test ERC20',
+    //         symbol: 'ONFT',
+    //         decimals: 18,
+    //         totalSupply: 100_000_000,
+    //       })) as ERC20Mock;
+    //
+    //       const contractsInfra = await hre.run('deploy:initial-deployment', {
+    //         baseToken: baseToken.address,
+    //         rentalFee: 100,
+    //         unsafe: true
+    //       });
+    //
+    //       const originalCollection = (await hre.run('deploy:test:mock:erc721', {
+    //         name: 'Test ERC721',
+    //         symbol: 'ONFT',
+    //       })) as ERC721Mock;
+    //
+    //       return { auth, baseToken, contractsInfra, originalCollection };
+    //     }
+    //   )
+    //
+    //   const metahub = contractsInfra.metahub as IMetahub;
+    //   const listingManager = contractsInfra.listingManager as IListingManager;
+    //   const listingTermsRegistry = contractsInfra.listingTermsRegistry as IListingTermsRegistry;
+    //   const rentingManager = contractsInfra.rentingManager as IRentingManager;
+    //   const universeRegistry = contractsInfra.universeRegistry as IUniverseRegistry;
+    //   const taxTermsRegistry = contractsInfra.taxTermsRegistry as ITaxTermsRegistry;
+    //
+    //   const listingWizardV1 = contractsInfra.listingWizardV1 as IListingWizardV1;
+    //   const universeWizardV1 = contractsInfra.universeWizardV1 as IUniverseWizardV1;
+    //   const warperWizardV1 = contractsInfra.warperWizardV1 as IWarperWizardV1;
+    //
+    //   this.ctx.testChainId = new ChainId({
+    //     namespace: 'eip155',
+    //     reference: await getChainId(),
+    //   });
+    //
+    //   this.ctx.contracts.auth = auth;
+    //   this.ctx.contracts.metahub = metahub;
+    //
+    //   this.ctx.contracts.listingManager = listingManager;
+    //   this.ctx.contracts.listingTermsRegistry = listingTermsRegistry;
+    //   this.ctx.contracts.rentingManager = rentingManager;
+    //   this.ctx.contracts.universeRegistry = universeRegistry;
+    //   this.ctx.contracts.taxTermsRegistry = taxTermsRegistry;
+    //
+    //   this.ctx.contracts.wizardsV1 = {
+    //     listingWizard: listingWizardV1,
+    //     universeWizard: universeWizardV1,
+    //     warperWizard: warperWizardV1,
+    //   };
+    //
+    //   this.ctx.mocks.assets.originalCollection = originalCollection;
+    //   this.ctx.mocks.assets.baseToken = baseToken;
+    // });
 
     testSuite();
   });

@@ -1,30 +1,20 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "@iqprotocol/solidity-contracts-nft/contracts/warper/ERC721/presets/ERC721PresetConfigurable.sol";
+import "@iqprotocol/solidity-contracts-nft/contracts/warper/ERC721/v1/presets/ERC721ConfigurablePreset.sol";
+import "@iqprotocol/solidity-contracts-nft/contracts/warper/mechanics/v1/renting-hook/IRentingHookMechanics.sol";
 
-import "./interfaces/IERC20RewardDistributor.sol";
-import "./interfaces/IRentingHookMechanics.sol";
-import "./interfaces/IContractRegistry.sol";
-import "./IERC20RewardWarper.sol";
-import "./auth/Auth.sol";
+import "./IERC20RewardWarperForTRV.sol";
+import "../auth/Auth.sol";
 
 /**
  * @title Custom Warper for ERC20 Tournament rewarding.
  */
-contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721PresetConfigurable, Auth {
-    using IQProtocolStructsMock for IQProtocolStructsMock.RentalEarnings;
-    using IQProtocolStructsMock for IQProtocolStructsMock.Agreement;
-
+contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechanics, ERC721ConfigurablePreset, Auth {
     /**
      * @dev ERC20RewardDistributor contact key.
      */
     bytes4 private constant ERC20_REWARD_DISTRIBUTOR = bytes4(keccak256("ERC20RewardDistributor"));
-
-    /**
-     * @dev ContractRegistry address.
-     */
-    address internal _contractRegistryMock;
 
     /**
      * @dev serviceId => tournamentId => player => tokenId => TournamentParticipant.
@@ -50,7 +40,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     }
 
     /**
-     * @inheritdoc IERC20RewardWarper
+     * @inheritdoc IERC20RewardWarperForTRV
      */
     function distributeRewards(
         uint64 serviceId,
@@ -71,10 +61,10 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
         }
 
         // Get address of ERC20RewardDistributor from Contract Registry
-        address rewardDistributor = IContractRegistry(_contractRegistryMock).getContract(ERC20_REWARD_DISTRIBUTOR);
+        address rewardDistributor = IContractRegistry(_metahub()).getContract(ERC20_REWARD_DISTRIBUTOR);
 
         // Init distribution through ERC20RewardDistributor
-        IQProtocolStructsMock.RentalEarnings memory rentalRewardFees = IERC20RewardDistributor(rewardDistributor)
+        Accounts.RentalEarnings memory rentalRewardFees = IERC20RewardDistributor(rewardDistributor)
             .distributeExternalReward(
                 tournamentParticipant.listingId,
                 tournamentParticipant.rentalId,
@@ -98,7 +88,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     }
 
     /**
-     * @inheritdoc IERC20RewardWarper
+     * @inheritdoc IERC20RewardWarperForTRV
      */
     function onJoinTournament(
         uint64 serviceId,
@@ -132,16 +122,16 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
      */
     function __onRent(
         uint256 rentalId,
-        IQProtocolStructsMock.Agreement calldata rentalAgreement,
-        IQProtocolStructsMock.RentalEarnings calldata /* rentalEarnings */
-    ) external override onlyMetahub returns (bool, string memory) {
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata /* rentalEarnings */
+    ) external override onlyRentingManager returns (bool, string memory) {
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
             _renterTokenIdsToRentals[rentalAgreement.renter][tokenId] = rentalId;
         }
 
         _rentalIdsToListings[rentalId] = rentalAgreement.listingId;
-        // Inform Metahub that everything is fine
+        // Inform Renting Manager that everything is fine
         return (true, "");
     }
 
@@ -161,8 +151,17 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
      * @param rentalId rental ID.
      * @return Listing ID.
      */
-    function getRentalListing(uint256 rentalId) external view returns(uint256) {
+    function getRentalListing(uint256 rentalId) external view returns (uint256) {
         return _rentalIdsToListings[rentalId];
+    }
+
+    function getTournamentParticipant(
+        uint64 serviceId,
+        uint64 tournamentId,
+        address participant,
+        uint256 tokenId
+    ) external view returns (TournamentParticipant memory) {
+        return _tournamentParticipants[serviceId][tournamentId][participant][tokenId];
     }
 
     /**
@@ -171,18 +170,7 @@ contract ERC20RewardWarper is IERC20RewardWarper, IRentingHookMechanics, ERC721P
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IRentingHookMechanics).interfaceId ||
-            interfaceId == type(IERC20RewardWarper).interfaceId ||
+            interfaceId == type(IERC20RewardWarperForTRV).interfaceId ||
             super.supportsInterface(interfaceId);
-    }
-
-    /**
-     * @notice TO REMOVE in future, was added because missing this method in current Warper implementation
-     * @dev Decodes asset ID and extracts identification data.
-     * @param id Asset ID structure.
-     * @return token Token contract address.
-     * @return tokenId Token ID.
-     */
-    function _decodeAssetId(Assets.AssetId memory id) internal pure returns (address token, uint256 tokenId) {
-        return abi.decode(id.data, (address, uint256));
     }
 }

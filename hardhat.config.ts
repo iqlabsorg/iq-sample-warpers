@@ -1,6 +1,8 @@
 import * as dotenv from 'dotenv';
 
 import { HardhatUserConfig } from 'hardhat/config';
+import 'hardhat-deploy';
+import '@iqprotocol/solidity-contracts-nft/tasks';
 import '@nomiclabs/hardhat-waffle';
 import '@nomiclabs/hardhat-ethers';
 import '@typechain/hardhat';
@@ -8,8 +10,6 @@ import '@nomiclabs/hardhat-etherscan';
 import 'hardhat-gas-reporter';
 import 'hardhat-contract-sizer';
 import 'solidity-coverage';
-import 'hardhat-deploy';
-import '@iqprotocol/solidity-contracts-nft/tasks';
 
 // Enable custom assertions on project startup
 import './test/assertions';
@@ -54,10 +54,6 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
-    lister: 1,
-    renter: 2,
-    authorizedCaller: 3,
-    metahubMockAddress: 4,
   },
   networks: {
     bscTestnet: {

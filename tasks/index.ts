@@ -3,7 +3,7 @@ import { subtask } from 'hardhat/config';
 import chaiAsPromised from 'chai-as-promised';
 import chai from 'chai';
 
-import './warper';
+import './the-red-village';
 import './auth';
 import './mocks';
 

@@ -90,3 +90,7 @@ export const EMPTY_BYTES_DATA_HEX = '0x';
 export const EMPTY_BYTES32_DATA_HEX = constants.HashZero;
 
 export const EMPTY_BYTES4_DATA_HEX = hexDataSlice(EMPTY_BYTES32_DATA_HEX, 0, 4);
+
+export const SECONDS_IN_DAY = 86_400;
+
+export const SECONDS_IN_HOUR = 3600;

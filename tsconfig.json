@@ -8,6 +8,6 @@
     "declaration": true,
     "allowJs": false
   },
-  "include": ["./test", "./typechain", "src/constants.ts"],
+  "include": ["./test", "./typechain", "./src"],
   "files": ["./hardhat.config.ts", "./.eslintrc.js"]
 }

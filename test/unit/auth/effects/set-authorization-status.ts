@@ -12,9 +12,7 @@ export function shouldBehaveLikeSetAuthorizationStatus(): void {
   beforeEach(async function () {
     auth = this.contracts.auth;
     deployer = this.signers.named.deployer;
-    authorizedCaller = this.signers.named.authorizedCaller;
-    authorizedCaller2 = this.signers.unnamed[1];
-    stranger = this.signers.unnamed[2];
+    [authorizedCaller, authorizedCaller2, stranger] = this.signers.unnamed;
 
     await auth.setAuthorizationStatus(authorizedCaller.address, true);
   });

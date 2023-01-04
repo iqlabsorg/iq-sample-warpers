@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "./mocks/IQProtocolStructsMock.sol";
+import "@iqprotocol/solidity-contracts-nft/contracts/accounting/Accounts.sol";
 
-interface IERC20RewardWarper {
+interface IERC20RewardWarperForTRV {
     /**
      * @dev Thrown when the participant does not exist.
      */
@@ -34,7 +34,7 @@ interface IERC20RewardWarper {
         uint256 listingId,
         address participant,
         address rewardTokenAddress,
-        IQProtocolStructsMock.RentalEarnings tournamentEarnings
+        Accounts.RentalEarnings tournamentEarnings
     );
 
     /**
