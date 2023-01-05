@@ -3,7 +3,7 @@ import * as dotenv from 'dotenv';
 import { HardhatUserConfig } from 'hardhat/config';
 import 'hardhat-deploy';
 import '@iqprotocol/solidity-contracts-nft/tasks';
-import '@nomiclabs/hardhat-waffle';
+import "@nomicfoundation/hardhat-chai-matchers";
 import '@nomiclabs/hardhat-ethers';
 import '@typechain/hardhat';
 import '@nomiclabs/hardhat-etherscan';

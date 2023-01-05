@@ -33,9 +33,6 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.signers.named = await ethers.getNamedSigners();
       this.signers.unnamed = await ethers.getUnnamedSigners();
 
-      // Fixture loader setup
-      this.loadFixture = hre.waffle.createFixtureLoader();
-
       // await deployments.fixture();
     });
 

@@ -1,6 +1,4 @@
 import {
-  ERC20Mock,
-  ERC721Mock,
   IListingManager,
   IListingTermsRegistry, IListingWizardV1,
   IMetahub, IRentingManager, ITaxTermsRegistry, IUniverseRegistry, IUniverseWizardV1, IWarperWizardV1
@@ -10,17 +8,10 @@ import { shouldBehaveLikeERC20RewardWarper } from './erc20-reward-warper-for-trv
 import { unitFixtureERC20RewardWarper } from './erc20-reward-warper-for-trv.fixture';
 import { ChainId } from "@iqprotocol/iq-space-sdk-js";
 import { getChainId } from "hardhat";
+import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
 
 export function unitTestERC20RewardWarperForTRV(): void {
   describe('ERC20RewardWarperForTRV', function () {
-    const fixture = async (): Promise<{
-      contractsInfra: any;
-      baseToken: ERC20Mock;
-      originalCollection: ERC721Mock;
-      erc20RewardWarperForTRV: ERC20RewardWarperForTRV;
-      rewardToken: ERC20Mock;
-    }> => unitFixtureERC20RewardWarper();
-
     beforeEach(async function () {
       const {
         contractsInfra,
@@ -28,8 +19,8 @@ export function unitTestERC20RewardWarperForTRV(): void {
         originalCollection,
         erc20RewardWarperForTRV,
         rewardToken
-      } = await this.loadFixture(
-        fixture,
+      } = await loadFixture(
+        unitFixtureERC20RewardWarper,
       );
 
       const metahub = contractsInfra.metahub as IMetahub;
