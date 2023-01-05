@@ -14,17 +14,6 @@ interface IERC20RewardWarperForTRV {
      */
     error ParticipantIsNotOwnerOfToken();
 
-    /**
-     * @dev Emitted when a user has joined the tournament.
-     */
-    event JoinedTournament(
-        uint64 serviceId,
-        uint64 tournamentId,
-        address participant,
-        uint256 tokenId,
-        uint256 rentalId
-    );
-
     event RewardsDistributed(
         uint64 serviceId,
         uint64 tournamentId,

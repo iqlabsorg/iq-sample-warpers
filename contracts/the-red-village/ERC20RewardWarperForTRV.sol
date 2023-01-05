@@ -117,9 +117,6 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
             rentalId: rentalId,
             listingId: listingId
         });
-
-        // Emit event
-        emit JoinedTournament(serviceId, tournamentId, participant, tokenId, rentalId);
     }
 
     /**

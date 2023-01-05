@@ -662,10 +662,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@iqprotocol/iq-space-sdk-js@^0.1.0-alpha.5":
-  version "0.1.0-alpha.5"
-  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-sdk-js/-/iq-space-sdk-js-0.1.0-alpha.5.tgz#c909c44d2d0a4f538018ff1d0fd4cc72694bbe5b"
-  integrity sha512-3/PEuLNU3QLtky/NzezZ63dmGk6/ILorsFiM6TG+bxj+0iTIeIR32SHK6fklVKTrD+bTrKz9CDfNAyUeYy+4mA==
+"@iqprotocol/iq-space-sdk-js@^0.1.0-alpha.7":
+  version "0.1.0-alpha.7"
+  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-sdk-js/-/iq-space-sdk-js-0.1.0-alpha.7.tgz#bc7de163207b130d7d3cc11778f6ed238dbc5ac9"
+  integrity sha512-5B0ilYT3y8pOICrfGYMx7XrTPoE4U2LsCIdFx248iErwfC+gB03KjGEa8/hsPv1Z7OV8yZapY6AP9qvU4F3J9w==
   dependencies:
     caip "^1.1.0"
 
