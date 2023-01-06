@@ -6,14 +6,12 @@ import {
   IMetahub,
   IRentingManager, IWarperWizardV1, IUniverseRegistry, IListingManager, IListingTermsRegistry, ITaxTermsRegistry,
 } from '@iqprotocol/solidity-contracts-nft/typechain';
-import { Auth, ERC20RewardWarperForTRV } from '../../typechain';
+import { Auth, ERC20RewardWarperForTRV, SolidityInterfaces } from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
-import type { Fixture } from 'ethereum-waffle';
 
 declare module 'mocha' {
   interface Context {
     contracts: Contracts;
-    loadFixture: <T>(fixture: Fixture<T>) => Promise<T>;
     mocks: Mocks;
     signers: Signers;
   }
@@ -47,6 +45,9 @@ export interface Mocks {
     originalCollection: ERC721Mock;
     baseToken: ERC20Mock;
   };
+  misc: {
+    solidityInterfaces: SolidityInterfaces;
+  }
 }
 
 export interface Signers {

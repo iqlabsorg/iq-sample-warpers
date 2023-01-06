@@ -17,13 +17,10 @@ interface IERC20RewardWarperForTRV {
     event RewardsDistributed(
         uint64 serviceId,
         uint64 tournamentId,
-        uint256 tokenId,
-        uint256 rewardAmount,
+        uint256 championId,
         uint256 rentalId,
-        uint256 listingId,
-        address participant,
-        address rewardTokenAddress,
-        Accounts.RentalEarnings tournamentEarnings
+        address renter,
+        address lister
     );
 
     /**
@@ -46,7 +43,7 @@ interface IERC20RewardWarperForTRV {
      * @param participant The address of the player.
      * @param rewardTokenAddress The reward IERC20 token contract address.
      */
-    function distributeRewards(
+    function disperseRewards(
         uint64 serviceId,
         uint64 tournamentId,
         uint256 tokenId,

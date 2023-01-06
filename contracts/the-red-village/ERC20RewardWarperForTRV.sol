@@ -45,7 +45,7 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
     /**
      * @inheritdoc IERC20RewardWarperForTRV
      */
-    function distributeRewards(
+    function disperseRewards(
         uint64 serviceId,
         uint64 tournamentId,
         uint256 tokenId,
@@ -78,17 +78,13 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
             );
 
         // Emit event
-        // TODO review output for TRV needs.
         emit RewardsDistributed(
             serviceId,
             tournamentId,
             tokenId,
-            rewardAmount,
             tournamentParticipant.rentalId,
-            tournamentParticipant.listingId,
             participant,
-            rewardTokenAddress,
-            rentalRewardFees
+            address(0)
         );
     }
 

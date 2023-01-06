@@ -2,7 +2,7 @@ import { ERC20RewardWarperForTRV__factory } from '../../typechain';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
 
-task('deploy:erc20-reward-warper-for-trv', 'Deploy the ERC20RewardWarperForTRV contract')
+task('deploy:trv:erc20-reward-warper-for-trv', 'Deploy the ERC20RewardWarperForTRV contract')
   .addParam('original', 'Original NFT contract address', undefined, types.string, false)
   .addParam('metahub', 'Metahub contract address', undefined, types.string, false)
   .setAction(async ({ original, metahub }, hre) => {
