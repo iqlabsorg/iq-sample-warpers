@@ -44,6 +44,7 @@ export function baseContext(description: string, testSuite: () => void): void {
 
       const contractsInfra = await hre.run('deploy:initial-deployment', {
         baseToken: baseToken.address,
+        protocolExternalFeesCollector: (await ethers.getNamedSigner("protocolExternalFeesCollector")).address,
         rentalFee: 100,
         unsafe: true
       });

@@ -22,7 +22,7 @@ import {
   UniverseRegistryAdapter,
   UniverseWizardAdapterV1
 } from "@iqprotocol/iq-space-sdk-js";
-import { network } from "hardhat";
+import { ethers, network } from "hardhat";
 import { makeTaxTermsFixedRate, makeTaxTermsFixedRateWithReward } from "../../../../shared/utils/tax-terms-utils";
 import { BigNumber, BigNumberish } from "ethers";
 import { createAssetReferenceForSDK, makeERC721AssetForSDK, toAccountId } from "../../../../shared/utils/sdk-utils";
@@ -46,10 +46,6 @@ import { makeListingTermsFixedRateWithReward } from "../../../../shared/utils/li
 import { makeSDKRentingEstimationParamsERC721 } from "../../../../shared/utils/renting-utils";
 import { expect } from "chai";
 import { convertToWei } from "../../../../shared/utils/general-utils";
-import { IERC20RewardWarperForTRV } from "../../../../../typechain/contracts/the-red-village/ERC20RewardWarperForTRV";
-import {
-  convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution
-} from "../../../../shared/utils/accounting-helpers";
 
 export function testVariousWarperOperations(): void {
   /**** Constants ****/
@@ -240,12 +236,8 @@ export function testVariousWarperOperations(): void {
       ).to.be.eventually.equal(renterA.address);
       await expect(
         ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getTokenRental(renterA.address, LISTER_TOKEN_ID_1)
+          .getLastActiveRentalId(renterA.address, LISTER_TOKEN_ID_1)
       ).to.be.eventually.equal(rentalId);
-      await expect(
-        ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getRentalListing(rentalId)
-      ).to.be.eventually.equal(listingId);
     });
 
     it(`works properly with multi-rental and erc20 reward distribution`, async () => {
@@ -326,12 +318,8 @@ export function testVariousWarperOperations(): void {
       ).to.be.eventually.equal(renterA.address);
       await expect(
         ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getTokenRental(renterA.address, LISTER_TOKEN_ID_1)
+          .getLastActiveRentalId(renterA.address, LISTER_TOKEN_ID_1)
       ).to.be.eventually.equal(rentalId_A);
-      await expect(
-        ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getRentalListing(rentalId_A)
-      ).to.be.eventually.equal(listingId_1);
 
       /**** Rental B ****/
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
@@ -361,27 +349,23 @@ export function testVariousWarperOperations(): void {
       ).to.be.eventually.equal(renterB.address);
       await expect(
         ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getTokenRental(renterB.address, LISTER_TOKEN_ID_2)
+          .getLastActiveRentalId(renterB.address, LISTER_TOKEN_ID_2)
       ).to.be.eventually.equal(rentalId_B);
-      await expect(
-        ERC20RewardWarperForTRV__factory.connect(erc20RewardWarperForTRV.address, stranger)
-          .getRentalListing(rentalId_B)
-      ).to.be.eventually.equal(listingId_2);
 
       /**** Join Tournament ****/
       await erc20RewardWarperForTRV.connect(universeOwner)
         .onJoinTournament(1, 1, renterA.address, LISTER_TOKEN_ID_1);
       expect(
         await erc20RewardWarperForTRV.connect(stranger)
-          .getTournamentParticipant(1, 1, renterA.address, LISTER_TOKEN_ID_1)
-      ).to.equalStruct(makeTournamentParticipantStruct(listingId_1, rentalId_A));
+          .getTournamentAssociatedRentalId(1, 1, renterA.address, LISTER_TOKEN_ID_1)
+      ).to.equal(rentalId_A);
 
       await erc20RewardWarperForTRV.connect(universeOwner)
         .onJoinTournament(1, 2, renterB.address, LISTER_TOKEN_ID_2);
       expect(
         await erc20RewardWarperForTRV.connect(stranger)
-          .getTournamentParticipant(1, 2, renterB.address, LISTER_TOKEN_ID_2)
-      ).to.equalStruct(makeTournamentParticipantStruct(listingId_2, rentalId_B));
+          .getTournamentAssociatedRentalId(1, 2, renterB.address, LISTER_TOKEN_ID_2)
+      ).to.equal(rentalId_B);
 
       /**** Distribute for Rental A (while rental is still active) ****/
       const REWARD_AMOUNT_A = convertToWei("100");
@@ -421,15 +405,28 @@ export function testVariousWarperOperations(): void {
         championId: LISTER_TOKEN_ID_1,
         rentalId: rentalId_A,
         renter: renterA.address,
-        lister: ADDRESS_ZERO,
+        lister: lister.address,
       });
 
-      await validateResultingAmounts(metahub, rewardToken, lister, true, renterA, TRV_UNIVERSE_ID, {
-        expectedListerBalance: expectedListerFeeA,
-        expectedRenterBalance: expectedRenterFeeA,
-        expectedUniverseBalance: expectedUniverseFeeA,
-        expectedProtocolBalance: expectedProtocolFeeA,
-      });
+      await validateResultingAmounts(
+        metahub,
+        rewardToken,
+        lister,
+        true,
+        renterA,
+        TRV_UNIVERSE_ID,
+        {
+          expectedListerBalance: expectedListerFeeA,
+          expectedRenterBalance: expectedRenterFeeA,
+          expectedUniverseBalance: expectedUniverseFeeA,
+          expectedProtocolBalance: expectedProtocolFeeA,
+        },
+        true,
+        true,
+      );
+      await expect(
+        rewardToken.connect(universeOwner).allowance(universeOwner.address, erc20RewardWarperForTRV.address)
+      ).to.eventually.equal(expectedUniverseFeeA);
 
       /**** Distribute for Rental B (when rental itself is already inactive) ****/
       await network.provider.send('evm_increaseTime', [RENTAL_B_PERIOD * 2]);
@@ -471,15 +468,28 @@ export function testVariousWarperOperations(): void {
         championId: LISTER_TOKEN_ID_2,
         rentalId: rentalId_B,
         renter: renterB.address,
-        lister: ADDRESS_ZERO,
+        lister: lister.address,
       });
 
-      await validateResultingAmounts(metahub, rewardToken, lister, true, renterB, TRV_UNIVERSE_ID, {
-        expectedListerBalance: BigNumber.from(expectedListerFeeB).add(expectedListerFeeA),
-        expectedRenterBalance: expectedRenterFeeB,
-        expectedUniverseBalance: BigNumber.from(expectedUniverseFeeB).add(expectedUniverseFeeA),
-        expectedProtocolBalance: BigNumber.from(expectedProtocolFeeB).add(expectedProtocolFeeA),
-      });
+      await validateResultingAmounts(
+        metahub,
+        rewardToken,
+        lister,
+        true,
+        renterB,
+        TRV_UNIVERSE_ID,
+        {
+          expectedListerBalance: BigNumber.from(expectedListerFeeB).add(expectedListerFeeA),
+          expectedRenterBalance: expectedRenterFeeB,
+          expectedUniverseBalance: BigNumber.from(expectedUniverseFeeB).add(expectedUniverseFeeA),
+          expectedProtocolBalance: BigNumber.from(expectedProtocolFeeB).add(expectedProtocolFeeA),
+        },
+        true,
+        true,
+      );
+      await expect(
+        rewardToken.connect(universeOwner).allowance(universeOwner.address, erc20RewardWarperForTRV.address)
+      ).to.eventually.equal(BigNumber.from(expectedUniverseFeeA).add(expectedUniverseFeeB));
     });
 
     it("does not distribute rewards, when tournament participant does not exist", async () => {
@@ -508,16 +518,6 @@ async function findRentalIdByRentTransaction(rentingManager: IRentingManager, tr
   );
 
   return event ? event.args.rentalId: undefined;
-}
-
-function makeTournamentParticipantStruct(
-  listingId: BigNumberish,
-  rentalId: BigNumberish,
-): IERC20RewardWarperForTRV.TournamentParticipantStruct {
-  return {
-    rentalId,
-    listingId,
-  }
 }
 
 export function getExpectedFeesOnERC20RewardDistribution(
@@ -574,6 +574,8 @@ export async function validateResultingAmounts(
     expectedUniverseBalance: BigNumberish;
     expectedProtocolBalance: BigNumberish;
   },
+  universeDidNotReceiveRewardsDirectly = false,
+  protocolReceivedFeesExternally = false
 ): Promise<void> {
   const { expectedListerBalance, expectedRenterBalance, expectedUniverseBalance, expectedProtocolBalance } =
     expectedBalances;
@@ -587,7 +589,15 @@ export async function validateResultingAmounts(
   await expect(metahub.balance(renter.address, rewardToken.address)).to.eventually.eq(0);
   await expect(rewardToken.balanceOf(renter.address)).to.eventually.eq(expectedRenterBalance);
 
-  await expect(metahub.universeBalance(universeId, rewardToken.address)).to.eventually.eq(expectedUniverseBalance);
-  await expect(metahub.protocolBalance(rewardToken.address)).to.eventually.eq(expectedProtocolBalance);
+  if (protocolReceivedFeesExternally) {
+    await expect(
+      rewardToken.balanceOf((await ethers.getNamedSigner("protocolExternalFeesCollector")).address)
+    ).to.eventually.eq(expectedProtocolBalance);
+  } else {
+    await expect(metahub.protocolBalance(rewardToken.address)).to.eventually.eq(expectedProtocolBalance);
+  }
+  if (!universeDidNotReceiveRewardsDirectly) {
+    await expect(metahub.universeBalance(universeId, rewardToken.address)).to.eventually.eq(expectedUniverseBalance);
+  }
 }
 

@@ -18,7 +18,7 @@
   "devDependencies": {
     "@defi-wonderland/smock": "2.0.7",
     "@iqprotocol/iq-space-sdk-js": "^0.1.0-alpha.7",
-    "@iqprotocol/solidity-contracts-nft": "2.1.7-alpha.3",
+    "@iqprotocol/solidity-contracts-nft": "2.1.7-alpha.13",
     "@nomicfoundation/hardhat-chai-matchers": "^1.0.5",
     "@nomicfoundation/hardhat-network-helpers": "^1.0.7",
     "@nomiclabs/hardhat-ethers": "npm:hardhat-deploy-ethers",

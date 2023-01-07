@@ -54,6 +54,7 @@ const config: HardhatUserConfig = {
   },
   namedAccounts: {
     deployer: 0,
+    protocolExternalFeesCollector: 1,
   },
   networks: {
     bscTestnet: {

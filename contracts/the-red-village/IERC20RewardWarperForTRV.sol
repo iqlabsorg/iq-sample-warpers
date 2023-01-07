@@ -24,16 +24,6 @@ interface IERC20RewardWarperForTRV {
     );
 
     /**
-     * @dev Tournament participant data.
-     * @param rentalId Rental agreement ID.
-     * @param listingId Listing ID.
-     */
-    struct TournamentParticipant {
-        uint256 rentalId;
-        uint256 listingId;
-    }
-
-    /**
      * @dev Executes tournament reward distribution.
      * The reward pool must set allowance for this Warper equal to `rewardAmount`.
      * @param serviceId represents the TRV service ID.

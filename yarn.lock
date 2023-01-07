@@ -585,10 +585,10 @@
   dependencies:
     caip "^1.1.0"
 
-"@iqprotocol/solidity-contracts-nft@2.1.7-alpha.3":
-  version "2.1.7-alpha.3"
-  resolved "https://registry.yarnpkg.com/@iqprotocol/solidity-contracts-nft/-/solidity-contracts-nft-2.1.7-alpha.3.tgz#4c54079309577bfc2d3251ca13c1bad2dfa276f3"
-  integrity sha512-kcupNL8JK0b6FPe+2JGjhKZI1Rn2aSRtHH8gN3+ndC/9wpxKs0GCVFSJO+3emqdSgltCVl3llplvk8k06zQAyw==
+"@iqprotocol/solidity-contracts-nft@2.1.7-alpha.13":
+  version "2.1.7-alpha.13"
+  resolved "https://registry.yarnpkg.com/@iqprotocol/solidity-contracts-nft/-/solidity-contracts-nft-2.1.7-alpha.13.tgz#7c07373caf150beec19e3c9e81367d65cfdc1e0a"
+  integrity sha512-lzGXtEQmjfyheT2H0vZ/wASen7ZychZYucZ9oL4xgOc1kWXeeL+V21CwPQR5J9Pxgnb6x/YvKvn6BB38QcRouA==
   dependencies:
     "@openzeppelin/contracts" "^4.6.0"
     "@openzeppelin/contracts-upgradeable" "^4.6.0"

@@ -3,6 +3,8 @@ pragma solidity ^0.8.15;
 
 import "@iqprotocol/solidity-contracts-nft/contracts/warper/ERC721/v1/presets/ERC721ConfigurablePreset.sol";
 import "@iqprotocol/solidity-contracts-nft/contracts/warper/mechanics/v1/renting-hook/IRentingHookMechanics.sol";
+import "@iqprotocol/solidity-contracts-nft/contracts/contract-registry/Contracts.sol";
+import "@iqprotocol/solidity-contracts-nft/contracts/renting/renting-manager/IRentingManager.sol";
 
 import "./IERC20RewardWarperForTRV.sol";
 import "../auth/Auth.sol";
@@ -12,31 +14,34 @@ import "../auth/Auth.sol";
  */
 contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechanics, ERC721ConfigurablePreset, Auth {
     /**
-     * @dev ERC20RewardDistributor contact key.
+     * @dev ListingManager contact key.
      */
-    bytes4 private constant ERC20_REWARD_DISTRIBUTOR = bytes4(keccak256("ERC20RewardDistributor"));
+    bytes4 private immutable LISTING_MANAGER;
 
     /**
-     * @dev serviceId => tournamentId => player => tokenId => TournamentParticipant.
+     * @dev RentingManager contact key.
      */
-    mapping(uint64 => mapping(uint64 => mapping(address => mapping(uint256 => TournamentParticipant))))
-        internal _tournamentParticipants;
+    bytes4 private immutable RENTING_MANAGER;
+
+
+    /**
+     * @dev serviceId => tournamentId => player => tokenId => rentalId.
+     */
+    mapping(uint64 => mapping(uint64 => mapping(address => mapping(uint256 => uint256))))
+        internal _tournamentAssociatedRental;
 
     /**
      * @dev tokenId => rentalId.
      */
-    mapping(address => mapping (uint256 => uint256)) internal _renterTokenIdsToRentals;
-
-    /**
-     * @dev rentalId => listingId.
-     */
-    mapping(uint256 => uint256) internal _rentalIdsToListings;
+    mapping(address => mapping (uint256 => uint256)) internal _lastActiveRental;
 
     /**
      * @dev Constructor for the IQNFTWarper contract.
      */
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
+        LISTING_MANAGER = Contracts.LISTING_MANAGER;
+        RENTING_MANAGER = Contracts.RENTING_MANAGER;
     }
 
     /// @dev Address where the rewards get taken from.
@@ -53,38 +58,59 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         address participant,
         address rewardTokenAddress
     ) external onlyAuthorizedCaller {
-        // Retrieve participant record
-        TournamentParticipant memory tournamentParticipant = _tournamentParticipants[serviceId][tournamentId][
+        uint256 tournamentAssociatedRentalId = _tournamentAssociatedRental[serviceId][tournamentId][
             participant
         ][tokenId];
 
-        // Check that participant exists
-        if (tournamentParticipant.listingId == 0 && tournamentParticipant.rentalId == 0) {
+        // Check that participant exists!
+        if (tournamentAssociatedRentalId == 0) {
             revert ParticipantDoesNotExist();
         }
 
-        // Get address of ERC20RewardDistributor from Contract Registry
-        address rewardDistributor = IContractRegistry(_metahub()).getContract(ERC20_REWARD_DISTRIBUTOR);
+        IListingManager listingManager = IListingManager(
+            IContractRegistry(_metahub()).getContract(LISTING_MANAGER)
+        );
+        IRentingManager rentingManager = IRentingManager(
+            IContractRegistry(_metahub()).getContract(RENTING_MANAGER)
+        );
 
-        IERC20(rewardTokenAddress).transferFrom(_rewardPool, rewardDistributor, rewardAmount);
+        Rentings.Agreement memory agreement = rentingManager.rentalAgreementInfo(tournamentAssociatedRentalId);
+        Listings.Listing memory listing = listingManager.listingInfo(agreement.listingId);
 
-        // Init distribution through ERC20RewardDistributor
-        Accounts.RentalEarnings memory rentalRewardFees = IERC20RewardDistributor(rewardDistributor)
-            .distributeExternalReward(
-                tournamentParticipant.listingId,
-                tournamentParticipant.rentalId,
+        ERC20RewardDistributionHelper.RentalExternalERC20RewardFees
+            memory rentalExternalERC20RewardFees = ERC20RewardDistributionHelper.getRentalExternalERC20RewardFees(
+                agreement,
                 rewardTokenAddress,
                 rewardAmount
             );
+
+        IERC20(rewardTokenAddress).transferFrom(
+            _rewardPool,
+            listing.beneficiary,
+            rentalExternalERC20RewardFees.listerRewardFee
+        );
+        IERC20(rewardTokenAddress).transferFrom(
+            _rewardPool,
+            agreement.renter,
+            rentalExternalERC20RewardFees.renterRewardFee
+        );
+        address protocolExternalFeesCollector = IMetahub(_metahub()).protocolExternalFeesCollector();
+        if (protocolExternalFeesCollector != address(0)) {
+            IERC20(rewardTokenAddress).transferFrom(
+                _rewardPool,
+                protocolExternalFeesCollector,
+                rentalExternalERC20RewardFees.protocolRewardFee
+            );
+        }
 
         // Emit event
         emit RewardsDistributed(
             serviceId,
             tournamentId,
             tokenId,
-            tournamentParticipant.rentalId,
-            participant,
-            address(0)
+            tournamentAssociatedRentalId,
+            agreement.renter,
+            listing.beneficiary
         );
     }
 
@@ -100,19 +126,13 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         // Make sure that the rental is active!
         if (ownerOf(tokenId) != participant) revert ParticipantIsNotOwnerOfToken();
 
-        // Associate the rentalId with the participant in the tournament.
-        // We don't need to worry about the `_tokenIdsToRentals` being outdated
+        // Associate the latest active (for given participant and tokenId) rental with the tournament.
+        // We don't need to worry about the rental being inactive,
         // because that's already implicitly checked via the ownerOf() call above.
-        uint256 rentalId = _renterTokenIdsToRentals[participant][tokenId];
+        uint256 rentalId = _lastActiveRental[participant][tokenId];
 
-        // Retrieve listingId associated with the rentalId
-        uint256 listingId = _rentalIdsToListings[rentalId];
-
-        // Registering new tournament participant
-        _tournamentParticipants[serviceId][tournamentId][participant][tokenId] = TournamentParticipant({
-            rentalId: rentalId,
-            listingId: listingId
-        });
+        // Registering new tournament participant's currently active rentalId.
+        _tournamentAssociatedRental[serviceId][tournamentId][participant][tokenId] = rentalId;
     }
 
     /**
@@ -125,10 +145,10 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
     ) external override onlyRentingManager returns (bool, string memory) {
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
-            _renterTokenIdsToRentals[rentalAgreement.renter][tokenId] = rentalId;
+            // Latest active rental is persisted.
+            _lastActiveRental[rentalAgreement.renter][tokenId] = rentalId;
         }
 
-        _rentalIdsToListings[rentalId] = rentalAgreement.listingId;
         // Inform Renting Manager that everything is fine
         return (true, "");
     }
@@ -139,32 +159,23 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
     }
 
     /**
-     * @dev Retuns rental ID by token ID.
+     * @dev Returns last active rentalId for `renter` and `tokenId`.
      * @notice may be removed in future
+     * @param renter Renter.
      * @param tokenId Token ID.
      * @return Rental ID.
      */
-    function getTokenRental(address renter, uint256 tokenId) external view returns(uint256) {
-        return _renterTokenIdsToRentals[renter][tokenId];
+    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns(uint256) {
+        return _lastActiveRental[renter][tokenId];
     }
 
-    /**
-     * @dev Retuns listing ID by rental ID.
-     * @notice may be removed in future
-     * @param rentalId rental ID.
-     * @return Listing ID.
-     */
-    function getRentalListing(uint256 rentalId) external view returns (uint256) {
-        return _rentalIdsToListings[rentalId];
-    }
-
-    function getTournamentParticipant(
+    function getTournamentAssociatedRentalId(
         uint64 serviceId,
         uint64 tournamentId,
         address participant,
         uint256 tokenId
-    ) external view returns (TournamentParticipant memory) {
-        return _tournamentParticipants[serviceId][tournamentId][participant][tokenId];
+    ) external view returns (uint256) {
+        return _tournamentAssociatedRental[serviceId][tournamentId][participant][tokenId];
     }
 
     /**
