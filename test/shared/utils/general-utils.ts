@@ -1,6 +1,5 @@
 import { ethers } from 'hardhat';
-import { BigNumberish, ContractReceipt, ContractTransaction, FixedNumber, Signer } from 'ethers';
-import { BASE_TOKEN_DECIMALS, HUNDRED_PERCENT, HUNDRED_PERCENT_PRECISION_4 } from '../../../src/constants';
+import { ContractReceipt, ContractTransaction } from 'ethers';
 
 export type WithTx<T> = Awaited<T> & { tx: ContractTransaction };
 
@@ -35,6 +34,4 @@ export const waitBlockchainTime = async (seconds: number): Promise<void> => {
   await mineBlock(time + seconds);
 };
 
-export const convertToWei = (toConvert: string, decimals: number = BASE_TOKEN_DECIMALS): BigNumberish => {
-  return ethers.utils.parseUnits(toConvert, decimals);
-};
+

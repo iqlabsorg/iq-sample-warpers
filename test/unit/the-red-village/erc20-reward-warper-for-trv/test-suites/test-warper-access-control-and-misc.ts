@@ -1,28 +1,15 @@
 import {
-  ERC20Mock, ERC721Mock,
-  IListingManager,
-  IListingTermsRegistry, IListingWizardV1, IMetahub,
-  IRentingManager,
-  ITaxTermsRegistry, IUniverseRegistry, IUniverseWizardV1
-} from "@iqprotocol/solidity-contracts-nft/typechain";
-import {
   Auth__factory,
   ERC20RewardWarperForTRV, SolidityInterfaces,
 } from "../../../../../typechain";
 import { SignerWithAddress } from "@nomiclabs/hardhat-ethers/signers";
 import {
   ChainId,
-  UniverseRegistryAdapter,
-  UniverseWizardAdapterV1,
-} from "@iqprotocol/iq-space-sdk-js";
-import { makeTaxTermsFixedRate } from "../../../../shared/utils/tax-terms-utils";
-import {
   ADDRESS_ZERO,
+  EMPTY_BYTES4_DATA_HEX,
   EMPTY_BYTES32_DATA_HEX,
-} from "@iqprotocol/solidity-contracts-nft";
-import {
-  makeListingTermsFixedRate,
-} from "../../../../shared/utils/listing-terms-utils";
+  EMPTY_BYTES_DATA_HEX
+} from "@iqprotocol/iq-space-sdk-js";
 import { expect } from "chai";
 import {
   convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution
@@ -71,9 +58,18 @@ export function testWarperAccessControlAndMisc(): void {
           startTime: 0,
           endTime: 0,
           agreementTerms: {
-            listingTerms: makeListingTermsFixedRate("0"),
-            universeTaxTerms: makeTaxTermsFixedRate("0"),
-            protocolTaxTerms: makeTaxTermsFixedRate("0"),
+            listingTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
+            universeTaxTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
+            protocolTaxTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
             paymentTokenData: {
               paymentToken: ADDRESS_ZERO,
               paymentTokenQuote: 0,

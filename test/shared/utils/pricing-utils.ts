@@ -1,14 +1,6 @@
-import { BASE_TOKEN_DECIMALS, HUNDRED_PERCENT, HUNDRED_PERCENT_PRECISION_4 } from "@iqprotocol/solidity-contracts-nft";
-import { BigNumber, BigNumberish, FixedNumber } from "ethers";
-import { convertToWei } from "./general-utils";
-
-export const calculateBaseRate = (
-  expectedForPeriodFee: string,
-  periodInSeconds: number,
-  decimals = BASE_TOKEN_DECIMALS,
-): string => {
-  return FixedNumber.from(expectedForPeriodFee).divUnsafe(FixedNumber.from(periodInSeconds)).round(decimals).toString();
-};
+import { BASE_TOKEN_DECIMALS, HUNDRED_PERCENT, HUNDRED_PERCENT_PRECISION_4 } from "@iqprotocol/iq-space-sdk-js";
+import { BigNumberish, FixedNumber } from "ethers";
+import { ethers } from "hardhat";
 
 export const convertPercentage = (
   percent: BigNumberish,
@@ -56,4 +48,8 @@ export const calculateTaxFeeForFixedRateInWei = (
       .toString(),
     decimals,
   );
+};
+
+export const convertToWei = (toConvert: string, decimals: number = BASE_TOKEN_DECIMALS): BigNumberish => {
+  return ethers.utils.parseUnits(toConvert, decimals);
 };
