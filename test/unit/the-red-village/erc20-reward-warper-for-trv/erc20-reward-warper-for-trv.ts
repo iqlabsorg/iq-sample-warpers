@@ -5,6 +5,7 @@ import { ERC20RewardWarperForTRV } from '../../../../typechain';
 import { shouldBehaveLikeERC20RewardWarperForTRV } from './erc20-reward-warper-for-trv.behaviour';
 import hre from "hardhat";
 import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { ADDRESS_ZERO } from "@iqprotocol/iq-space-sdk-js";
 
 export function unitTestERC20RewardWarperForTRV(): void {
   describe('ERC20RewardWarperForTRV', function () {
@@ -22,6 +23,7 @@ export function unitTestERC20RewardWarperForTRV(): void {
         const erc20RewardWarperForTRV = (await hre.run('deploy:trv:erc20-reward-warper-for-trv', {
           original: this.mocks.assets.originalCollection.address,
           metahub: this.contracts.metahub.address,
+          rewardPool: ADDRESS_ZERO,
         })) as ERC20RewardWarperForTRV;
 
         return {

@@ -35,17 +35,21 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
      */
     mapping(address => mapping (uint256 => uint256)) internal _lastActiveRental;
 
+    /// @dev Address where the rewards get taken from.
+    address internal _rewardPool;
+
     /**
      * @dev Constructor for the IQNFTWarper contract.
      */
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
+
+        (, , address rewardPool) = abi.decode(config, (address, address, address));
+        setRewardPool(rewardPool);
+
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
     }
-
-    /// @dev Address where the rewards get taken from.
-    address internal _rewardPool;
 
     /**
      * @inheritdoc IERC20RewardWarperForTRV
@@ -154,7 +158,7 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
     }
 
     /// @inheritdoc IERC20RewardWarperForTRV
-    function setRewardPool(address rewardPool) external onlyOwner {
+    function setRewardPool(address rewardPool) public onlyOwner {
         _rewardPool = rewardPool;
     }
 
