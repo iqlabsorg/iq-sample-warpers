@@ -87,10 +87,3 @@ export const convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution = (
     ),
   };
 };
-
-// function userEarningOutput(): Accounts.UserEarningStructOutput {
-//   // return [0, false, '', BigNumber.from(0), ''];
-//   return {
-//     earningType: 0, isLister: false, account: '', value: BigNumber.from(0), token: ''
-//   };
-// }

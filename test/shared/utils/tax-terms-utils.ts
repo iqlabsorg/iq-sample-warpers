@@ -1,11 +1,11 @@
 import { BytesLike } from "ethers";
 import {
+  convertPercentage,
   EMPTY_BYTES4_DATA_HEX,
   EMPTY_BYTES_DATA_HEX,
   TAX_STRATEGY_IDS
 } from "@iqprotocol/iq-space-sdk-js";
 import { ITaxTermsRegistry } from "@iqprotocol/solidity-contracts-nft/typechain";
-import { convertPercentage } from "./pricing-utils";
 import { defaultAbiCoder } from "ethers/lib/utils";
 
 export const makeTaxTerms = (

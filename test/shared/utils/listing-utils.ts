@@ -1,11 +1,10 @@
-import { ListingParams, ADDRESS_ZERO } from "@iqprotocol/iq-space-sdk-js";
-import { toAccountId } from "./sdk-utils";
+import { ListingParams, ADDRESS_ZERO, AccountId } from "@iqprotocol/iq-space-sdk-js";
 
 export const makeListingParams = (
   chainId: string,
   listerAddress: string,
   configuratorAddress: string = ADDRESS_ZERO,
 ): ListingParams => ({
-  lister: toAccountId(chainId, listerAddress),
-  configurator: toAccountId(chainId, configuratorAddress),
+  lister: new AccountId({ chainId, address: listerAddress }),
+  configurator: new AccountId({ chainId, address: configuratorAddress }),
 });

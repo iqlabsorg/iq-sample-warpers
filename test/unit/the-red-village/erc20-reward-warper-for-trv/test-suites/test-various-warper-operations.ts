@@ -25,18 +25,20 @@ import {
   TAX_STRATEGIES,
   LISTING_STRATEGIES,
   ADDRESS_ZERO,
-  EMPTY_BYTES32_DATA_HEX,
   EMPTY_BYTES_DATA_HEX,
   HUNDRED_PERCENT_PRECISION_4,
+  AccountId,
+  AddressTranslator,
+  createAsset,
+  convertToWei,
+  convertPercentage,
+  calculateTaxFeeForFixedRateInWei,
 } from "@iqprotocol/iq-space-sdk-js";
 import { ethers, network } from "hardhat";
 import { BigNumber, BigNumberish } from "ethers";
-import { createAssetReferenceForSDK, makeERC721AssetForSDK, toAccountId } from "../../../../shared/utils/sdk-utils";
 import {
   calculateListerBaseFee,
-  calculateTaxFeeForFixedRateInWei,
   convertListerBaseFeeToWei,
-  convertPercentage, convertToWei
 } from "../../../../shared/utils/pricing-utils";
 import { SECONDS_IN_DAY, SECONDS_IN_HOUR } from "../../../../../src";
 import { makeListingParams } from "../../../../shared/utils/listing-utils";
@@ -48,8 +50,8 @@ export function testVariousWarperOperations(): void {
   /**** Constants ****/
   const PROTOCOL_RATE_PERCENT = '5';
   const PROTOCOL_REWARD_RATE_PERCENT = '7';
-  const LISTER_TOKEN_ID_1 = 1;
-  const LISTER_TOKEN_ID_2 = 2;
+  const LISTER_TOKEN_ID_1 = BigNumber.from(1);
+  const LISTER_TOKEN_ID_2 = BigNumber.from(2);
   /**** Config ****/
   let chainId: string;
   /**** Contracts ****/
@@ -109,16 +111,16 @@ export function testVariousWarperOperations(): void {
     );
 
     let iqSpace = await IQSpace.init({ signer: lister });
-    listingWizardV1Adapter = iqSpace.listingWizardV1(toAccountId(chainId, listingWizardV1.address));
-    listingManagerAdapter = iqSpace.listingManager(toAccountId(chainId, listingManager.address));
-    listingTermsRegistryAdapter = iqSpace.listingTermsRegistry(toAccountId(chainId, listingTermsRegistry.address));
+    listingWizardV1Adapter = iqSpace.listingWizardV1(new AccountId({chainId, address: listingWizardV1.address}));
+    listingManagerAdapter = iqSpace.listingManager(new AccountId({chainId, address: listingManager.address}));
+    listingTermsRegistryAdapter = iqSpace.listingTermsRegistry(new AccountId({chainId, address: listingTermsRegistry.address}));
     iqSpace = await IQSpace.init({ signer: renterA });
-    rentingManagerAdapterA = iqSpace.rentingManager(toAccountId(chainId, rentingManager.address));
+    rentingManagerAdapterA = iqSpace.rentingManager(new AccountId({chainId, address: rentingManager.address}));
     iqSpace = await IQSpace.init({ signer: renterB });
-    rentingManagerAdapterB = iqSpace.rentingManager(toAccountId(chainId, rentingManager.address));
+    rentingManagerAdapterB = iqSpace.rentingManager(new AccountId({chainId, address: rentingManager.address}));
     iqSpace = await IQSpace.init({ signer: universeOwner });
-    universeWizardV1Adapter = iqSpace.universeWizardV1(toAccountId(chainId, universeWizardV1.address));
-    universeRegistryAdapter = iqSpace.universeRegistry(toAccountId(chainId, universeRegistry.address));
+    universeWizardV1Adapter = iqSpace.universeWizardV1(new AccountId({chainId, address: universeWizardV1.address}));
+    universeRegistryAdapter = iqSpace.universeRegistry(new AccountId({chainId, address: universeRegistry.address}));
 
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_1);
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_2);
@@ -132,11 +134,11 @@ export function testVariousWarperOperations(): void {
     let TRV_UNIVERSE_ID: BigNumberish;
 
     beforeEach(async () => {
-      const universeParams = { name: 'The Red Village', paymentTokens: [toAccountId(chainId, baseToken.address)] };
+      const universeParams = { name: 'The Red Village', paymentTokens: [new AccountId({chainId, address: baseToken.address})] };
 
-      const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndWarper(
+      const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
         universeParams,
-        createAssetReferenceForSDK(chainId, 'erc721', erc20RewardWarperForTRV.address),
+        AddressTranslator.createAssetType(new AccountId({chainId, address: erc20RewardWarperForTRV.address}), 'erc721'),
         {
           name: TAX_STRATEGIES.FIXED_RATE_TAX_WITH_REWARD,
           data: {
@@ -149,8 +151,6 @@ export function testVariousWarperOperations(): void {
           universeId: 0, // Unknown before-hand.
           paused: false,
         },
-        EMPTY_BYTES32_DATA_HEX,
-        EMPTY_BYTES_DATA_HEX,
       );
       const newUniverseId = (await universeRegistryAdapter.findUniverseByCreationTransaction(
         setupUniverseTx.hash
@@ -178,7 +178,7 @@ export function testVariousWarperOperations(): void {
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
         TRV_UNIVERSE_ID,
         {
-          assets: [makeERC721AssetForSDK(chainId, originalCollection.address, LISTER_TOKEN_ID_1)],
+          assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_1.toString())],
           params: makeListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
@@ -264,7 +264,7 @@ export function testVariousWarperOperations(): void {
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
         TRV_UNIVERSE_ID,
         {
-          assets: [makeERC721AssetForSDK(chainId, originalCollection.address, LISTER_TOKEN_ID_1)],
+          assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_1.toString())],
           params: makeListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
@@ -290,7 +290,7 @@ export function testVariousWarperOperations(): void {
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
         TRV_UNIVERSE_ID,
         {
-          assets: [makeERC721AssetForSDK(chainId, originalCollection.address, LISTER_TOKEN_ID_2)],
+          assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_2.toString())],
           params: makeListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_2_MAX_LOCK_PERIOD,
           immediatePayout: true,
