@@ -2,7 +2,7 @@ import { BigNumberish } from "ethers";
 import {
   AccountId,
   AddressTranslator,
-  ListingTermsParams,
+  ListingTerms,
   RentingEstimationParams,
 } from "@iqprotocol/iq-space-sdk-js";
 
@@ -14,7 +14,7 @@ export const makeSDKRentingEstimationParamsERC721 = (
   rentalPeriod: BigNumberish,
   paymentTokenAddress: string,
   listingTermsId: BigNumberish,
-  selectedConfiguratorListingTerms?: ListingTermsParams,
+  selectedConfiguratorListingTerms?: ListingTerms,
 ): RentingEstimationParams => ({
   listingId,
   warper: AddressTranslator.createAssetType(new AccountId({chainId, address: warperAddress}), 'erc721'),

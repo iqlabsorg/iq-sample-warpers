@@ -850,10 +850,10 @@
   resolved "https://registry.yarnpkg.com/@humanwhocodes/object-schema/-/object-schema-1.2.1.tgz#b520529ec21d8e5945a1851dfd1c32e94e39ff45"
   integrity sha512-ZnQMnLV4e7hDlUvw8H+U8ASL02SS2Gn6+9Ac3wGGLIe7+je2AeAOxPY+izIPJDfFDb7eDjev0Us8MO1iFRN8hA==
 
-"@iqprotocol/iq-space-sdk-js@^0.1.0-alpha.14":
-  version "0.1.0-alpha.14"
-  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-sdk-js/-/iq-space-sdk-js-0.1.0-alpha.14.tgz#6ace537b4a8778e744239b7fc9e89e0de5219b1d"
-  integrity sha512-UCLbZYYlrFtBKfluCFan2rpcMDgCpLTXxWBubgC4QVXtjYtbNjwpfbFfbTZy6rruHJCBK5fD0/trTJqhkF4NcA==
+"@iqprotocol/iq-space-sdk-js@^0.1.0-alpha.15":
+  version "0.1.0-alpha.15"
+  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-sdk-js/-/iq-space-sdk-js-0.1.0-alpha.15.tgz#870fa66d0f4f68fd9b8d8d5e6c03185fbc91006c"
+  integrity sha512-vlcdeU2KcdybHeTj++Nb3ssSFdLPzHvTaYaT5noLRYLEGKPb6TvDd8J/34lWuo52XyscnLb0+/pODVGDy+do4A==
   dependencies:
     "@iqprotocol/solidity-contracts-nft" "2.1.7-alpha.16"
     caip "^1.1.0"

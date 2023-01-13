@@ -41,7 +41,7 @@ import {
   convertListerBaseFeeToWei,
 } from "../../../../shared/utils/pricing-utils";
 import { SECONDS_IN_DAY, SECONDS_IN_HOUR } from "../../../../../src";
-import { makeListingParams } from "../../../../shared/utils/listing-utils";
+import { makeSDKListingParams } from "../../../../shared/utils/listing-sdk-utils";
 import { makeSDKRentingEstimationParamsERC721 } from "../../../../shared/utils/renting-sdk-utils";
 import { expect } from "chai";
 import { makeTaxTermsFixedRateWithReward } from "../../../../shared/utils/tax-terms-utils";
@@ -179,7 +179,7 @@ export function testVariousWarperOperations(): void {
         TRV_UNIVERSE_ID,
         {
           assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_1.toString())],
-          params: makeListingParams(chainId, lister.address),
+          params: makeSDKListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
@@ -265,7 +265,7 @@ export function testVariousWarperOperations(): void {
         TRV_UNIVERSE_ID,
         {
           assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_1.toString())],
-          params: makeListingParams(chainId, lister.address),
+          params: makeSDKListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
@@ -291,7 +291,7 @@ export function testVariousWarperOperations(): void {
         TRV_UNIVERSE_ID,
         {
           assets: [createAsset("erc721", new AccountId({chainId, address: originalCollection.address}), LISTER_TOKEN_ID_2.toString())],
-          params: makeListingParams(chainId, lister.address),
+          params: makeSDKListingParams(chainId, lister.address),
           maxLockPeriod: LISTING_2_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },

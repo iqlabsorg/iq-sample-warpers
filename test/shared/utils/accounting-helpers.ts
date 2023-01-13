@@ -1,4 +1,4 @@
-import { Accounts, Rentings } from "@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/core/IMetahub";
+import { Accounts } from "@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/core/IMetahub";
 import { BigNumber, BigNumberish } from "ethers";
 
 export const EARNING_TYPES = {
