@@ -1,16 +1,23 @@
 /* eslint-disable @typescript-eslint/no-unsafe-assignment */
+/* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import hre, { ethers, getChainId } from 'hardhat';
-import { loadFixture } from "@nomicfoundation/hardhat-network-helpers";
+import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import type { Contracts, Mocks, Signers } from './types';
 import {
   ERC20Mock,
   ERC721Mock,
   IListingManager,
-  IListingTermsRegistry, IListingWizardV1,
-  IMetahub, IRentingManager, ITaxTermsRegistry, IUniverseRegistry, IUniverseWizardV1, IWarperWizardV1
-} from "@iqprotocol/solidity-contracts-nft/typechain";
-import { ChainId } from "@iqprotocol/iq-space-sdk-js";
-import { SolidityInterfaces } from "../../typechain";
+  IListingTermsRegistry,
+  IListingWizardV1,
+  IMetahub,
+  IRentingManager,
+  ITaxTermsRegistry,
+  IUniverseRegistry,
+  IUniverseWizardV1,
+  IWarperWizardV1,
+} from '@iqprotocol/solidity-contracts-nft/typechain';
+import { ChainId } from '@iqprotocol/iq-space-sdk-js';
+import { SolidityInterfaces } from '../../typechain';
 
 // eslint-disable-next-line func-style
 export function baseContext(description: string, testSuite: () => void): void {
@@ -30,6 +37,7 @@ export function baseContext(description: string, testSuite: () => void): void {
     });
 
     async function deployProtocol(): Promise<{
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       contractsInfra: any;
       baseToken: ERC20Mock;
       originalCollection: ERC721Mock;
@@ -44,9 +52,9 @@ export function baseContext(description: string, testSuite: () => void): void {
 
       const contractsInfra = await hre.run('deploy:initial-deployment', {
         baseToken: baseToken.address,
-        protocolExternalFeesCollector: (await ethers.getNamedSigner("protocolExternalFeesCollector")).address,
+        protocolExternalFeesCollector: (await ethers.getNamedSigner('protocolExternalFeesCollector')).address,
         rentalFee: 100,
-        unsafe: true
+        unsafe: true,
       });
 
       const originalCollection = (await hre.run('deploy:test:mock:erc721', {
@@ -54,7 +62,7 @@ export function baseContext(description: string, testSuite: () => void): void {
         symbol: 'ONFT',
       })) as ERC721Mock;
 
-      const solidityInterfaces = (await hre.run('deploy:mocks:misc:solidity-interfaces')) as SolidityInterfaces
+      const solidityInterfaces = (await hre.run('deploy:mocks:misc:solidity-interfaces')) as SolidityInterfaces;
 
       return { baseToken, contractsInfra, originalCollection, solidityInterfaces };
     }
@@ -62,7 +70,7 @@ export function baseContext(description: string, testSuite: () => void): void {
     beforeEach(async () => {
       this.timeout(120000);
 
-      const { baseToken, contractsInfra, originalCollection, solidityInterfaces } = await loadFixture(deployProtocol)
+      const { baseToken, contractsInfra, originalCollection, solidityInterfaces } = await loadFixture(deployProtocol);
 
       const metahub = contractsInfra.metahub as IMetahub;
       const listingManager = contractsInfra.listingManager as IListingManager;
@@ -98,8 +106,8 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.ctx.mocks.assets.baseToken = baseToken;
 
       this.ctx.mocks.misc = {
-        solidityInterfaces
-      }
+        solidityInterfaces,
+      };
     });
 
     testSuite();

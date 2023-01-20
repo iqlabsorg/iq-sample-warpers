@@ -1,4 +1,4 @@
-import { ListingParams, ADDRESS_ZERO, AccountId } from "@iqprotocol/iq-space-sdk-js";
+import { ListingParams, ADDRESS_ZERO, AccountId } from '@iqprotocol/iq-space-sdk-js';
 
 export const makeSDKListingParams = (
   chainId: string,

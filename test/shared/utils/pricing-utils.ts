@@ -1,8 +1,5 @@
-import {
-  BASE_TOKEN_DECIMALS,
-  convertToWei,
-} from "@iqprotocol/iq-space-sdk-js";
-import { BigNumberish, FixedNumber } from "ethers";
+import { BASE_TOKEN_DECIMALS, convertToWei } from '@iqprotocol/iq-space-sdk-js';
+import { BigNumberish, FixedNumber } from 'ethers';
 
 export const calculateListerBaseFee = (
   baseRate: string,

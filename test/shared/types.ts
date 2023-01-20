@@ -4,7 +4,12 @@ import {
   IListingWizardV1,
   IUniverseWizardV1,
   IMetahub,
-  IRentingManager, IWarperWizardV1, IUniverseRegistry, IListingManager, IListingTermsRegistry, ITaxTermsRegistry,
+  IRentingManager,
+  IWarperWizardV1,
+  IUniverseRegistry,
+  IListingManager,
+  IListingTermsRegistry,
+  ITaxTermsRegistry,
 } from '@iqprotocol/solidity-contracts-nft/typechain';
 import { Auth, ERC20RewardWarperForTRV, SolidityInterfaces } from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
@@ -47,7 +52,7 @@ export interface Mocks {
   };
   misc: {
     solidityInterfaces: SolidityInterfaces;
-  }
+  };
 }
 
 export interface Signers {

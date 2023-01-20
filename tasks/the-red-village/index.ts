@@ -1,1 +1,1 @@
-export * from './erc20-reward-warper-for-trv';
+import './erc20-reward-warper-for-trv';

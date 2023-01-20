@@ -18,7 +18,7 @@ subtask(TASK_TEST_SETUP_TEST_ENVIRONMENT, async (): Promise<void> => {
 
 use(customMatchers);
 
-function customMatchers(chai: ChaiStatic, utils: ChaiUtils) {
+function customMatchers(chai: ChaiStatic, /* eslint-disable-line @typescript-eslint/no-unused-vars*/ utils: ChaiUtils) {
   chai.Assertion.addMethod('equalStruct', function (expectedStruct: Record<string, any>, message?: string) {
     const cleanedUpExpectedStruct = transmuteObject(expectedStruct);
     const cleanedUpStruct = transmuteObject(this._obj);

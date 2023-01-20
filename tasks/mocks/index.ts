@@ -1,1 +1,1 @@
-export * from './solidity-interfaces';
+import './solidity-interfaces';

@@ -33,5 +33,3 @@ export const waitBlockchainTime = async (seconds: number): Promise<void> => {
   const time = await latestBlockTimestamp();
   await mineBlock(time + seconds);
 };
-
-

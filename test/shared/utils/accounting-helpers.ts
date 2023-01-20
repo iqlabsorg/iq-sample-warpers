@@ -1,5 +1,5 @@
-import { Accounts } from "@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/core/IMetahub";
-import { BigNumber, BigNumberish } from "ethers";
+import { Accounts } from '@iqprotocol/solidity-contracts-nft/typechain/contracts/metahub/core/IMetahub';
+import { BigNumber, BigNumberish } from 'ethers';
 
 export const EARNING_TYPES = {
   LISTER_FIXED_FEE: 0,

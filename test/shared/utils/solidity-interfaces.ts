@@ -1,4 +1,4 @@
-import { SolidityInterfaces } from "../../../typechain";
+import { SolidityInterfaces } from '../../../typechain';
 
 export const getSolidityInterfaceId = async (
   solidityInterfaces: SolidityInterfaces,
