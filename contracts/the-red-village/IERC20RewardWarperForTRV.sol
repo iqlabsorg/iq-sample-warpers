@@ -1,7 +1,7 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "@iqprotocol/solidity-contracts-nft/contracts/accounting/Accounts.sol";
+import "@iqprotocol/iq-space-protocol/contracts/accounting/Accounts.sol";
 
 interface IERC20RewardWarperForTRV {
     /**

@@ -1,11 +1,13 @@
 import { baseContext } from '../shared/contexts';
 import { unitTestAuth } from './auth/auth';
-import { unitTestTRV } from './the-red-village';
+import { integrationTestTRV } from './the-red-village';
+import { integrationTestIQPixelsteins } from './iq-pixelsteins';
 
 baseContext('Unit Tests', function () {
   unitTestAuth();
 });
 
 baseContext('Integration Tests', function () {
-  unitTestTRV();
+  integrationTestTRV();
+  integrationTestIQPixelsteins();
 });

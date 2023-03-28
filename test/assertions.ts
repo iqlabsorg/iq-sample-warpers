@@ -52,12 +52,12 @@ declare global {
        */
       equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): AsyncAssertion;
 
-      // /**
-      //  * Asserts that all of the structs are contained in the expected array.
-      //  * Index and length are enforced!
-      //  * @param structs An Array of structs.
-      //  */
-      // containsAllStructs(structs: Array<Record<string, any>>): AsyncAssertion;
+      /**
+       * Asserts that all of the structs are contained in the expected array.
+       * Index and length are enforced!
+       * @param structs An Array of structs.
+       */
+      containsAllStructs(structs: Array<Record<string, any>>): AsyncAssertion;
     }
     interface Assertion {
       /**
@@ -67,21 +67,21 @@ declare global {
        */
       equalStruct(expectedStruct: Record<string, any>, message?: string | undefined): Assertion;
 
-      // /**
-      //  * Asserts that all of the structs are contained in the expected array.
-      //  * Index and length are enforced!
-      //  * @param structs An Array of structs.
-      //  */
-      // containsAllStructs(structs: Array<Record<string, any>>): Assertion;
+      /**
+       * Asserts that all of the structs are contained in the expected array.
+       * Index and length are enforced!
+       * @param structs An Array of structs.
+       */
+      containsAllStructs(structs: Array<Record<string, any>>): Assertion;
     }
   }
 }
 
-// Assertion.addMethod('containsAllStructs', function (expectedStruct: Array<Record<string, any>>) {
-//   for (let index = 0; index < this._obj.length; index++) {
-//     new Assertion(this._obj[index]).to.equalStruct(expectedStruct[index], `Item with index ${index} did not match`);
-//   }
-// });
+Assertion.addMethod('containsAllStructs', function (expectedStruct: Array<Record<string, any>>) {
+  for (let index = 0; index < this._obj.length; index++) {
+    new Assertion(this._obj[index]).to.equalStruct(expectedStruct[index], `Item with index ${index} did not match`);
+  }
+});
 
 const transmuteSingleObject = (key: string, object: any): any => {
   // the key is not a number (only match "stringy" keys)

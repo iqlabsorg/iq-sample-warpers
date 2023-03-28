@@ -2,7 +2,7 @@ import * as dotenv from 'dotenv';
 
 import { HardhatUserConfig } from 'hardhat/config';
 import 'hardhat-deploy';
-import '@iqprotocol/solidity-contracts-nft/tasks';
+import '@iqprotocol/iq-space-protocol/tasks';
 import '@nomicfoundation/hardhat-chai-matchers';
 import '@nomiclabs/hardhat-ethers';
 import '@typechain/hardhat';
@@ -80,8 +80,8 @@ const config: HardhatUserConfig = {
   external: {
     contracts: [
       {
-        artifacts: 'node_modules/@iqprotocol/solidity-contracts-nft/artifacts',
-        deploy: 'node_modules/@iqprotocol/solidity-contracts-nft/deploy',
+        artifacts: 'node_modules/@iqprotocol/iq-space-protocol/artifacts',
+        deploy: 'node_modules/@iqprotocol/iq-space-protocol/deploy',
       },
     ],
   },

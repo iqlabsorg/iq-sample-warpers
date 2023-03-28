@@ -3,7 +3,7 @@ import { BigNumberish, FixedNumber } from 'ethers';
 
 export const calculateListerBaseFee = (
   baseRate: string,
-  rentalPeriodInSeconds: number,
+  rentalPeriodInSeconds: BigNumberish,
   decimals = BASE_TOKEN_DECIMALS,
 ): string => {
   return FixedNumber.from(baseRate).mulUnsafe(FixedNumber.from(rentalPeriodInSeconds)).round(decimals).toString();

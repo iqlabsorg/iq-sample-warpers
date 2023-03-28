@@ -1,5 +1,6 @@
 import { BigNumberish } from 'ethers';
-import { AccountId, AddressTranslator, ListingTerms, RentingEstimationParams } from '@iqprotocol/iq-space-sdk-js';
+import { AccountId, AddressTranslator, RentingEstimationParams } from '@iqprotocol/iq-space-sdk-js';
+import { IListingTermsRegistry } from '@iqprotocol/iq-space-protocol/typechain';
 
 export const makeSDKRentingEstimationParamsERC721 = (
   chainId: string,
@@ -9,7 +10,7 @@ export const makeSDKRentingEstimationParamsERC721 = (
   rentalPeriod: BigNumberish,
   paymentTokenAddress: string,
   listingTermsId: BigNumberish,
-  selectedConfiguratorListingTerms?: ListingTerms,
+  selectedConfiguratorListingTerms?: IListingTermsRegistry.ListingTermsStruct,
 ): RentingEstimationParams => ({
   listingId,
   warper: AddressTranslator.createAssetType(new AccountId({ chainId, address: warperAddress }), 'erc721'),

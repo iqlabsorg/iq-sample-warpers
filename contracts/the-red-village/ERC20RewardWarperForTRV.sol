@@ -1,10 +1,10 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "@iqprotocol/solidity-contracts-nft/contracts/warper/ERC721/v1/presets/ERC721ConfigurablePreset.sol";
-import "@iqprotocol/solidity-contracts-nft/contracts/warper/mechanics/v1/renting-hook/IRentingHookMechanics.sol";
-import "@iqprotocol/solidity-contracts-nft/contracts/contract-registry/Contracts.sol";
-import "@iqprotocol/solidity-contracts-nft/contracts/renting/renting-manager/IRentingManager.sol";
+import "@iqprotocol/iq-space-protocol/contracts/warper/ERC721/v1-controller/presets/ERC721ConfigurablePreset.sol";
+import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/renting-hook/IRentingHookMechanics.sol";
+import "@iqprotocol/iq-space-protocol/contracts/contract-registry/Contracts.sol";
+import "@iqprotocol/iq-space-protocol/contracts/renting/renting-manager/IRentingManager.sol";
 
 import "./IERC20RewardWarperForTRV.sol";
 import "../auth/Auth.sol";
@@ -147,6 +147,8 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
+        (, uint256 tokenId) = _tokenWithId(rentalAgreement.warpedAssets[0]);
+
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
             // Latest active rental is persisted.

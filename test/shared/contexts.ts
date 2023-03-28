@@ -15,9 +15,9 @@ import {
   IUniverseRegistry,
   IUniverseWizardV1,
   IWarperWizardV1,
-} from '@iqprotocol/solidity-contracts-nft/typechain';
+} from '@iqprotocol/iq-space-protocol/typechain';
 import { ChainId } from '@iqprotocol/iq-space-sdk-js';
-import { SolidityInterfaces } from '../../typechain';
+import { IWarperManager, SolidityInterfaces } from '../../typechain';
 
 // eslint-disable-next-line func-style
 export function baseContext(description: string, testSuite: () => void): void {
@@ -77,6 +77,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       const listingTermsRegistry = contractsInfra.listingTermsRegistry as IListingTermsRegistry;
       const rentingManager = contractsInfra.rentingManager as IRentingManager;
       const universeRegistry = contractsInfra.universeRegistry as IUniverseRegistry;
+      const warperManager = contractsInfra.warperManager as IWarperManager;
       const taxTermsRegistry = contractsInfra.taxTermsRegistry as ITaxTermsRegistry;
 
       const listingWizardV1 = contractsInfra.listingWizardV1 as IListingWizardV1;
@@ -94,6 +95,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.ctx.contracts.listingTermsRegistry = listingTermsRegistry;
       this.ctx.contracts.rentingManager = rentingManager;
       this.ctx.contracts.universeRegistry = universeRegistry;
+      this.ctx.contracts.warperManager = warperManager;
       this.ctx.contracts.taxTermsRegistry = taxTermsRegistry;
 
       this.ctx.contracts.wizardsV1 = {

@@ -1,11 +1,11 @@
-import { ERC20Mock } from '@iqprotocol/solidity-contracts-nft/typechain';
+import { ERC20Mock } from '@iqprotocol/iq-space-protocol/typechain';
 import { ERC20RewardWarperForTRV } from '../../../../typechain';
 import { shouldBehaveLikeERC20RewardWarperForTRV } from './erc20-reward-warper-for-trv.behaviour';
 import hre from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ADDRESS_ZERO } from '@iqprotocol/iq-space-sdk-js';
 
-export function unitTestERC20RewardWarperForTRV(): void {
+export function integrationTestERC20RewardWarperForTRV(): void {
   describe('ERC20RewardWarperForTRV', function () {
     beforeEach(async function () {
       const fixtureERC20RewardWarperForTRV = async (): Promise<{

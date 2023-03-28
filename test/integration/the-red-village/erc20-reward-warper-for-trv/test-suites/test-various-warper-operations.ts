@@ -9,7 +9,7 @@ import {
   ITaxTermsRegistry,
   IUniverseRegistry,
   IUniverseWizardV1,
-} from '@iqprotocol/solidity-contracts-nft/typechain';
+} from '@iqprotocol/iq-space-protocol/typechain';
 import { Auth__factory, ERC20RewardWarperForTRV, ERC20RewardWarperForTRV__factory } from '../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
@@ -21,27 +21,29 @@ import {
   RentingManagerAdapter,
   UniverseRegistryAdapter,
   UniverseWizardAdapterV1,
-  calculatePricePerSecondInEthers,
-  TAX_STRATEGIES,
   LISTING_STRATEGIES,
   ADDRESS_ZERO,
   EMPTY_BYTES_DATA_HEX,
-  HUNDRED_PERCENT_PRECISION_4,
   AccountId,
   AddressTranslator,
   createAsset,
   convertToWei,
-  convertPercentage,
-  calculateTaxFeeForFixedRateInWei,
+  makeFixedRateWithRewardTaxTermsFromUnconverted,
+  calculateBaseRateInBaseTokenEthers,
+  periodValueAndTypeToProtocolConverted,
+  PERIOD_TYPE_DAY,
+  makeFixedRateWithRewardListingTermsFromUnconverted,
+  DECIMALS_18,
+  convertPercentageToProtocolUint16,
+  HUNDRED_PERCENT_CONVERTED_SCALE_2,
 } from '@iqprotocol/iq-space-sdk-js';
 import { ethers, network } from 'hardhat';
 import { BigNumber, BigNumberish } from 'ethers';
 import { calculateListerBaseFee, convertListerBaseFeeToWei } from '../../../../shared/utils/pricing-utils';
-import { SECONDS_IN_DAY, SECONDS_IN_HOUR } from '../../../../../src';
+import { calculateTaxFeeForFixedRateInWei, SECONDS_IN_DAY } from '../../../../../src';
 import { makeSDKListingParams } from '../../../../shared/utils/listing-sdk-utils';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../shared/utils/renting-sdk-utils';
 import { expect } from 'chai';
-import { makeTaxTermsFixedRateWithReward } from '../../../../shared/utils/tax-terms-utils';
 
 export function testVariousWarperOperations(): void {
   /**** Constants ****/
@@ -106,7 +108,7 @@ export function testVariousWarperOperations(): void {
     await taxTermsRegistry
       .connect(deployer)
       .registerProtocolGlobalTaxTerms(
-        makeTaxTermsFixedRateWithReward(PROTOCOL_RATE_PERCENT, PROTOCOL_REWARD_RATE_PERCENT),
+        makeFixedRateWithRewardTaxTermsFromUnconverted(PROTOCOL_RATE_PERCENT, PROTOCOL_REWARD_RATE_PERCENT),
       );
 
     let iqSpace = await IQSpace.init({ signer: lister });
@@ -146,13 +148,10 @@ export function testVariousWarperOperations(): void {
           new AccountId({ chainId, address: erc20RewardWarperForTRV.address }),
           'erc721',
         ),
-        {
-          name: TAX_STRATEGIES.FIXED_RATE_TAX_WITH_REWARD,
-          data: {
-            ratePercent: TRV_UNIVERSE_WARPER_RATE_PERCENT,
-            rewardRatePercent: TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
-          },
-        },
+        makeFixedRateWithRewardTaxTermsFromUnconverted(
+          TRV_UNIVERSE_WARPER_RATE_PERCENT,
+          TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
+        ),
         {
           name: 'TRV Warper',
           universeId: 0, // Unknown before-hand.
@@ -177,7 +176,10 @@ export function testVariousWarperOperations(): void {
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
-      const LISTING_1_BASE_RATE = calculatePricePerSecondInEthers('300' /*$*/, SECONDS_IN_DAY);
+      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+        '300' /*$*/,
+        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
+      );
       const LISTING_1_REWARD_RATE_PERCENT = '0'; /*%*/
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
@@ -196,13 +198,7 @@ export function testVariousWarperOperations(): void {
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
-        {
-          name: LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD,
-          data: {
-            pricePerSecondInEthers: LISTING_1_BASE_RATE,
-            rewardRatePercent: LISTING_1_REWARD_RATE_PERCENT,
-          },
-        },
+        makeFixedRateWithRewardListingTermsFromUnconverted(LISTING_1_BASE_RATE, LISTING_1_REWARD_RATE_PERCENT),
       );
       const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
       if (!listingId) {
@@ -247,10 +243,8 @@ export function testVariousWarperOperations(): void {
       await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
       const rentTx = await rentingManagerAdapterA.rent({
         ...rentingEstimationParams,
-        tokenQuoteDataEncoded: {
-          tokenQuote: EMPTY_BYTES_DATA_HEX,
-          tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
-        },
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
         maxPaymentAmount: rentalFees.total,
       });
       const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
@@ -270,8 +264,14 @@ export function testVariousWarperOperations(): void {
     });
 
     it(`works properly with multi-rental and erc20 reward distribution`, async () => {
-      const LISTING_1_BASE_RATE = calculatePricePerSecondInEthers('0' /*$*/, SECONDS_IN_DAY);
-      const LISTING_2_BASE_RATE = calculatePricePerSecondInEthers('1500' /*$*/, SECONDS_IN_HOUR);
+      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+        '0' /*$*/,
+        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
+      );
+      const LISTING_2_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+        '1500' /*$*/,
+        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
+      );
       const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
       const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
@@ -294,13 +294,7 @@ export function testVariousWarperOperations(): void {
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
-        {
-          name: LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD,
-          data: {
-            pricePerSecondInEthers: LISTING_1_BASE_RATE,
-            rewardRatePercent: LISTING_1_REWARD_RATE_PERCENT,
-          },
-        },
+        makeFixedRateWithRewardListingTermsFromUnconverted(LISTING_1_BASE_RATE, LISTING_1_REWARD_RATE_PERCENT),
       );
       const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
       if (!listingId_1) {
@@ -328,13 +322,7 @@ export function testVariousWarperOperations(): void {
           maxLockPeriod: LISTING_2_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
-        {
-          name: LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD,
-          data: {
-            pricePerSecondInEthers: LISTING_2_BASE_RATE,
-            rewardRatePercent: LISTING_2_REWARD_RATE_PERCENT,
-          },
-        },
+        makeFixedRateWithRewardListingTermsFromUnconverted(LISTING_2_BASE_RATE, LISTING_2_REWARD_RATE_PERCENT),
       );
       const listingId_2 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_2.hash);
       if (!listingId_2) {
@@ -362,10 +350,8 @@ export function testVariousWarperOperations(): void {
       await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees_A.total);
       const rentTx_A = await rentingManagerAdapterA.rent({
         ...rentingEstimationParams_A,
-        tokenQuoteDataEncoded: {
-          tokenQuote: EMPTY_BYTES_DATA_HEX,
-          tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
-        },
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
         maxPaymentAmount: rentalFees_A.total,
       });
       const rentalId_A = await findRentalIdByRentTransaction(rentingManager, rentTx_A.hash);
@@ -397,10 +383,8 @@ export function testVariousWarperOperations(): void {
       await baseToken.connect(renterB).increaseAllowance(metahub.address, rentalFees_B.total);
       const rentTx_B = await rentingManagerAdapterB.rent({
         ...rentingEstimationParams_B,
-        tokenQuoteDataEncoded: {
-          tokenQuote: EMPTY_BYTES_DATA_HEX,
-          tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
-        },
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
         maxPaymentAmount: rentalFees_B.total,
       });
       const rentalId_B = await findRentalIdByRentTransaction(rentingManager, rentTx_B.hash);
@@ -433,7 +417,7 @@ export function testVariousWarperOperations(): void {
       ).to.equal(rentalId_B);
 
       /**** Distribute for Rental A (while rental is still active) ****/
-      const REWARD_AMOUNT_A = convertToWei('100');
+      const REWARD_AMOUNT_A = convertToWei('100', DECIMALS_18);
       await rewardToken.connect(universeOwner).mint(universeOwner.address, REWARD_AMOUNT_A);
       await rewardToken.connect(universeOwner).increaseAllowance(erc20RewardWarperForTRV.address, REWARD_AMOUNT_A);
 
@@ -444,9 +428,9 @@ export function testVariousWarperOperations(): void {
         expectedProtocolFeeFromRewards: expectedProtocolFeeA,
       } = getExpectedFeesOnERC20RewardDistribution(
         REWARD_AMOUNT_A,
-        convertPercentage(LISTING_1_REWARD_RATE_PERCENT),
-        convertPercentage(TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT),
-        convertPercentage(PROTOCOL_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(LISTING_1_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(PROTOCOL_REWARD_RATE_PERCENT),
       );
 
       const distributeRewards_TX_A = erc20RewardWarperForTRV
@@ -454,20 +438,24 @@ export function testVariousWarperOperations(): void {
         .disperseRewards(1, 1, LISTER_TOKEN_ID_1, REWARD_AMOUNT_A, renterA.address, rewardToken.address);
 
       await expect(distributeRewards_TX_A).to.be.fulfilled;
-      const receipt_A = await (await distributeRewards_TX_A).wait();
-      const events_A = await erc20RewardWarperForTRV.queryFilter(
-        erc20RewardWarperForTRV.filters.RewardsDistributed(),
-        receipt_A.blockNumber,
-      );
-      const rewardsDistributed_A = events_A[0].args;
-      expect(rewardsDistributed_A).to.equalStruct({
-        serviceId: 1,
-        tournamentId: 1,
-        championId: LISTER_TOKEN_ID_1,
-        rentalId: rentalId_A,
-        renter: renterA.address,
-        lister: lister.address,
-      });
+      // const receipt_A = await (await distributeRewards_TX_A).wait();
+      // const events_A = await erc20RewardWarperForTRV.queryFilter(
+      //   erc20RewardWarperForTRV.filters.RewardsDistributed(),
+      //   receipt_A.blockNumber,
+      // );
+      // const rewardsDistributed_A = events_A[0].args;
+      // expect({
+      //   serviceId: BigNumber.from(1),
+      //   tournamentId: BigNumber.from(1),
+      //   championId: LISTER_TOKEN_ID_1,
+      //   rentalId: rentalId_A,
+      //   renter: renterA.address,
+      //   lister: lister.address,
+      // }).to.equalStruct(rewardsDistributed_A);
+
+      await expect(distributeRewards_TX_A)
+        .to.emit(erc20RewardWarperForTRV, 'RewardsDistributed')
+        .withArgs(BigNumber.from(1), BigNumber.from(1), LISTER_TOKEN_ID_1, rentalId_A, renterA.address, lister.address);
 
       await validateResultingAmounts(
         metahub,
@@ -492,7 +480,7 @@ export function testVariousWarperOperations(): void {
       /**** Distribute for Rental B (when rental itself is already inactive) ****/
       await network.provider.send('evm_increaseTime', [RENTAL_B_PERIOD * 2]);
 
-      const REWARD_AMOUNT_B = convertToWei('1');
+      const REWARD_AMOUNT_B = convertToWei('1', DECIMALS_18);
       await rewardToken.connect(universeOwner).mint(universeOwner.address, REWARD_AMOUNT_B);
       await rewardToken.connect(universeOwner).increaseAllowance(erc20RewardWarperForTRV.address, REWARD_AMOUNT_B);
 
@@ -503,9 +491,9 @@ export function testVariousWarperOperations(): void {
         expectedProtocolFeeFromRewards: expectedProtocolFeeB,
       } = getExpectedFeesOnERC20RewardDistribution(
         REWARD_AMOUNT_B,
-        convertPercentage(LISTING_2_REWARD_RATE_PERCENT),
-        convertPercentage(TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT),
-        convertPercentage(PROTOCOL_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(LISTING_2_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(TRV_UNIVERSE_WARPER_REWARD_RATE_PERCENT),
+        convertPercentageToProtocolUint16(PROTOCOL_REWARD_RATE_PERCENT),
       );
 
       const distributeRewards_TX_B = erc20RewardWarperForTRV
@@ -513,20 +501,9 @@ export function testVariousWarperOperations(): void {
         .disperseRewards(1, 2, LISTER_TOKEN_ID_2, REWARD_AMOUNT_B, renterB.address, rewardToken.address);
 
       await expect(distributeRewards_TX_B).to.be.fulfilled;
-      const receipt_B = await (await distributeRewards_TX_B).wait();
-      const events_B = await erc20RewardWarperForTRV.queryFilter(
-        erc20RewardWarperForTRV.filters.RewardsDistributed(),
-        receipt_B.blockNumber,
-      );
-      const rewardsDistributed_B = events_B[0].args;
-      expect(rewardsDistributed_B).to.equalStruct({
-        serviceId: 1,
-        tournamentId: 2,
-        championId: LISTER_TOKEN_ID_2,
-        rentalId: rentalId_B,
-        renter: renterB.address,
-        lister: lister.address,
-      });
+      await expect(distributeRewards_TX_B)
+        .to.emit(erc20RewardWarperForTRV, 'RewardsDistributed')
+        .withArgs(BigNumber.from(1), BigNumber.from(2), LISTER_TOKEN_ID_2, rentalId_B, renterB.address, lister.address);
 
       await validateResultingAmounts(
         metahub,
@@ -588,7 +565,7 @@ export function getExpectedFeesOnERC20RewardDistribution(
 
   let expectedUniverseFee = BigNumber.from(rewardAmount)
     .mul(universeFeeRewardPercentConverted)
-    .div(HUNDRED_PERCENT_PRECISION_4);
+    .div(HUNDRED_PERCENT_CONVERTED_SCALE_2);
   if (BigNumber.from(leftover).lte(expectedUniverseFee)) {
     expectedUniverseFee = BigNumber.from(leftover);
     leftover = BigNumber.from(0);
@@ -598,7 +575,7 @@ export function getExpectedFeesOnERC20RewardDistribution(
 
   let expectedProtocolFee = BigNumber.from(leftover)
     .mul(protocolFeeRewardPercentConverted)
-    .div(HUNDRED_PERCENT_PRECISION_4);
+    .div(HUNDRED_PERCENT_CONVERTED_SCALE_2);
   if (BigNumber.from(leftover).lte(expectedProtocolFee)) {
     expectedProtocolFee = BigNumber.from(leftover);
     leftover = BigNumber.from(0);
@@ -608,7 +585,7 @@ export function getExpectedFeesOnERC20RewardDistribution(
 
   let expectedListerFee = BigNumber.from(leftover)
     .mul(listerFeeRewardPercentConverted)
-    .div(HUNDRED_PERCENT_PRECISION_4);
+    .div(HUNDRED_PERCENT_CONVERTED_SCALE_2);
   if (BigNumber.from(leftover).lte(expectedListerFee)) {
     expectedListerFee = BigNumber.from(leftover);
     leftover = BigNumber.from(0);

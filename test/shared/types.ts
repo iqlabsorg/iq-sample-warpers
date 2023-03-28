@@ -10,8 +10,14 @@ import {
   IListingManager,
   IListingTermsRegistry,
   ITaxTermsRegistry,
-} from '@iqprotocol/solidity-contracts-nft/typechain';
-import { Auth, ERC20RewardWarperForTRV, SolidityInterfaces } from '../../typechain';
+} from '@iqprotocol/iq-space-protocol/typechain';
+import {
+  Auth,
+  ERC20RewardWarperForTRV,
+  IQPixelsteinsArsenalWarper,
+  IWarperManager,
+  SolidityInterfaces,
+} from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
 declare module 'mocha' {
@@ -29,6 +35,7 @@ export interface Contracts {
   listingTermsRegistry: IListingTermsRegistry;
   rentingManager: IRentingManager;
   universeRegistry: IUniverseRegistry;
+  warperManager: IWarperManager;
   taxTermsRegistry: ITaxTermsRegistry;
 
   wizardsV1: {
@@ -38,11 +45,16 @@ export interface Contracts {
   };
 
   theRedVillage: TheRedVillageContracts;
+  iqPixelsteins: IQPixelsteinsContracts;
 }
 
 interface TheRedVillageContracts {
   erc20RewardWarperForTRV: ERC20RewardWarperForTRV;
   rewardToken: ERC20Mock;
+}
+
+interface IQPixelsteinsContracts {
+  iqPixelsteinsArsenalWarper: IQPixelsteinsArsenalWarper;
 }
 
 export interface Mocks {
