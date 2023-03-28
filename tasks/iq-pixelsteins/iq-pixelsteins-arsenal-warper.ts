@@ -22,5 +22,14 @@ task('deploy:iq-pixelsteins:arsenal-warper', 'Deploy the IQPixelsteinsArsenalWar
     console.log('Tx:', transactionHash);
     console.log('Warper address:', address);
 
+    if (hre.network.name !== 'hardhat') {
+      await hre.run('verification:verify', {
+        contractName: 'IQPixelsteinsArsenalWarper',
+        contractAddress: address,
+        constructorArguments: [initData],
+        proxyVerification: false,
+      });
+    }
+
     return new IQPixelsteinsArsenalWarper__factory(deployer).attach(address);
   });

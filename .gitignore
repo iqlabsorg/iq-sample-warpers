@@ -9,8 +9,7 @@ typechain
 
 # Hardhat files
 cache
-deployments/hardhat
-deployments/localhost
+deployments
 # Exported artifacts
 artifacts
 *.dbg.json
