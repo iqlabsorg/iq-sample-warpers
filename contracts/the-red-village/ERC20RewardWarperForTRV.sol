@@ -147,7 +147,7 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
-        (, uint256 tokenId) = _tokenWithId(rentalAgreement.warpedAssets[0]);
+        // (, uint256 tokenId) = _tokenWithId(rentalAgreement.warpedAssets[0]);
 
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
