@@ -25,14 +25,6 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
      */
     bytes4 private immutable RENTING_MANAGER;
 
-    struct RentalDetails {
-        IListingTermsRegistry.ListingTerms listingTerms;
-        ITaxTermsRegistry.TaxTerms universeTaxTerms;
-        ITaxTermsRegistry.TaxTerms protocolTaxTerms;
-        uint256 rentalId;
-        uint256 listingId;
-    }
-
     /**
      * @dev renter address => tokenId => rentalId.
      */
@@ -58,7 +50,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
      * @param rentId Rent ID.
      * @return RentalDetails.
      */
-    function getRentalDetails(uint256 rentId) public view returns (RentalDetails memory) {
+    function getRentalDetails(uint256 rentId) public view returns (IUniversusWarper.RentalDetails memory) {
         return _rentalDetails[rentId];
     }
 
