@@ -58,7 +58,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
      * @param rentId Rent ID.
      * @return RentalDetails.
      */
-    function getRentalDetails(uint256 rentId) public view returns (RentalDetails) {
+    function getRentalDetails(uint256 rentId) public view returns (RentalDetails memory) {
         return _rentalDetails[rentId];
     }
 
