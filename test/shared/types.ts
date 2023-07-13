@@ -14,6 +14,7 @@ import {
 import {
   Auth,
   ERC20RewardWarperForTRV,
+  UniversusWarper,
   IQPixelsteinsArsenalWarper,
   IWarperManager,
   SolidityInterfaces,
@@ -46,11 +47,16 @@ export interface Contracts {
 
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
+  universus: UniversusContracts;
 }
 
 interface TheRedVillageContracts {
   erc20RewardWarperForTRV: ERC20RewardWarperForTRV;
   rewardToken: ERC20Mock;
+}
+
+interface UniversusContracts {
+  warperForUniversus: UniversusWarper;
 }
 
 interface IQPixelsteinsContracts {
