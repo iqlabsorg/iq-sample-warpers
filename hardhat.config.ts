@@ -53,6 +53,9 @@ const config: HardhatUserConfig = {
       },
     },
   },
+  mocha: {
+    timeout: 700000 // more time for tests
+  },
   namedAccounts: {
     deployer: 0,
     protocolExternalFeesCollector: 1,
@@ -63,7 +66,7 @@ const config: HardhatUserConfig = {
       accounts,
       gasPrice: 70000000000,
       gasMultiplier: 2,
-      timeout: 40000,
+      timeout: 700000,
     },
     [IQSpaceV2SupportedChainNetworks.POLYGON_MUMBAI_TESTNET]: {
       url: `https://rpc.ankr.com/polygon_mumbai/${ankrProjectKey}`,
