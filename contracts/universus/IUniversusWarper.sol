@@ -31,8 +31,8 @@ interface IUniversusWarper {
 
     /**
      * @dev Returns the rental details for a given rental ID.
-     * @param rentId Rental ID.
+     * @param rentalId Rental ID.
      * @return RentalDetails.
      */
-    function getRentalDetails(uint256 rentId) external view returns (RentalDetails memory);
+    function getRentalDetails(uint256 rentalId) external view returns (RentalDetails memory);
 }

@@ -36,25 +36,6 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     mapping(uint256 => RentalDetails) internal _rentalDetails;
 
     /**
-     * @dev Returns last active rentalId for `renter` and `tokenId`.
-     * @param renter Renter.
-     * @param tokenId Token ID.
-     * @return Rental ID.
-     */
-    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256) {
-        return _lastActiveRental[renter][tokenId];
-    }
-
-    /**
-     * @dev Returns RentalDetails for 'rentalId'.
-     * @param rentId Rent ID.
-     * @return RentalDetails.
-     */
-    function getRentalDetails(uint256 rentId) public view returns (IUniversusWarper.RentalDetails memory) {
-        return _rentalDetails[rentId];
-    }
-
-    /**
      * @dev Constructor for the IQNFTWarper contract.
      */
     constructor(bytes memory config) Auth() warperInitializer {
@@ -75,7 +56,6 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
-        // (, uint256 tokenId) = _tokenWithId(rentalAgreement.warpedAssets[0]);
 
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
@@ -92,6 +72,25 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
 
         // Inform Renting Manager that everything is fine
         return (true, "");
+    }
+
+    /**
+     * @dev Returns last active rentalId for `renter` and `tokenId`.
+     * @param renter Renter.
+     * @param tokenId Token ID.
+     * @return Rental ID.
+     */
+    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256) {
+        return _lastActiveRental[renter][tokenId];
+    }
+
+    /**
+     * @dev Returns RentalDetails for 'rentalId'.
+     * @param rentalId Rent ID.
+     * @return RentalDetails.
+     */
+    function getRentalDetails(uint256 rentalId) public view returns (IUniversusWarper.RentalDetails memory) {
+        return _rentalDetails[rentalId];
     }
 
     /**
