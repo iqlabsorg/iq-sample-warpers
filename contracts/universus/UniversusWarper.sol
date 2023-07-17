@@ -21,6 +21,11 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     bytes4 private immutable LISTING_MANAGER;
 
     /**
+     * @dev Reward address for this universe.
+     */
+    address private universeRewardAddress;
+
+    /**
      * @dev RentingManager contact key.
      */
     bytes4 private immutable RENTING_MANAGER;
@@ -41,8 +46,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
 
-        // (, , address rewardPool) = abi.decode(config, (address, address, address));
-        // setRewardPool(rewardPool);
+        (, , address universeRewardAddress) = abi.decode(config, (address, address, address)); //??? where i should get this address ???
 
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
@@ -105,6 +109,14 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
      */
     function getRentalDetails(uint256 rentalId) public view returns (IUniversusWarper.RentalDetails memory) {
         return _rentalDetails[rentalId];
+    }
+
+    /**
+     * @dev Returns reward address for this universe.
+     * @return universeRewardAddress.
+     */
+    function getUniverseRewardAddress() public view returns (address) {
+        return universeRewardAddress;
     }
 
     /**
