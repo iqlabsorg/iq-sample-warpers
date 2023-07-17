@@ -56,7 +56,6 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
-
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
             // Latest active rental is persisted.
@@ -69,9 +68,20 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
             rentalDetails.rentalId = rentalId;
             rentalDetails.listingId = rentalAgreement.listingId;
 
+            IListingManager listingManager = IListingManager(
+                IContractRegistry(_metahub()).getContract(LISTING_MANAGER)
+            );
+            IRentingManager rentingManager = IRentingManager(
+                IContractRegistry(_metahub()).getContract(RENTING_MANAGER)
+            );
+            Rentings.Agreement memory agreement = rentingManager.rentalAgreementInfo(rentalId);
+
+            rentalDetails.lister = IListingManager().listingInfo(rentalAgreement.listing).beneficiary;
+
+            rentalDetails.protocol = IMetahub(_metahub()).protocolExternalFeesCollector();
+
             // Emit the OnRentHookEvent for every rent
             emit OnRentHookEvent(rentalAgreement.renter, tokenId, rentalId);
-
         }
 
         // Inform Renting Manager that everything is fine
@@ -79,10 +89,10 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     }
 
     /**
-     * @dev Returns last active rentalId for `renter` and `tokenId`.
-     * @param renter Renter.
+     * @dev Returns the last active rental ID for renter and token ID.
+     * @param renter Renter address.
      * @param tokenId Token ID.
-     * @return Rental ID.
+     * @return The last active rental ID.
      */
     function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256) {
         return _lastActiveRental[renter][tokenId];

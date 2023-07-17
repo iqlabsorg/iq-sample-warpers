@@ -12,6 +12,8 @@ interface IUniversusWarper {
      * @param protocolTaxTerms Protocol tax terms information.
      * @param rentalId Asset rental ID.
      * @param listingId Asset listing ID.
+     * @param lister Lister address.
+     * @param protocol Protocol address.
      */
     struct RentalDetails {
         IListingTermsRegistry.ListingTerms listingTerms;
@@ -19,19 +21,21 @@ interface IUniversusWarper {
         ITaxTermsRegistry.TaxTerms protocolTaxTerms;
         uint256 rentalId;
         uint256 listingId;
+        address lister;
+        address protocol;
     }
 
      /**
      * @dev Emits when asset are rented.
      * @param renter Renter Address.
+     * @param tokenId Asset token ID.
      * @param rentalId Asset rental ID.
-     * @param listingId Asset listing ID.
      */
     event OnRentHookEvent(
         address renter,
         uint256 tokenId,
         uint256 rentalId
-    )
+    );
 
     /**
      * @dev Returns the last active rental ID for renter and token ID.
