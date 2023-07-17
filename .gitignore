@@ -10,6 +10,7 @@ typechain
 # Hardhat files
 cache
 deployments
+active-deployment
 # Exported artifacts
 artifacts
 *.dbg.json
