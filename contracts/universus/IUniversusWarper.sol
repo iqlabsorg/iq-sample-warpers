@@ -21,6 +21,18 @@ interface IUniversusWarper {
         uint256 listingId;
     }
 
+     /**
+     * @dev Emits when asset are rented.
+     * @param renter Renter Address.
+     * @param rentalId Asset rental ID.
+     * @param listingId Asset listing ID.
+     */
+    event OnRentHookEvent(
+        address renter,
+        uint256 tokenId,
+        uint256 rentalId
+    )
+
     /**
      * @dev Returns the last active rental ID for renter and token ID.
      * @param renter Renter address.

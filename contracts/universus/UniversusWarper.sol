@@ -68,6 +68,10 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
             rentalDetails.protocolTaxTerms = rentalAgreement.agreementTerms.protocolTaxTerms;
             rentalDetails.rentalId = rentalId;
             rentalDetails.listingId = rentalAgreement.listingId;
+
+            // Emit the OnRentHookEvent for every rent
+            emit OnRentHookEvent(rentalAgreement.renter, tokenId, rentalId);
+
         }
 
         // Inform Renting Manager that everything is fine
