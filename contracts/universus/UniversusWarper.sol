@@ -23,7 +23,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     /**
      * @dev Reward address for this universe.
      */
-    address private universeRewardAddress;
+    address private _universeRewardAddress;
 
     /**
      * @dev RentingManager contact key.
@@ -46,7 +46,9 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
 
-        (, , address universeRewardAddress) = abi.decode(config, (address, address, address)); //??? where i should get this address ???
+        (, , address universeRewardAddress) = abi.decode(config, (address, address, address));
+
+        _universeRewardAddress = universeRewardAddress;
 
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
@@ -75,12 +77,9 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
             IListingManager listingManager = IListingManager(
                 IContractRegistry(_metahub()).getContract(LISTING_MANAGER)
             );
-            IRentingManager rentingManager = IRentingManager(
-                IContractRegistry(_metahub()).getContract(RENTING_MANAGER)
-            );
-            Rentings.Agreement memory agreement = rentingManager.rentalAgreementInfo(rentalId);
 
-            rentalDetails.lister = IListingManager().listingInfo(rentalAgreement.listing).beneficiary;
+            rentalDetails.lister = rentalAgreement.listingInfo(rentalAgreement.listingId).beneficiary;
+            // rentalDetails.lister = IListingManager().listingInfo(rentalAgreement.listing).beneficiary;
 
             rentalDetails.protocol = IMetahub(_metahub()).protocolExternalFeesCollector();
 
