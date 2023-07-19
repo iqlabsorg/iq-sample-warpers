@@ -78,9 +78,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
                 IContractRegistry(_metahub()).getContract(LISTING_MANAGER)
             );
 
-            rentalDetails.lister = rentalAgreement.listingInfo(rentalAgreement.listingId).beneficiary;
-            // rentalDetails.lister = IListingManager().listingInfo(rentalAgreement.listing).beneficiary;
-
+            rentalDetails.lister = listingManager.listingInfo(rentalAgreement.listingId).beneficiary;
             rentalDetails.protocol = IMetahub(_metahub()).protocolExternalFeesCollector();
 
             // Emit the OnRentHookEvent for every rent
@@ -112,10 +110,10 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
 
     /**
      * @dev Returns reward address for this universe.
-     * @return universeRewardAddress.
+     * @return _universeRewardAddress.
      */
     function getUniverseRewardAddress() public view returns (address) {
-        return universeRewardAddress;
+        return _universeRewardAddress;
     }
 
     /**
