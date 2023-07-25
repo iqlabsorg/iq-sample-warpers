@@ -1,9 +1,11 @@
 import { Auth__factory, UniversusWarper, SolidityInterfaces } from '../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import { getSolidityInterfaceId } from '../../../../shared/utils/solidity-interfaces';
 
 export function testWarperAccessControlAndMisc(): void {
   /**** Contracts ****/
-  let warperForUniversus: UniversusWarper;
+  let universusWarper: UniversusWarper;
   /**** Mocks & Samples ****/
   let solidityInterfaces: SolidityInterfaces;
   /**** Signers ****/
@@ -14,17 +16,108 @@ export function testWarperAccessControlAndMisc(): void {
 
   beforeEach(async function () {
     /**** Contracts ****/
-    warperForUniversus = this.contracts.universus.warperForUniversus;
+    universusWarper = this.contracts.universus.warperForUniversus;
     /**** Mocks & Samples ****/
     solidityInterfaces = this.mocks.misc.solidityInterfaces;
     /**** Signers ****/
     deployer = this.signers.named.deployer;
     [warperOwner, authorizedCaller, stranger] = this.signers.unnamed;
 
-    await warperForUniversus.connect(deployer).transferOwnership(warperOwner.address);
-    await Auth__factory.connect(warperForUniversus.address, warperOwner).setAuthorizationStatus(
+    await universusWarper.connect(deployer).transferOwnership(warperOwner.address);
+    await Auth__factory.connect(universusWarper.address, warperOwner).setAuthorizationStatus(
       authorizedCaller.address,
       true,
     );
+  });
+
+  // it(`does not work when __onRent is called by not Renting Manager`, async () => {
+  //   await expect(
+  //     warperForUniversus.connect(stranger).__onRent(
+  //       0,
+  //       {
+  //         warpedAssets: [],
+  //         universeId: 0,
+  //         collectionId: EMPTY_BYTES32_DATA_HEX,
+  //         listingId: 0,
+  //         renter: ADDRESS_ZERO,
+  //         startTime: 0,
+  //         endTime: 0,
+  //         agreementTerms: {
+  //           listingTerms: {
+  //             strategyId: EMPTY_BYTES4_DATA_HEX,
+  //             strategyData: EMPTY_BYTES_DATA_HEX,
+  //           },
+  //           universeTaxTerms: {
+  //             strategyId: EMPTY_BYTES4_DATA_HEX,
+  //             strategyData: EMPTY_BYTES_DATA_HEX,
+  //           },
+  //           protocolTaxTerms: {
+  //             strategyId: EMPTY_BYTES4_DATA_HEX,
+  //             strategyData: EMPTY_BYTES_DATA_HEX,
+  //           },
+  //           paymentTokenData: {
+  //             paymentToken: ADDRESS_ZERO,
+  //             paymentTokenQuote: 0,
+  //           },
+  //         },
+  //       },
+  //       convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
+  //         '0',
+  //         '0',
+  //         '0',
+  //         '0',
+  //         ADDRESS_ZERO,
+  //         ADDRESS_ZERO,
+  //         ADDRESS_ZERO,
+  //         0,
+  //       ),
+  //     ),
+  //   ).to.be.revertedWithCustomError(warperForUniversus, 'CallerIsNotRentingManager');
+  // });
+
+  it('supports necessary interfaces', async () => {
+    await expect(
+      universusWarper.connect(stranger).supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IERC721')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper.connect(stranger).supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IERC165')),
+    ).to.be.fulfilled;
+
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IUniversusWarper')),
+    ).to.be.fulfilled;
+
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'ITaxTermsRegistry')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'ERC721ConfigurablePreset')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IRentingHookMechanics')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IRentingManager')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'ITaxTermsRegistry')),
+    ).to.be.fulfilled;
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IListingTermsRegistry')),
+    ).to.be.fulfilled;
   });
 }

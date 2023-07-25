@@ -44,7 +44,6 @@ export interface Contracts {
     universeWizard: IUniverseWizardV1;
     warperWizard: IWarperWizardV1;
   };
-
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
   universus: UniversusContracts;
