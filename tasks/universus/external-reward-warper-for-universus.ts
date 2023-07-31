@@ -1,3 +1,4 @@
+import { ADDRESS_ZERO } from '@iqprotocol/iq-space-protocol';
 import { UniversusWarper__factory } from '../../typechain';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
@@ -12,9 +13,17 @@ task('deploy:trv:external-reward-warper-for-universus', 'Deploy the UniversusWar
     //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
     console.log('Deploying...', { original, metahub });
 
+    if (universeRewardAddress === ADDRESS_ZERO) {
+      const universeRewardSigner = await hre.ethers.getNamedSigner('universeRewardAddress');
+      universeRewardAddress = universeRewardSigner.address;
+    }
+
     await hre.deployments.delete('UniversusWarper');
 
-    const initData = defaultAbiCoder.encode(['address', 'address', 'address'], [original, metahub, universeRewardAddress]);
+    const initData = defaultAbiCoder.encode(
+      ['address', 'address', 'address'],
+      [original, metahub, universeRewardAddress],
+    );
 
     const { address, transactionHash } = await hre.deployments.deploy('UniversusWarper', {
       from: deployer.address,

@@ -5,11 +5,11 @@ import { integrationTestIQPixelsteins } from './iq-pixelsteins';
 import { integrationTestUniversus } from './universus';
 
 baseContext('Unit Tests', function () {
-  // unitTestAuth();
+  unitTestAuth();
 });
 
 baseContext('Integration Tests', function () {
-  // integrationTestTRV();
-  // integrationTestIQPixelsteins();
+  integrationTestTRV();
+  integrationTestIQPixelsteins();
   integrationTestUniversus();
 });

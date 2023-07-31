@@ -54,11 +54,12 @@ const config: HardhatUserConfig = {
     },
   },
   mocha: {
-    timeout: 700000 // more time for tests
+    timeout: 700000, // more time for tests
   },
   namedAccounts: {
     deployer: 0,
     protocolExternalFeesCollector: 1,
+    universeRewardAddress: 2,
   },
   networks: {
     [IQSpaceV2SupportedChainNetworks.POLYGON_MAINNET]: {

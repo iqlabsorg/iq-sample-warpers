@@ -25,17 +25,13 @@ interface IUniversusWarper {
         address protocol;
     }
 
-     /**
+    /**
      * @dev Emits when asset are rented.
      * @param renter Renter Address.
      * @param tokenId Asset token ID.
      * @param rentalId Asset rental ID.
      */
-    event OnRentHookEvent(
-        address renter,
-        uint256 tokenId,
-        uint256 rentalId
-    );
+    event OnRentHookEvent(address renter, uint256 tokenId, uint256 rentalId);
 
     /**
      * @dev Returns the last active rental ID for renter and token ID.

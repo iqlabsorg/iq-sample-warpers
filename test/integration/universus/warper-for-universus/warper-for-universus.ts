@@ -17,14 +17,14 @@ export function integrationTestWarperForUniversus(): void {
         })) as UniversusWarper;
 
         return {
-          warperForUniversus
+          warperForUniversus,
         };
       };
 
       const { warperForUniversus } = await loadFixture(fixtureExternalRewardWarperForUniversus);
 
       this.contracts.universus = {
-        warperForUniversus
+        warperForUniversus,
       };
     });
 
