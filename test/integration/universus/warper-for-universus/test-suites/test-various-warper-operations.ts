@@ -39,6 +39,7 @@ import { calculateTaxFeeForFixedRateInWei, SECONDS_IN_DAY } from '../../../../..
 import { makeSDKListingParams } from '../../../../shared/utils/listing-sdk-utils';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../shared/utils/renting-sdk-utils';
 import { expect } from 'chai';
+import { listing } from '@iqprotocol/iq-space-protocol/typechain/contracts';
 
 export function testVariousWarperOperations(): void {
   /**** Constants ****/
@@ -132,6 +133,16 @@ export function testVariousWarperOperations(): void {
   context('Renting `ERC20 Reward Warper for Universus` with various cases', () => {
     const UNIVERSUS_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
     const UNIVERSUS_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
+    const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+      '0' /*$*/,
+      periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
+    );
+    const LISTING_2_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+      '1500' /*$*/,
+      periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
+    );
+    const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
+    const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
 
     let UNIVERSUS_UNIVERSE_ID: BigNumberish;
     let universeTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
@@ -143,6 +154,15 @@ export function testVariousWarperOperations(): void {
         name: 'Universus',
         paymentTokens: [new AccountId({ chainId, address: baseToken.address })],
       };
+
+      listingTerms_1 = makeFixedRateWithRewardListingTermsFromUnconverted(
+        LISTING_1_BASE_RATE,
+        LISTING_1_REWARD_RATE_PERCENT,
+      );
+      listingTerms_2 = makeFixedRateWithRewardListingTermsFromUnconverted(
+        LISTING_2_BASE_RATE,
+        LISTING_2_REWARD_RATE_PERCENT,
+      );
 
       universeTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
         UNIVERSUS_UNIVERSE_WARPER_RATE_PERCENT,
@@ -176,18 +196,8 @@ export function testVariousWarperOperations(): void {
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
-      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
-        '300' /*$*/,
-        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
-      );
-      const LISTING_1_REWARD_RATE_PERCENT = '0'; /*%*/
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-
-      listingTerms_1 = makeFixedRateWithRewardListingTermsFromUnconverted(
-        LISTING_1_BASE_RATE,
-        LISTING_1_REWARD_RATE_PERCENT,
-      );
 
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
         UNIVERSUS_UNIVERSE_ID,
@@ -252,10 +262,15 @@ export function testVariousWarperOperations(): void {
         tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
         maxPaymentAmount: rentalFees.total,
       });
+
       const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
       if (!rentalId) {
         throw new Error('Rental Agreement was not found!');
       }
+
+      await expect(rentTx)
+        .to.emit(universusWarper, 'OnRentHookEvent')
+        .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
 
       await expect(universusWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
@@ -285,16 +300,6 @@ export function testVariousWarperOperations(): void {
     });
 
     it(`works properly with multi-rental and retrieving reward data`, async () => {
-      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
-        '0' /*$*/,
-        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
-      );
-      const LISTING_2_BASE_RATE = calculateBaseRateInBaseTokenEthers(
-        '1500' /*$*/,
-        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
-      );
-      const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
-      const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const LISTING_2_MAX_LOCK_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
@@ -315,7 +320,7 @@ export function testVariousWarperOperations(): void {
           maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
-        makeFixedRateWithRewardListingTermsFromUnconverted(LISTING_1_BASE_RATE, LISTING_1_REWARD_RATE_PERCENT),
+        listingTerms_1,
       );
       const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
       if (!listingId_1) {
@@ -343,7 +348,7 @@ export function testVariousWarperOperations(): void {
           maxLockPeriod: LISTING_2_MAX_LOCK_PERIOD,
           immediatePayout: true,
         },
-        makeFixedRateWithRewardListingTermsFromUnconverted(LISTING_2_BASE_RATE, LISTING_2_REWARD_RATE_PERCENT),
+        listingTerms_2,
       );
       const listingId_2 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_2.hash);
       if (!listingId_2) {
@@ -392,6 +397,21 @@ export function testVariousWarperOperations(): void {
         ),
       ).to.be.eventually.equal(rentalId_A);
 
+      const rental_A_Details = await UniversusWarper__factory.connect(
+        universusWarper.address,
+        stranger,
+      ).getRentalDetails(rentalId_A);
+
+      expect(rental_A_Details.listingTerms.strategyId).to.be.equal(listingTerms_1.strategyId);
+      expect(rental_A_Details.listingTerms.strategyData).to.be.equal(listingTerms_1.strategyData);
+      expect(rental_A_Details.universeTaxTerms.strategyId).to.be.equal(universeTaxTerms.strategyId);
+      expect(rental_A_Details.universeTaxTerms.strategyData).to.be.equal(universeTaxTerms.strategyData);
+      expect(rental_A_Details.protocolTaxTerms.strategyId).to.be.equal(protocolTaxTerms.strategyId);
+      expect(rental_A_Details.protocolTaxTerms.strategyData).to.be.equal(protocolTaxTerms.strategyData);
+      expect(rental_A_Details.rentalId).to.be.equal(rentalId_A);
+      expect(rental_A_Details.listingId).to.be.equal(listingId_1);
+      expect(rental_A_Details.lister).to.be.equal(lister.address);
+
       /**** Rental B ****/
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
         chainId,
@@ -428,9 +448,20 @@ export function testVariousWarperOperations(): void {
         ),
       ).to.be.eventually.equal(rentalId_B);
 
-      /**** TODO ****/
-      // check getRentalDetails
-      // check getLastActiveRentalId
+      const rental_B_Details = await UniversusWarper__factory.connect(
+        universusWarper.address,
+        stranger,
+      ).getRentalDetails(rentalId_B);
+
+      expect(rental_B_Details.listingTerms.strategyId).to.be.equal(listingTerms_2.strategyId);
+      expect(rental_B_Details.listingTerms.strategyData).to.be.equal(listingTerms_2.strategyData);
+      expect(rental_B_Details.universeTaxTerms.strategyId).to.be.equal(universeTaxTerms.strategyId);
+      expect(rental_B_Details.universeTaxTerms.strategyData).to.be.equal(universeTaxTerms.strategyData);
+      expect(rental_B_Details.protocolTaxTerms.strategyId).to.be.equal(protocolTaxTerms.strategyId);
+      expect(rental_B_Details.protocolTaxTerms.strategyData).to.be.equal(protocolTaxTerms.strategyData);
+      expect(rental_B_Details.rentalId).to.be.equal(rentalId_B);
+      expect(rental_B_Details.listingId).to.be.equal(listingId_2);
+      expect(rental_B_Details.lister).to.be.equal(lister.address);
     });
   });
 }

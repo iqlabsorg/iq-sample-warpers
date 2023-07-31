@@ -3,7 +3,7 @@ import { UniversusWarper__factory } from '../../typechain';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
 
-task('deploy:trv:external-reward-warper-for-universus', 'Deploy the UniversusWarper contract')
+task('deploy:universus:external-reward-warper-for-universus', 'Deploy the UniversusWarper contract')
   .addParam('original', 'Original NFT contract address', undefined, types.string, false)
   .addParam('metahub', 'Metahub contract address', undefined, types.string, false)
   .addParam('universeRewardAddress', 'The address receiver of universe rewards', undefined, types.string, false)

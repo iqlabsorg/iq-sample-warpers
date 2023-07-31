@@ -98,15 +98,31 @@ export function testWarperAccessControlAndMisc(): void {
     ).to.be.fulfilled;
 
     await expect(
+      universusWarper.connect(stranger).supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IWarper')),
+    ).to.be.fulfilled;
+
+    await expect(
       universusWarper
         .connect(stranger)
-        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'ERC721ConfigurablePreset')),
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IERC721Warper')),
     ).to.be.fulfilled;
 
     await expect(
       universusWarper
         .connect(stranger)
         .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IRentingHookMechanics')),
+    ).to.be.fulfilled;
+
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IAvailabilityPeriodMechanics')),
+    ).to.be.fulfilled;
+
+    await expect(
+      universusWarper
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IRentalPeriodMechanics')),
     ).to.be.fulfilled;
   });
 }
