@@ -1,9 +1,9 @@
 import { ADDRESS_ZERO } from '@iqprotocol/iq-space-protocol';
-import { UniversusWarper__factory } from '../../typechain';
+import { ExternalRewardWarper__factory } from '../../typechain';
 import { defaultAbiCoder } from 'ethers/lib/utils';
 import { task, types } from 'hardhat/config';
 
-task('deploy:universus:external-reward-warper-for-universus', 'Deploy the UniversusWarper contract')
+task('deploy:external-reward:external-reward-warper', 'Deploy the ExternalRewardWarper contract')
   .addParam('original', 'Original NFT contract address', undefined, types.string, false)
   .addParam('metahub', 'Metahub contract address', undefined, types.string, false)
   .addParam('universeRewardAddress', 'The address receiver of universe rewards', undefined, types.string, false)
@@ -18,21 +18,21 @@ task('deploy:universus:external-reward-warper-for-universus', 'Deploy the Univer
       universeRewardAddress = universeRewardSigner.address;
     }
 
-    await hre.deployments.delete('UniversusWarper');
+    await hre.deployments.delete('ExternalRewardWarper');
 
     const initData = defaultAbiCoder.encode(
       ['address', 'address', 'address'],
       [original, metahub, universeRewardAddress],
     );
 
-    const { address, transactionHash } = await hre.deployments.deploy('UniversusWarper', {
+    const { address, transactionHash } = await hre.deployments.deploy('ExternalRewardWarper', {
       from: deployer.address,
       args: [initData],
     });
     console.log('Tx:', transactionHash);
     console.log('Warper address:', address);
 
-    const instance = new UniversusWarper__factory(deployer).attach(address);
+    const instance = new ExternalRewardWarper__factory(deployer).attach(address);
 
     return instance;
   });

@@ -10,7 +10,7 @@ import {
   IUniverseRegistry,
   IUniverseWizardV1,
 } from '@iqprotocol/iq-space-protocol/typechain';
-import { Auth__factory, UniversusWarper, UniversusWarper__factory } from '../../../../../typechain';
+import { Auth__factory, ExternalRewardWarper, ExternalRewardWarper__factory } from '../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   ChainId,
@@ -57,7 +57,7 @@ export function testVariousWarperOperations(): void {
   let listingTermsRegistry: IListingTermsRegistry;
   let rentingManager: IRentingManager;
   let taxTermsRegistry: ITaxTermsRegistry;
-  let universusWarper: UniversusWarper;
+  let externalRewardWarper: ExternalRewardWarper;
   let listingWizardV1: IListingWizardV1;
   let universeWizardV1: IUniverseWizardV1;
   let universeRegistry: IUniverseRegistry;
@@ -94,7 +94,7 @@ export function testVariousWarperOperations(): void {
     universeRegistry = this.contracts.universeRegistry;
     taxTermsRegistry = this.contracts.taxTermsRegistry;
     rentingManager = this.contracts.rentingManager;
-    universusWarper = this.contracts.universus.warperForUniversus;
+    externalRewardWarper = this.contracts.externalReward.externalRewardWarper;
     /**** Mocks & Samples ****/
     baseToken = this.mocks.assets.baseToken;
     originalCollection = this.mocks.assets.originalCollection;
@@ -103,7 +103,7 @@ export function testVariousWarperOperations(): void {
     universeRewardAddress = this.signers.named.universeRewardAddress;
     [lister, renterA, renterB, universeOwner, stranger] = this.signers.unnamed;
 
-    await universusWarper.connect(deployer).transferOwnership(universeOwner.address);
+    await externalRewardWarper.connect(deployer).transferOwnership(universeOwner.address);
     protocolTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
       PROTOCOL_RATE_PERCENT,
       PROTOCOL_REWARD_RATE_PERCENT,
@@ -130,9 +130,9 @@ export function testVariousWarperOperations(): void {
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
   });
 
-  context('Renting `ERC20 Reward Warper for Universus` with various cases', () => {
-    const UNIVERSUS_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
-    const UNIVERSUS_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
+  context('Renting `ERC20 EXTERNAL REWARD WARPER ` with various cases', () => {
+    const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
+    const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
     const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
       '0' /*$*/,
       periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
@@ -144,14 +144,14 @@ export function testVariousWarperOperations(): void {
     const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
     const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
 
-    let UNIVERSUS_UNIVERSE_ID: BigNumberish;
+    let EXTERNAL_REWARD_WARPER_UNIVERSE_ID: BigNumberish;
     let universeTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
     let listingTerms_1: IListingTermsRegistry.ListingTermsStruct;
     let listingTerms_2: IListingTermsRegistry.ListingTermsStruct;
 
     beforeEach(async () => {
       const universeParams = {
-        name: 'Universus',
+        name: 'External Reward Warper Name',
         paymentTokens: [new AccountId({ chainId, address: baseToken.address })],
       };
 
@@ -165,16 +165,16 @@ export function testVariousWarperOperations(): void {
       );
 
       universeTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
-        UNIVERSUS_UNIVERSE_WARPER_RATE_PERCENT,
-        UNIVERSUS_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
       );
 
       const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
         universeParams,
-        AddressTranslator.createAssetType(new AccountId({ chainId, address: universusWarper.address }), 'erc721'),
+        AddressTranslator.createAssetType(new AccountId({ chainId, address: externalRewardWarper.address }), 'erc721'),
         universeTaxTerms,
         {
-          name: 'Universus Warper',
+          name: 'External Reward Warper',
           universeId: 0, // Unknown before-hand.
           paused: false,
         },
@@ -184,10 +184,10 @@ export function testVariousWarperOperations(): void {
       if (!newUniverseId) {
         throw new Error('Universe was not created!');
       } else {
-        UNIVERSUS_UNIVERSE_ID = newUniverseId;
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID = newUniverseId;
       }
 
-      await Auth__factory.connect(universusWarper.address, universeOwner).setAuthorizationStatus(
+      await Auth__factory.connect(externalRewardWarper.address, universeOwner).setAuthorizationStatus(
         universeOwner.address,
         true,
       );
@@ -200,7 +200,7 @@ export function testVariousWarperOperations(): void {
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
-        UNIVERSUS_UNIVERSE_ID,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -223,8 +223,8 @@ export function testVariousWarperOperations(): void {
         await listingTermsRegistry.allListingTerms(
           {
             listingId,
-            universeId: UNIVERSUS_UNIVERSE_ID,
-            warperAddress: universusWarper.address,
+            universeId: EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+            warperAddress: externalRewardWarper.address,
           },
           0,
           1,
@@ -237,7 +237,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId,
-        universusWarper.address,
+        externalRewardWarper.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -248,7 +248,7 @@ export function testVariousWarperOperations(): void {
       const expectedListerBaseFee = calculateListerBaseFee(LISTING_1_BASE_RATE, RENTAL_A_PERIOD);
       expect(rentalFees.listerBaseFee).to.be.equal(convertListerBaseFeeToWei(expectedListerBaseFee));
       expect(rentalFees.universeBaseFee).to.be.equal(
-        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, UNIVERSUS_UNIVERSE_WARPER_RATE_PERCENT),
+        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT),
       );
       expect(rentalFees.protocolFee).to.be.equal(
         calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, PROTOCOL_RATE_PERCENT),
@@ -269,22 +269,22 @@ export function testVariousWarperOperations(): void {
       }
 
       await expect(rentTx)
-        .to.emit(universusWarper, 'OnRentHookEvent')
+        .to.emit(externalRewardWarper, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
 
-      await expect(universusWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        UniversusWarper__factory.connect(universusWarper.address, stranger).getLastActiveRentalId(
+        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId);
       await expect(
-        UniversusWarper__factory.connect(universusWarper.address, stranger).getUniverseRewardAddress(),
+        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getUniverseRewardAddress(),
       ).to.be.eventually.equal(universeRewardAddress.address);
-      const rentalDetails = await UniversusWarper__factory.connect(universusWarper.address, stranger).getRentalDetails(
+      const rentalDetails = await ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getRentalDetails(
         rentalId,
       );
 
@@ -307,7 +307,7 @@ export function testVariousWarperOperations(): void {
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
-        UNIVERSUS_UNIVERSE_ID,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -335,7 +335,7 @@ export function testVariousWarperOperations(): void {
 
       /**** Listing 2 ****/
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
-        UNIVERSUS_UNIVERSE_ID,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -365,7 +365,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
-        universusWarper.address,
+        externalRewardWarper.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -385,20 +385,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_A)
-        .to.emit(universusWarper, 'OnRentHookEvent')
+        .to.emit(externalRewardWarper, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId_A);
-      await expect(universusWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        UniversusWarper__factory.connect(universusWarper.address, stranger).getLastActiveRentalId(
+        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId_A);
 
-      const rental_A_Details = await UniversusWarper__factory.connect(
-        universusWarper.address,
+      const rental_A_Details = await ExternalRewardWarper__factory.connect(
+        externalRewardWarper.address,
         stranger,
       ).getRentalDetails(rentalId_A);
 
@@ -416,7 +416,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_2,
-        universusWarper.address,
+        externalRewardWarper.address,
         renterB.address,
         RENTAL_B_PERIOD,
         baseToken.address,
@@ -436,20 +436,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_B)
-        .to.emit(universusWarper, 'OnRentHookEvent')
+        .to.emit(externalRewardWarper, 'OnRentHookEvent')
         .withArgs(renterB.address, LISTER_TOKEN_ID_2, rentalId_B);
-      await expect(universusWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
+      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
         renterB.address,
       );
       await expect(
-        UniversusWarper__factory.connect(universusWarper.address, stranger).getLastActiveRentalId(
+        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
           renterB.address,
           LISTER_TOKEN_ID_2,
         ),
       ).to.be.eventually.equal(rentalId_B);
 
-      const rental_B_Details = await UniversusWarper__factory.connect(
-        universusWarper.address,
+      const rental_B_Details = await ExternalRewardWarper__factory.connect(
+        externalRewardWarper.address,
         stranger,
       ).getRentalDetails(rentalId_B);
 
