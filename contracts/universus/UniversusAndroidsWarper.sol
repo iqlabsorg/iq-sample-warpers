@@ -16,7 +16,13 @@ import "../auth/Auth.sol";
 /**
  * @title Custom Warper for Universus
  */
-contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRentabilityMechanics, ERC721ConfigurablePreset, Auth {
+contract UniversusWarper is
+    IUniversusWarper,
+    IRentingHookMechanics,
+    IAssetRentabilityMechanics,
+    ERC721ConfigurablePreset,
+    Auth
+{
     /**
      * @dev ListingManager contact key.
      */
@@ -55,7 +61,10 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRenta
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
 
-        (, , address universeRewardAddress, address[] memory zeroBalanceCheckAddresses) = abi.decode(config, (address, address, address, address[]));
+        (, , address universeRewardAddress, address[] memory zeroBalanceCheckAddresses) = abi.decode(
+            config,
+            (address, address, address, address[])
+        );
 
         _universeRewardAddress = universeRewardAddress;
         _zeroBalanceCheckAddresses = zeroBalanceCheckAddresses;
@@ -107,7 +116,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRenta
         address renter,
         uint256,
         uint256
-    ) external override view returns (bool isRentable, string memory errorMessage) {
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         for (uint256 i = 0; i < _zeroBalanceCheckAddresses.length; i++) {
             if (IERC721(_zeroBalanceCheckAddresses[i]).balanceOf(renter) != 0) {
                 return (false, "Renter has Universus NFTs");

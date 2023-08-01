@@ -16,7 +16,13 @@ import "../auth/Auth.sol";
 /**
  * @title Custom Warper for Universus
  */
-contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRentabilityMechanics, ERC721ConfigurablePreset, Auth {
+contract UniversusWarper is
+    IUniversusWarper,
+    IRentingHookMechanics,
+    IAssetRentabilityMechanics,
+    ERC721ConfigurablePreset,
+    Auth
+{
     /**
      * @notice This error is thrown when the lengths of the collectionAddresses and requiredHoldings arrays do not match.
      * @dev The lengths of these arrays should always be equal, as each address in collectionAddresses should correspond to a required holding amount in requiredHoldings.
@@ -37,7 +43,7 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRenta
      * @dev An array storing the addresses of NFTs a user must own from each collection to be eligible for renting.
      * Each address corresponds to a different NFT collection.
      * The ownership status of NFTs from these collections will be checked for each user.
-    */
+     */
     address[] private _requiredCollectionAddresses;
 
     /**
@@ -67,9 +73,13 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRenta
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
 
-        (, , address universeRewardAddress, address[] memory requiredCollectionAddresses, uint256[] memory requiredMinimumCollectionAmountThresholds) = abi.decode(config, (address, address, address, address[], uint256[]));
-
-
+        (
+            ,
+            ,
+            address universeRewardAddress,
+            address[] memory requiredCollectionAddresses,
+            uint256[] memory requiredMinimumCollectionAmountThresholds
+        ) = abi.decode(config, (address, address, address, address[], uint256[]));
 
         _universeRewardAddress = universeRewardAddress;
         _requiredCollectionAddresses = requiredCollectionAddresses;
@@ -121,9 +131,12 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRenta
         address renter,
         uint256,
         uint256
-    ) external override view returns (bool isRentable, string memory errorMessage) {
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         for (uint256 i = 0; i < _requiredCollectionAddresses.length; i++) {
-            if (IERC721(_requiredCollectionAddresses[i]).balanceOf(renter) < _requiredMinimumCollectionAmountThresholds[i]) {
+            if (
+                IERC721(_requiredCollectionAddresses[i]).balanceOf(renter) <
+                _requiredMinimumCollectionAmountThresholds[i]
+            ) {
                 return (false, "Renter has not enough NFTs from required collections");
             }
         }
