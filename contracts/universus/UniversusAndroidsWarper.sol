@@ -3,10 +3,12 @@ pragma solidity ^0.8.15;
 
 import "@iqprotocol/iq-space-protocol/contracts/warper/ERC721/v1-controller/presets/ERC721ConfigurablePreset.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/renting-hook/IRentingHookMechanics.sol";
+import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 import "@iqprotocol/iq-space-protocol/contracts/contract-registry/Contracts.sol";
 import "@iqprotocol/iq-space-protocol/contracts/renting/renting-manager/IRentingManager.sol";
 import "@iqprotocol/iq-space-protocol/contracts/listing/listing-terms-registry/IListingTermsRegistry.sol";
 import "@iqprotocol/iq-space-protocol/contracts/tax/tax-terms-registry/ITaxTermsRegistry.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./IUniversusWarper.sol";
 import "../auth/Auth.sol";
@@ -14,7 +16,7 @@ import "../auth/Auth.sol";
 /**
  * @title Custom Warper for Universus
  */
-contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721ConfigurablePreset, Auth {
+contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, IAssetRentabilityMechanics, ERC721ConfigurablePreset, Auth {
     /**
      * @dev ListingManager contact key.
      */
@@ -24,6 +26,13 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
      * @dev Reward address for this universe.
      */
     address private _universeRewardAddress;
+
+    /**
+     * @dev A state variable to store an array of addresses that need to be checked in the ZeroBalanceWarper.
+     * Each address in this array represents a user that we need to verify whether they hold any NFTs or not.
+     * A user can rent an NFT only if their balance for each address in this array is zero.
+     */
+    address[] private _zeroBalanceCheckAddresses;
 
     /**
      * @dev RentingManager contact key.
@@ -46,9 +55,10 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
 
-        (, , address universeRewardAddress) = abi.decode(config, (address, address, address));
+        (, , address universeRewardAddress, address[] memory zeroBalanceCheckAddresses) = abi.decode(config, (address, address, address, address[]));
 
         _universeRewardAddress = universeRewardAddress;
+        _zeroBalanceCheckAddresses = zeroBalanceCheckAddresses;
 
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
@@ -86,6 +96,24 @@ contract UniversusWarper is IUniversusWarper, IRentingHookMechanics, ERC721Confi
         }
 
         // Inform Renting Manager that everything is fine
+        return (true, "");
+    }
+
+    /**
+     * @inheritdoc IAssetRentabilityMechanics
+     * @notice The asset is rentable when the renter has no Universus NFTs.
+     */
+    function __isRentableAsset(
+        address renter,
+        uint256,
+        uint256
+    ) external override view returns (bool isRentable, string memory errorMessage) {
+        for (uint256 i = 0; i < _zeroBalanceCheckAddresses.length; i++) {
+            if (IERC721(_zeroBalanceCheckAddresses[i]).balanceOf(renter) != 0) {
+                return (false, "Renter has Universus NFTs");
+            }
+        }
+
         return (true, "");
     }
 
