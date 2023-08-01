@@ -4,7 +4,7 @@ pragma solidity ^0.8.15;
 import "@iqprotocol/iq-space-protocol/contracts/listing/listing-terms-registry/IListingTermsRegistry.sol";
 import "@iqprotocol/iq-space-protocol/contracts/tax/tax-terms-registry/ITaxTermsRegistry.sol";
 
-interface IUniversusWarper {
+interface IExternalRewardWarper {
     /**
      * @dev Struct defining the rental details.
      * @param listingTerms Listing terms information.
