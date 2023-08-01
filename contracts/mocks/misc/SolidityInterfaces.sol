@@ -8,6 +8,7 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/r
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/ERC721/IERC721Warper.sol";
 import "../../the-red-village/IERC20RewardWarperForTRV.sol";
+import "../../universus/IUniversusWarper.sol";
 import "../../iq-pixelsteins/IIQPixelsteinsArsenalWarper.sol";
 
 contract SolidityInterfaces {
@@ -23,6 +24,7 @@ contract SolidityInterfaces {
         _list.push(Interface("IERC165", type(IERC165).interfaceId));
 
         _list.push(Interface("IERC20RewardWarperForTRV", type(IERC20RewardWarperForTRV).interfaceId));
+        _list.push(Interface("IUniversusWarper", type(IUniversusWarper).interfaceId));
         _list.push(Interface("IIQPixelsteinsArsenalWarper", type(IIQPixelsteinsArsenalWarper).interfaceId));
 
         _list.push(Interface("IAvailabilityPeriodMechanics", type(IAvailabilityPeriodMechanics).interfaceId));

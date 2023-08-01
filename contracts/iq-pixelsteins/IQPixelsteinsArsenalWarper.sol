@@ -12,7 +12,12 @@ import "./IIQPixelsteinsArsenalWarper.sol";
 /**
  * @title Custom Warper for ERC20 Tournament rewarding.
  */
-contract IQPixelsteinsArsenalWarper is IIQPixelsteinsArsenalWarper, IRentingHookMechanics, IAssetRentabilityMechanics, ERC721ConfigurablePreset {
+contract IQPixelsteinsArsenalWarper is
+    IIQPixelsteinsArsenalWarper,
+    IRentingHookMechanics,
+    IAssetRentabilityMechanics,
+    ERC721ConfigurablePreset
+{
     using EnumerableMap for EnumerableMap.AddressToUintMap;
     /**
      * @dev renter => uint256 (renter's current IQPixelstein rental end datetime in seconds).
@@ -75,9 +80,11 @@ contract IQPixelsteinsArsenalWarper is IIQPixelsteinsArsenalWarper, IRentingHook
     /**
      * @inheritdoc IIQPixelsteinsArsenalWarper
      */
-    function getTotalRentalDurations(
-        uint256 offset, uint256 limit
-    ) external view returns (address[] memory renterAddresses, uint256[] memory totalRentalDurations) {
+    function getTotalRentalDurations(uint256 offset, uint256 limit)
+        external
+        view
+        returns (address[] memory renterAddresses, uint256[] memory totalRentalDurations)
+    {
         uint256 indexSize = _rentersTotalRentalDuration.length();
         if (offset >= indexSize) return (new address[](0), new uint256[](0));
 
@@ -100,9 +107,9 @@ contract IQPixelsteinsArsenalWarper is IIQPixelsteinsArsenalWarper, IRentingHook
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
-        interfaceId == type(IRentingHookMechanics).interfaceId ||
-        interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
-        interfaceId == type(IIQPixelsteinsArsenalWarper).interfaceId ||
-        super.supportsInterface(interfaceId);
+            interfaceId == type(IRentingHookMechanics).interfaceId ||
+            interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
+            interfaceId == type(IIQPixelsteinsArsenalWarper).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }

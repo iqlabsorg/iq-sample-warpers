@@ -23,7 +23,6 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
      */
     bytes4 private immutable RENTING_MANAGER;
 
-
     /**
      * @dev serviceId => tournamentId => player => tokenId => rentalId.
      */
@@ -33,7 +32,7 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
     /**
      * @dev tokenId => rentalId.
      */
-    mapping(address => mapping (uint256 => uint256)) internal _lastActiveRental;
+    mapping(address => mapping(uint256 => uint256)) internal _lastActiveRental;
 
     /// @dev Address where the rewards get taken from.
     address internal _rewardPool;
@@ -62,21 +61,17 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
         address participant,
         address rewardTokenAddress
     ) external onlyAuthorizedCaller {
-        uint256 tournamentAssociatedRentalId = _tournamentAssociatedRental[serviceId][tournamentId][
-            participant
-        ][tokenId];
+        uint256 tournamentAssociatedRentalId = _tournamentAssociatedRental[serviceId][tournamentId][participant][
+            tokenId
+        ];
 
         // Check that participant exists!
         if (tournamentAssociatedRentalId == 0) {
             revert ParticipantDoesNotExist();
         }
 
-        IListingManager listingManager = IListingManager(
-            IContractRegistry(_metahub()).getContract(LISTING_MANAGER)
-        );
-        IRentingManager rentingManager = IRentingManager(
-            IContractRegistry(_metahub()).getContract(RENTING_MANAGER)
-        );
+        IListingManager listingManager = IListingManager(IContractRegistry(_metahub()).getContract(LISTING_MANAGER));
+        IRentingManager rentingManager = IRentingManager(IContractRegistry(_metahub()).getContract(RENTING_MANAGER));
 
         Rentings.Agreement memory agreement = rentingManager.rentalAgreementInfo(tournamentAssociatedRentalId);
         Listings.Listing memory listing = listingManager.listingInfo(agreement.listingId);
@@ -171,7 +166,7 @@ contract ERC20RewardWarperForTRV is IERC20RewardWarperForTRV, IRentingHookMechan
      * @param tokenId Token ID.
      * @return Rental ID.
      */
-    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns(uint256) {
+    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256) {
         return _lastActiveRental[renter][tokenId];
     }
 

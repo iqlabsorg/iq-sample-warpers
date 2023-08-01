@@ -10,21 +10,21 @@ export function integrationTestWarperForUniversus(): void {
       const fixtureExternalRewardWarperForUniversus = async (): Promise<{
         warperForUniversus: UniversusWarper;
       }> => {
-        const warperForUniversus = (await hre.run('deploy:trv:external-reward-warper-for-universus', {
+        const warperForUniversus = (await hre.run('deploy:universus:external-reward-warper-for-universus', {
           original: this.mocks.assets.originalCollection.address,
           metahub: this.contracts.metahub.address,
           universeRewardAddress: ADDRESS_ZERO,
         })) as UniversusWarper;
 
         return {
-          warperForUniversus
+          warperForUniversus,
         };
       };
 
       const { warperForUniversus } = await loadFixture(fixtureExternalRewardWarperForUniversus);
 
       this.contracts.universus = {
-        warperForUniversus
+        warperForUniversus,
       };
     });
 

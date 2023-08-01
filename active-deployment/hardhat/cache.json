@@ -1,342 +1,342 @@
 {
   "network": "hardhat",
   "status": "Finished",
-  "lastContract": "ERC20Mock",
+  "lastContract": "ERC721Mock",
   "contracts": {
     "ERC20Mock": {
       "contractName": "ERC20Mock",
       "args": [
-        "Reward Token",
-        "RWRD",
+        "Test ERC20",
+        "ONFT",
         18,
         {
           "type": "BigNumber",
-          "hex": "0x033b2e3c9fd0803ce8000000"
+          "hex": "0x52b7d2dcc80cd2e4000000"
         }
       ],
       "status": "Finished",
-      "deployment": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7"
+      "deployment": "0x5FbDB2315678afecb367f032d93F642f64180aa3"
     },
     "ACL": {
       "contractName": "ACL",
       "args": [],
       "status": "Finished",
-      "deployment": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3"
+      "deployment": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
     },
     "AssetClassRegistry": {
       "contractName": "AssetClassRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
         }
       ],
       "status": "Finished",
-      "deployment": "0x5067457698Fd6Fa1C6964e416b3f42713513B3dD"
+      "deployment": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
     },
     "Assets": {
       "contractName": "Assets",
       "args": [],
       "status": "Finished",
-      "deployment": "0x18E317A7D70d8fBf8e6E893616b52390EbBdb629"
+      "deployment": "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707"
     },
     "Accounts": {
       "contractName": "Accounts",
       "args": [],
       "status": "Finished",
-      "deployment": "0x4b6aB5F819A515382B0dEB6935D793817bB4af28"
+      "deployment": "0x0165878A594ca255338adfa4d48449f69242Eb8F"
     },
     "Metahub": {
       "contractName": "Metahub",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "baseToken": "0xAA292E8611aDF267e563f334Ee42320aC96D0463",
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "baseToken": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
           "protocolExternalFeesCollector": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
-          "assetClassRegistry": "0x5067457698Fd6Fa1C6964e416b3f42713513B3dD"
+          "assetClassRegistry": "0xDc64a140Aa3E981100a9becA4E685f962f0cF6C9"
         }
       ],
       "status": "Finished",
-      "deployment": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+      "deployment": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
     },
     "Listings": {
       "contractName": "Listings",
       "args": [],
       "status": "Finished",
-      "deployment": "0xc0F115A19107322cFBf1cDBC7ea011C19EbDB4F8"
+      "deployment": "0x610178dA211FEF7D417bC0e6FeD39F05609AD788"
     },
     "ListingManager": {
       "contractName": "ListingManager",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x34B40BA116d5Dec75548a9e9A8f15411461E8c70"
+      "deployment": "0xA51c1fc2f0D1a1b8494Ed1FE312d7C3a78Ed91C0"
     },
     "ListingConfiguratorController": {
       "contractName": "ListingConfiguratorController",
       "args": [],
       "status": "Finished",
-      "deployment": "0x22753E4264FDDc6181dc7cce468904A80a363E44"
+      "deployment": "0x0B306BF915C4d645ff596e518fAf3F9669b97016"
     },
     "ListingConfiguratorRegistry": {
       "contractName": "ListingConfiguratorRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "listingConfiguratorController": "0x22753E4264FDDc6181dc7cce468904A80a363E44",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "listingConfiguratorController": "0x0B306BF915C4d645ff596e518fAf3F9669b97016",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c"
+      "deployment": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
     },
     "ListingConfiguratorPresetFactory": {
       "contractName": "ListingConfiguratorPresetFactory",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "listingConfiguratorRegistry": "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "listingConfiguratorRegistry": "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE"
         }
       ],
       "status": "Finished",
-      "deployment": "0x3155755b79aA083bd953911C92705B7aA82a18F9"
+      "deployment": "0xc6e7DF5E7b4f2A278906862b61205850344D4e7d"
     },
     "ListingStrategyRegistry": {
       "contractName": "ListingStrategyRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x3aAde2dCD2Df6a8cAc689EE797591b2913658659"
+      "deployment": "0x322813Fd9A801c5507c9de605d63CEA4f2CE6c44"
     },
     "ListingTermsRegistry": {
       "contractName": "ListingTermsRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x1f10F3Ba7ACB61b2F50B9d6DdCf91a6f787C0E82"
+      "deployment": "0x7a2088a1bFc9d81c55368AE168C2C02570cB814F"
     },
     "Rentings": {
       "contractName": "Rentings",
       "args": [],
       "status": "Finished",
-      "deployment": "0x525C7063E7C20997BaaE9bDa922159152D0e8417"
+      "deployment": "0xc5a5C42992dECbae36851359345FE25997F5C42d"
     },
     "RentingManager": {
       "contractName": "RentingManager",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x5fc748f1FEb28d7b76fa1c6B07D8ba2d5535177c"
+      "deployment": "0xE6E340D132b5f46d1e472DebcD681B2aBc16e57E"
     },
     "WarperManager": {
       "contractName": "WarperManager",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x8A93d247134d91e0de6f96547cB0204e5BE8e5D8"
+      "deployment": "0xa82fF9aFd8f496c3d6ac40E2a0F282E47488CFc9"
     },
     "WarperPresetFactory": {
       "contractName": "WarperPresetFactory",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xd6e1afe5cA8D00A2EFC01B89997abE2De47fdfAf"
+      "deployment": "0xf5059a5D33d5853360D16C683c16e67980206f36"
     },
     "UniverseRegistry": {
       "contractName": "UniverseRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xCA8c8688914e0F7096c920146cd0Ad85cD7Ae8b9"
+      "deployment": "0x70e0bA845a1A0F2DA3359C97E0285013525FFC49"
     },
     "TaxStrategyRegistry": {
       "contractName": "TaxStrategyRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x976fcd02f7C4773dd89C309fBF55D5923B4c98a1"
+      "deployment": "0x0E801D84Fa97b50751Dbf25036d067dCf18858bF"
     },
     "TaxTermsRegistry": {
       "contractName": "TaxTermsRegistry",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xfcDB4564c18A9134002b9771816092C9693622e3"
+      "deployment": "0x5eb3Bc0a489C5A8288765d2336659EbCA68FCd00"
     },
     "TokenQuote": {
       "contractName": "TokenQuote",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x01c1DeF3b91672704716159C9041Aeca392DdFfb"
+      "deployment": "0x4c5859f0F772848b2D91F1D83E2Fe57935348029"
     },
     "ERC20RewardDistributor": {
       "contractName": "ERC20RewardDistributor",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xFD6F7A6a5c21A3f503EBaE7a473639974379c351"
+      "deployment": "0xCD8a1C3ba11CF5ECfa6267617243239504a98d90"
     },
     "ListingWizardV1": {
       "contractName": "ListingWizardV1",
       "args": [
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
       ],
       "status": "Finished",
-      "deployment": "0x5302E909d1e93e30F05B5D6Eea766363D14F9892"
+      "deployment": "0x2bdCC0de6bE1f7D2ee689a0342D76F52E8EFABa3"
     },
     "RentingWizardV1": {
       "contractName": "RentingWizardV1",
       "args": [
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
       ],
       "status": "Finished",
-      "deployment": "0x40a42Baf86Fc821f972Ad2aC878729063CeEF403"
+      "deployment": "0xc351628EB244ec633d5f21fBD6621e1a683B1181"
     },
     "GeneralGuildWizardV1": {
       "contractName": "GeneralGuildWizardV1",
       "args": [
-        "0xfaAddC93baf78e89DCf37bA67943E1bE8F37Bb8c",
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+        "0x9A9f2CCfdE556A7E9Ff0848998Aa4a0CFD8863AE",
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
       ],
       "status": "Finished",
-      "deployment": "0x986aaa537b8cc170761FDAC6aC4fc7F9d8a20A8C"
+      "deployment": "0xcbEAF3BDe82155F56486Fb5a1072cb8baAf547cc"
     },
     "UniverseWizardV1": {
       "contractName": "UniverseWizardV1",
       "args": [
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
       ],
       "status": "Finished",
-      "deployment": "0x870526b7973b56163a6997bB7C886F5E4EA53638"
+      "deployment": "0x162A433068F51e18b7d13932F27e66a3f99E6890"
     },
     "WarperWizardV1": {
       "contractName": "WarperWizardV1",
       "args": [
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
       ],
       "status": "Finished",
-      "deployment": "0xc582Bc0317dbb0908203541971a358c44b1F3766"
+      "deployment": "0x1fA02b2d6A771842690194Cf62D91bdd92BfE28d"
     },
     "ERC721AssetVault": {
       "contractName": "ERC721AssetVault",
       "args": [
-        "0xD5ac451B0c50B9476107823Af206eD814a2e2580",
-        "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3"
+        "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6",
+        "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
       ],
       "status": "Finished",
-      "deployment": "0x66F625B8c4c635af8b74ECe2d7eD0D58b4af3C3d"
+      "deployment": "0x4C4a2f8c81640e47606d3fd77B353E87Ba015584"
     },
     "ERC721AssetController": {
       "contractName": "ERC721AssetController",
       "args": [],
       "status": "Finished",
-      "deployment": "0x8bCe54ff8aB45CB075b044AE117b8fD91F9351aB"
+      "deployment": "0x21dF544947ba3E8b3c32561399E88B52Dc8b2823"
     },
     "ERC721WarperController": {
       "contractName": "ERC721WarperController",
       "args": [],
       "status": "Finished",
-      "deployment": "0x74Cf9087AD26D541930BaC724B7ab21bA8F00a27"
+      "deployment": "0x2E2Ed0Cfd3AD2f1d34481277b3204d807Ca2F8c2"
     },
     "ERC721ConfigurablePreset": {
       "contractName": "ERC721ConfigurablePreset",
       "args": [],
       "status": "Finished",
-      "deployment": "0xaca81583840B1bf2dDF6CDe824ada250C1936B4D"
+      "deployment": "0xDC11f7E700A4c898AE5CAddB1082cFfa76512aDD"
     },
     "GeneralGuildPreset": {
       "contractName": "GeneralGuildPreset",
       "args": [],
       "status": "Finished",
-      "deployment": "0x26B862f640357268Bd2d9E95bc81553a2Aa81D7E"
+      "deployment": "0x36b58F5C1969B7b6591D752ea6F5486D069010AB"
     },
     "FixedRateTaxController": {
       "contractName": "FixedRateTaxController",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0xddE78e6202518FF4936b5302cC2891ec180E8bFf"
+      "deployment": "0x202CCe504e04bEd6fC0521238dDf04Bc9E8E15aB"
     },
     "FixedRateWithRewardTaxController": {
       "contractName": "FixedRateWithRewardTaxController",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x045857BDEAE7C1c7252d611eB24eB55564198b4C"
+      "deployment": "0xBEc49fA140aCaA83533fB00A2BB19bDdd0290f25"
     },
     "FixedRateListingController": {
       "contractName": "FixedRateListingController",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x821f3361D454cc98b7555221A06Be563a7E2E0A6"
+      "deployment": "0x46b142DD1E924FAb83eCc3c08e4D46E82f005e0E"
     },
     "FixedRateWithRewardListingController": {
       "contractName": "FixedRateWithRewardListingController",
       "args": [
         {
-          "acl": "0x720472c8ce72c2A2D711333e064ABD3E6BbEAdd3",
-          "metahub": "0xD5ac451B0c50B9476107823Af206eD814a2e2580"
+          "acl": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+          "metahub": "0x2279B7A0a67DB372996a5FaB50D91eAA73d2eBe6"
         }
       ],
       "status": "Finished",
-      "deployment": "0x8F4ec854Dd12F1fe79500a1f53D0cbB30f9b6134"
+      "deployment": "0x4C2F7092C2aE51D986bEFEe378e50BD4dB99C901"
     },
     "ERC721Mock": {
       "contractName": "ERC721Mock",
@@ -345,9 +345,9 @@
         "ONFT"
       ],
       "status": "Finished",
-      "deployment": "0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876"
+      "deployment": "0x4631BCAbD6dF18D94796344963cB60d44a4136b6"
     }
   },
-  "startTime": 1679557307922,
-  "endTime": 1689186688163
+  "startTime": 1690821716406,
+  "endTime": 1690822120021
 }
