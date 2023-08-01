@@ -12,7 +12,7 @@ import "./IExternalRewardWarper.sol";
 import "../auth/Auth.sol";
 
 /**
- * @title Custom Warper for Universus
+ * @title Custom Warper for universes with external reward distribution
  */
 contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, ERC721ConfigurablePreset, Auth {
     /**
@@ -104,7 +104,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
      * @param rentalId Rent ID.
      * @return RentalDetails.
      */
-    function getRentalDetails(uint256 rentalId) public view returns (IUniversusWarper.RentalDetails memory) {
+    function getRentalDetails(uint256 rentalId) public view returns (IExternalRewardWarper.RentalDetails memory) {
         return _rentalDetails[rentalId];
     }
 
@@ -122,7 +122,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
             interfaceId == type(IRentingHookMechanics).interfaceId ||
-            interfaceId == type(IUniversusWarper).interfaceId ||
+            interfaceId == type(IExternalRewardWarper).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 }

@@ -3,4 +3,4 @@ import './the-red-village';
 import './iq-pixelsteins';
 import './auth';
 import './utils';
-import './universus';
+import './external-reward';
