@@ -17,7 +17,9 @@ import {
   ExternalRewardWarper,
   IQPixelsteinsArsenalWarper,
   IWarperManager,
+  MinimumThresholdWarper,
   SolidityInterfaces,
+  ZeroBalanceWarper,
 } from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
@@ -47,6 +49,8 @@ export interface Contracts {
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
   externalReward: ExternalRewardContracts;
+  zeroBalance: ZeroBalanceContracts;
+  minimumThreshold: MinimumThresholdContracts;
 }
 
 interface TheRedVillageContracts {
@@ -56,6 +60,16 @@ interface TheRedVillageContracts {
 
 interface ExternalRewardContracts {
   externalRewardWarper: ExternalRewardWarper;
+}
+
+interface ZeroBalanceContracts {
+  testZeroBalanceCollection: ERC721Mock;
+  zeroBalanceWarper: ZeroBalanceWarper;
+}
+
+interface MinimumThresholdContracts {
+  testThresholdCollection: ERC721Mock;
+  minimumThresholdWarper: MinimumThresholdWarper;
 }
 
 interface IQPixelsteinsContracts {

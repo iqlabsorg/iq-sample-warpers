@@ -1,5 +1,5 @@
 import { integrationTestExternalRewardWarper } from './external-reward-warper/external-reward-warper';
 
-export function integrationTestExternalRewardWarper(): void {
+export function integrationTestExternalReward(): void {
   integrationTestExternalRewardWarper();
 }

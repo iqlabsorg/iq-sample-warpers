@@ -25,17 +25,25 @@ interface IExternalRewardWarper {
         address protocol;
     }
 
-     /**
+    /**
      * @dev Emits when asset are rented.
      * @param renter Renter Address.
      * @param tokenId Asset token ID.
      * @param rentalId Asset rental ID.
      */
-    event OnRentHookEvent(
-        address renter,
-        uint256 tokenId,
-        uint256 rentalId
-    );
+    event OnRentHookEvent(address renter, uint256 tokenId, uint256 rentalId);
+
+    /**
+     * @dev Emits when reward address for universe is set.
+     * @param universeRewardAddress Universe reward address.
+     */
+    event UniverseRewardAddressSet(address universeRewardAddress);
+
+    /**
+     * @dev Set reward address for universe
+     * @param universeRewardAddress Universe reward address.
+     */
+    function setUniverseRewardAddress(address universeRewardAddress) external;
 
     /**
      * @dev Returns the last active rental ID for renter and token ID.
@@ -51,4 +59,10 @@ interface IExternalRewardWarper {
      * @return RentalDetails.
      */
     function getRentalDetails(uint256 rentalId) external view returns (RentalDetails memory);
+
+    /**
+     * @dev Returns reward address for universe.
+     * @return Universe reward address.
+     */
+    function getUniverseRewardAddress() external view returns (address);
 }

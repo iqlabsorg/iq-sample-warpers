@@ -48,7 +48,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
 
         (, , address universeRewardAddress) = abi.decode(config, (address, address, address));
 
-        _universeRewardAddress = universeRewardAddress;
+        setUniverseRewardAddress(universeRewardAddress);
 
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
@@ -89,30 +89,35 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
         return (true, "");
     }
 
+    function setUniverseRewardAddress(address universeRewardAddress) public override onlyOwner {
+        _universeRewardAddress = universeRewardAddress;
+
+        emit UniverseRewardAddressSet(universeRewardAddress);
+    }
+
     /**
-     * @dev Returns the last active rental ID for renter and token ID.
-     * @param renter Renter address.
-     * @param tokenId Token ID.
-     * @return The last active rental ID.
+     * @inheritdoc IExternalRewardWarper
      */
-    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256) {
+    function getLastActiveRentalId(address renter, uint256 tokenId) public view override returns (uint256) {
         return _lastActiveRental[renter][tokenId];
     }
 
     /**
-     * @dev Returns RentalDetails for 'rentalId'.
-     * @param rentalId Rent ID.
-     * @return RentalDetails.
+     * @inheritdoc IExternalRewardWarper
      */
-    function getRentalDetails(uint256 rentalId) public view returns (IExternalRewardWarper.RentalDetails memory) {
+    function getRentalDetails(uint256 rentalId)
+        public
+        view
+        override
+        returns (IExternalRewardWarper.RentalDetails memory)
+    {
         return _rentalDetails[rentalId];
     }
 
     /**
-     * @dev Returns reward address for this universe.
-     * @return _universeRewardAddress.
+     * @inheritdoc IExternalRewardWarper
      */
-    function getUniverseRewardAddress() public view returns (address) {
+    function getUniverseRewardAddress() public view override returns (address) {
         return _universeRewardAddress;
     }
 

@@ -1,11 +1,11 @@
 import { shouldBeLikeExternalRewardWarper } from './external-reward-warper.behaviour';
-import { ExternalRewardWarper } from '../../../../typechain';
 import hre from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { ADDRESS_ZERO } from '@iqprotocol/iq-space-sdk-js';
+import { ExternalRewardWarper } from '../../../../typechain';
 
 export function integrationTestExternalRewardWarper(): void {
-  describe('Tests for External Reward Warper', function () {
+  describe('ExternalRewardWarper', function () {
     beforeEach(async function () {
       const fixtureExternalRewardWarper = async (): Promise<{
         externalRewardWarper: ExternalRewardWarper;
