@@ -1,6 +1,7 @@
 .idea/*
 .vscode/*
 
+yarn-error.log
 node_modules
 .env
 coverage
@@ -10,6 +11,7 @@ typechain
 # Hardhat files
 cache
 deployments
+active-deployment
 # Exported artifacts
 artifacts
 *.dbg.json

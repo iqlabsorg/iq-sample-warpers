@@ -1,7 +1,7 @@
 {
   "network": "hardhat",
   "status": "Finished",
-  "lastContract": "ERC20Mock",
+  "lastContract": "ERC721Mock",
   "contracts": {
     "ERC20Mock": {
       "contractName": "ERC20Mock",
@@ -341,13 +341,13 @@
     "ERC721Mock": {
       "contractName": "ERC721Mock",
       "args": [
-        "Test ERC721",
-        "ONFT"
+        "Test Zero Balance Collection",
+        "TZNFT"
       ],
       "status": "Finished",
-      "deployment": "0x12Bcb546bC60fF39F1Adfc7cE4605d5Bd6a6A876"
+      "deployment": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7"
     }
   },
-  "startTime": 1679557307922,
-  "endTime": 1679997866498
+  "startTime": 1691006752436,
+  "endTime": 1691016116090
 }
