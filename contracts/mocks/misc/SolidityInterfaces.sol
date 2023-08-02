@@ -25,7 +25,7 @@ contract SolidityInterfaces {
 
         _list.push(Interface("IExternalRewardWarper", type(IExternalRewardWarper).interfaceId));
         _list.push(Interface("IERC20RewardWarperForTRV", type(IERC20RewardWarperForTRV).interfaceId));
-        _list.push(Interface("IExternalRewardWarper", type(I).interfaceId));
+        _list.push(Interface("IExternalRewardWarper", type(IExternalRewardWarper).interfaceId));
         _list.push(Interface("IIQPixelsteinsArsenalWarper", type(IIQPixelsteinsArsenalWarper).interfaceId));
 
         _list.push(Interface("IAvailabilityPeriodMechanics", type(IAvailabilityPeriodMechanics).interfaceId));
