@@ -50,12 +50,9 @@ export interface Contracts {
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
   externalReward: ExternalRewardContracts;
-<<<<<<< HEAD
   maxDuration: MaxDurationContracts;
-=======
   zeroBalance: ZeroBalanceContracts;
   minimumThreshold: MinimumThresholdContracts;
->>>>>>> origin/max-duration-raffle-warper
 }
 
 interface TheRedVillageContracts {
