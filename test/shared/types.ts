@@ -16,6 +16,7 @@ import {
   ERC20RewardWarperForTRV,
   ExternalRewardWarper,
   IQPixelsteinsArsenalWarper,
+  MaxDurationRaffleWarper,
   IWarperManager,
   SolidityInterfaces,
 } from '../../typechain';
@@ -47,6 +48,7 @@ export interface Contracts {
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
   externalReward: ExternalRewardContracts;
+  maxDuration: MaxDurationContracts;
 }
 
 interface TheRedVillageContracts {
@@ -60,6 +62,10 @@ interface ExternalRewardContracts {
 
 interface IQPixelsteinsContracts {
   iqPixelsteinsArsenalWarper: IQPixelsteinsArsenalWarper;
+}
+
+interface MaxDurationContracts {
+  maxDurationRaffleWarper: MaxDurationRaffleWarper;
 }
 
 export interface Mocks {

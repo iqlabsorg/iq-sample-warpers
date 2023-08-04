@@ -1,21 +1,21 @@
 {
   "network": "hardhat",
   "status": "Finished",
-  "lastContract": "ERC20Mock",
+  "lastContract": "ERC721Mock",
   "contracts": {
     "ERC20Mock": {
       "contractName": "ERC20Mock",
       "args": [
-        "Reward Token",
-        "RWRD",
+        "Test ERC20",
+        "ONFT",
         18,
         {
           "type": "BigNumber",
-          "hex": "0x033b2e3c9fd0803ce8000000"
+          "hex": "0x52b7d2dcc80cd2e4000000"
         }
       ],
       "status": "Finished",
-      "deployment": "0x9BcC604D4381C5b0Ad12Ff3Bf32bEdE063416BC7"
+      "deployment": "0xAA292E8611aDF267e563f334Ee42320aC96D0463"
     },
     "ACL": {
       "contractName": "ACL",
@@ -349,5 +349,5 @@
     }
   },
   "startTime": 1690821716406,
-  "endTime": 1690968624808
+  "endTime": 1691151014494
 }
