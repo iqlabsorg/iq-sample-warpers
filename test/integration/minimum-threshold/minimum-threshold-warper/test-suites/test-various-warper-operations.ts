@@ -10,7 +10,8 @@ import {
   IUniverseRegistry,
   IUniverseWizardV1,
 } from '@iqprotocol/iq-space-protocol/typechain';
-import { Auth__factory, ExternalRewardWarper, ExternalRewardWarper__factory } from '../../../../../typechain';
+import hre from 'hardhat';
+import { Auth__factory, MinimumThresholdWarper__factory, MinimumThresholdWarper } from '../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
   ChainId,
@@ -56,7 +57,9 @@ export function testVariousWarperOperations(): void {
   let listingTermsRegistry: IListingTermsRegistry;
   let rentingManager: IRentingManager;
   let taxTermsRegistry: ITaxTermsRegistry;
-  let externalRewardWarper: ExternalRewardWarper;
+  let minimumThresholdToken: ERC721Mock;
+  let additionalMinimumTresholdToken: ERC721Mock;
+  let minimumThresholdWarper: MinimumThresholdWarper;
   let listingWizardV1: IListingWizardV1;
   let universeWizardV1: IUniverseWizardV1;
   let universeRegistry: IUniverseRegistry;
@@ -93,7 +96,12 @@ export function testVariousWarperOperations(): void {
     universeRegistry = this.contracts.universeRegistry;
     taxTermsRegistry = this.contracts.taxTermsRegistry;
     rentingManager = this.contracts.rentingManager;
-    externalRewardWarper = this.contracts.externalReward.externalRewardWarper;
+    minimumThresholdWarper = this.contracts.minimumThreshold.minimumThresholdWarper;
+    minimumThresholdToken = this.contracts.minimumThreshold.testThresholdCollection;
+    additionalMinimumTresholdToken = (await hre.run('deploy:test:mock:erc721', {
+      name: 'Test Additional Minimum Threshold Collection',
+      symbol: 'TANFT',
+    })) as ERC721Mock;
     /**** Mocks & Samples ****/
     baseToken = this.mocks.assets.baseToken;
     originalCollection = this.mocks.assets.originalCollection;
@@ -102,7 +110,7 @@ export function testVariousWarperOperations(): void {
     universeRewardAddress = this.signers.named.universeRewardAddress;
     [lister, renterA, renterB, universeOwner, stranger] = this.signers.unnamed;
 
-    await externalRewardWarper.connect(deployer).transferOwnership(universeOwner.address);
+    await minimumThresholdWarper.connect(deployer).transferOwnership(universeOwner.address);
     protocolTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
       PROTOCOL_RATE_PERCENT,
       PROTOCOL_REWARD_RATE_PERCENT,
@@ -129,9 +137,9 @@ export function testVariousWarperOperations(): void {
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
   });
 
-  context('Renting `EXTERNAL REWARD WARPER ` with various cases', () => {
-    const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
-    const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
+  context('Renting `MINIMUM THRESHOLD WARPER ` with various cases', () => {
+    const MINIMUM_THRESHOLD_WARPER_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
+    const MINIMUM_THRESHOLD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
     const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
       '0' /*$*/,
       periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_DAY).secondsInProtocolUint32,
@@ -143,14 +151,14 @@ export function testVariousWarperOperations(): void {
     const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
     const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
 
-    let EXTERNAL_REWARD_WARPER_UNIVERSE_ID: BigNumberish;
+    let MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID: BigNumberish;
     let universeTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
     let listingTerms_1: IListingTermsRegistry.ListingTermsStruct;
     let listingTerms_2: IListingTermsRegistry.ListingTermsStruct;
 
     beforeEach(async () => {
       const universeParams = {
-        name: 'External Reward Warper Name',
+        name: 'Minimum Threshold Warper Name',
         paymentTokens: [new AccountId({ chainId, address: baseToken.address })],
       };
 
@@ -164,16 +172,19 @@ export function testVariousWarperOperations(): void {
       );
 
       universeTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT,
-        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_WARPER_RATE_PERCENT,
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
       );
 
       const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
         universeParams,
-        AddressTranslator.createAssetType(new AccountId({ chainId, address: externalRewardWarper.address }), 'erc721'),
+        AddressTranslator.createAssetType(
+          new AccountId({ chainId, address: minimumThresholdWarper.address }),
+          'erc721',
+        ),
         universeTaxTerms,
         {
-          name: 'External Reward Warper',
+          name: 'Minimum Threshold Warper',
           universeId: 0, // Unknown before-hand.
           paused: false,
         },
@@ -183,10 +194,10 @@ export function testVariousWarperOperations(): void {
       if (!newUniverseId) {
         throw new Error('Universe was not created!');
       } else {
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID = newUniverseId;
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID = newUniverseId;
       }
 
-      await Auth__factory.connect(externalRewardWarper.address, universeOwner).setAuthorizationStatus(
+      await Auth__factory.connect(minimumThresholdWarper.address, universeOwner).setAuthorizationStatus(
         universeOwner.address,
         true,
       );
@@ -197,7 +208,7 @@ export function testVariousWarperOperations(): void {
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -220,8 +231,8 @@ export function testVariousWarperOperations(): void {
         await listingTermsRegistry.allListingTerms(
           {
             listingId,
-            universeId: EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
-            warperAddress: externalRewardWarper.address,
+            universeId: MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID,
+            warperAddress: minimumThresholdWarper.address,
           },
           0,
           1,
@@ -231,10 +242,12 @@ export function testVariousWarperOperations(): void {
         throw new Error('Listing Terms were not found!');
       }
 
+      await minimumThresholdToken.connect(renterA).mint(renterA.address, 1);
+
       const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId,
-        externalRewardWarper.address,
+        minimumThresholdWarper.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -245,7 +258,7 @@ export function testVariousWarperOperations(): void {
       const expectedListerBaseFee = calculateListerBaseFee(LISTING_1_BASE_RATE, RENTAL_A_PERIOD);
       expect(rentalFees.listerBaseFee).to.be.equal(convertListerBaseFeeToWei(expectedListerBaseFee));
       expect(rentalFees.universeBaseFee).to.be.equal(
-        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT),
+        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, MINIMUM_THRESHOLD_WARPER_UNIVERSE_WARPER_RATE_PERCENT),
       );
       expect(rentalFees.protocolFee).to.be.equal(
         calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, PROTOCOL_RATE_PERCENT),
@@ -253,6 +266,7 @@ export function testVariousWarperOperations(): void {
 
       await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
       await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
       const rentTx = await rentingManagerAdapterA.rent({
         ...rentingEstimationParams,
         tokenQuote: EMPTY_BYTES_DATA_HEX,
@@ -266,23 +280,23 @@ export function testVariousWarperOperations(): void {
       }
 
       await expect(rentTx)
-        .to.emit(externalRewardWarper, 'OnRentHookEvent')
+        .to.emit(minimumThresholdWarper, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
 
-      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(minimumThresholdWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
+        MinimumThresholdWarper__factory.connect(minimumThresholdWarper.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId);
       await expect(
-        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getUniverseRewardAddress(),
+        MinimumThresholdWarper__factory.connect(minimumThresholdWarper.address, stranger).getUniverseRewardAddress(),
       ).to.be.eventually.equal(universeRewardAddress.address);
-      const rentalDetails = await ExternalRewardWarper__factory.connect(
-        externalRewardWarper.address,
+      const rentalDetails = await MinimumThresholdWarper__factory.connect(
+        minimumThresholdWarper.address,
         stranger,
       ).getRentalDetails(rentalId);
 
@@ -295,17 +309,52 @@ export function testVariousWarperOperations(): void {
       expect(rentalDetails.rentalId).to.be.equal(rentalId);
       expect(rentalDetails.listingId).to.be.equal(listingId);
       expect(rentalDetails.lister).to.be.equal(lister.address);
+
+      const minimumThresholds = await MinimumThresholdWarper__factory.connect(
+        minimumThresholdWarper.address,
+        stranger,
+      ).getMinimumThresholds();
+
+      expect(minimumThresholds.requiredCollectionAddresses.length).to.be.equal(1);
+      expect(minimumThresholds.requiredCollectionMinimumThresholds.length).to.be.equal(1);
+      expect(minimumThresholds.requiredCollectionAddresses[0]).to.be.equal(minimumThresholdToken.address);
+      expect(minimumThresholds.requiredCollectionMinimumThresholds[0].toString()).to.be.equal('1');
     });
 
-    it(`works properly with multi-rental and retrieving reward data`, async () => {
+    it(`works properly with multi-rental, multi-threshold tokens and retrieving reward data`, async () => {
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const LISTING_2_MAX_LOCK_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
       const RENTAL_B_PERIOD = LISTING_2_MAX_LOCK_PERIOD / 2;
+      const REQUIRED_COLLECTION_ADDRESSES = [minimumThresholdToken.address, additionalMinimumTresholdToken.address];
+      const REQUIRED_COLLECTION_MINIMUM_THRESHOLDS = [1, 1];
+
+      // Setting minimum threshold tokens
+      const setMinimumTresholdsTx = await minimumThresholdWarper
+        .connect(universeOwner)
+        .setMinimumThresholds(REQUIRED_COLLECTION_ADDRESSES, REQUIRED_COLLECTION_MINIMUM_THRESHOLDS);
+
+      await expect(setMinimumTresholdsTx)
+        .to.emit(minimumThresholdWarper, 'MinimumTresholdsSet')
+        .withArgs(REQUIRED_COLLECTION_ADDRESSES, REQUIRED_COLLECTION_MINIMUM_THRESHOLDS);
+
+      const minimumThresholds = await MinimumThresholdWarper__factory.connect(
+        minimumThresholdWarper.address,
+        stranger,
+      ).getMinimumThresholds();
+
+      expect(minimumThresholds.requiredCollectionAddresses.length).to.be.equal(REQUIRED_COLLECTION_ADDRESSES.length);
+      expect(minimumThresholds.requiredCollectionMinimumThresholds.length).to.be.equal(
+        REQUIRED_COLLECTION_MINIMUM_THRESHOLDS.length,
+      );
+      expect(minimumThresholds.requiredCollectionAddresses[0]).to.be.equal(REQUIRED_COLLECTION_ADDRESSES[0]);
+      expect(minimumThresholds.requiredCollectionAddresses[1]).to.be.equal(REQUIRED_COLLECTION_ADDRESSES[1]);
+      expect(minimumThresholds.requiredCollectionMinimumThresholds[0].toString()).to.be.equal('1');
+      expect(minimumThresholds.requiredCollectionMinimumThresholds[1].toString()).to.be.equal('1');
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -331,9 +380,12 @@ export function testVariousWarperOperations(): void {
         throw new Error('Listing Terms were not found!');
       }
 
+      await minimumThresholdToken.connect(renterA).mint(renterA.address, 1);
+      await additionalMinimumTresholdToken.connect(renterA).mint(renterA.address, 1);
+
       /**** Listing 2 ****/
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -359,11 +411,14 @@ export function testVariousWarperOperations(): void {
         throw new Error('Listing Terms were not found!');
       }
 
+      await minimumThresholdToken.connect(renterB).mint(renterB.address, 2);
+      await additionalMinimumTresholdToken.connect(renterB).mint(renterB.address, 2);
+
       /**** Rental A ****/
       const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
-        externalRewardWarper.address,
+        minimumThresholdWarper.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -383,20 +438,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_A)
-        .to.emit(externalRewardWarper, 'OnRentHookEvent')
+        .to.emit(minimumThresholdWarper, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId_A);
-      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(minimumThresholdWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
+        MinimumThresholdWarper__factory.connect(minimumThresholdWarper.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId_A);
 
-      const rental_A_Details = await ExternalRewardWarper__factory.connect(
-        externalRewardWarper.address,
+      const rental_A_Details = await MinimumThresholdWarper__factory.connect(
+        minimumThresholdWarper.address,
         stranger,
       ).getRentalDetails(rentalId_A);
 
@@ -414,7 +469,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_2,
-        externalRewardWarper.address,
+        minimumThresholdWarper.address,
         renterB.address,
         RENTAL_B_PERIOD,
         baseToken.address,
@@ -434,20 +489,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_B)
-        .to.emit(externalRewardWarper, 'OnRentHookEvent')
+        .to.emit(minimumThresholdWarper, 'OnRentHookEvent')
         .withArgs(renterB.address, LISTER_TOKEN_ID_2, rentalId_B);
-      await expect(externalRewardWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
+      await expect(minimumThresholdWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
         renterB.address,
       );
       await expect(
-        ExternalRewardWarper__factory.connect(externalRewardWarper.address, stranger).getLastActiveRentalId(
+        MinimumThresholdWarper__factory.connect(minimumThresholdWarper.address, stranger).getLastActiveRentalId(
           renterB.address,
           LISTER_TOKEN_ID_2,
         ),
       ).to.be.eventually.equal(rentalId_B);
 
-      const rental_B_Details = await ExternalRewardWarper__factory.connect(
-        externalRewardWarper.address,
+      const rental_B_Details = await MinimumThresholdWarper__factory.connect(
+        minimumThresholdWarper.address,
         stranger,
       ).getRentalDetails(rentalId_B);
 
@@ -460,6 +515,53 @@ export function testVariousWarperOperations(): void {
       expect(rental_B_Details.rentalId).to.be.equal(rentalId_B);
       expect(rental_B_Details.listingId).to.be.equal(listingId_2);
       expect(rental_B_Details.lister).to.be.equal(lister.address);
+    });
+
+    it(`reverts when threshold tokens are not on balance`, async () => {
+      const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+
+      /**** Listing 1 ****/
+      const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
+        MINIMUM_THRESHOLD_WARPER_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_1,
+      );
+      const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
+      if (!listingId_1) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId_1 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+        createListingTx_1.hash,
+      );
+      if (!listingTermsId_1) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      /**** Rental A ****/
+      const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId_1,
+        minimumThresholdWarper.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId_1,
+      );
+      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
+        .to.be.revertedWithCustomError(minimumThresholdWarper, 'AssetIsNotRentable')
+        .withArgs('Renter has not enough NFTs from required collections');
     });
   });
 }
