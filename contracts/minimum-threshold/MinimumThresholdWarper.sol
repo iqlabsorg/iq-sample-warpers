@@ -68,7 +68,7 @@ contract MinimumThresholdWarper is IAssetRentabilityMechanics, IMinimumThreshold
 
     /**
      * @inheritdoc IAssetRentabilityMechanics
-     * @notice The asset is rentable when the renter has no Universus NFTs.
+     * @notice The asset is rentable when the renter has minimum number of NFTs from required collections
      */
     function __isRentableAsset(
         address renter,

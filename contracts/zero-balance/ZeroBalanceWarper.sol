@@ -9,7 +9,8 @@ import "./IZeroBalanceWarper.sol";
 
 /**
  * @title Zero Balance Warper
- * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero, this name represents the core functionality quite accurately.
+ * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero,
+ * this name represents the core functionality quite accurately.
  */
 contract ZeroBalanceWarper is IAssetRentabilityMechanics, ExternalRewardWarper, IZeroBalanceWarper {
     /**
@@ -39,7 +40,7 @@ contract ZeroBalanceWarper is IAssetRentabilityMechanics, ExternalRewardWarper, 
 
     /**
      * @inheritdoc IAssetRentabilityMechanics
-     * @notice The asset is rentable when the renter has no Universus NFTs.
+     * @notice The asset is rentable when the renter has no NFTs stored in _zeroBalanceCheckAddresses array.
      */
     function __isRentableAsset(
         address renter,
