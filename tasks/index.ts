@@ -4,5 +4,6 @@ import './iq-pixelsteins';
 import './auth';
 import './utils';
 import './external-reward';
+import './max-duration-raffle';
 import './minimum-threshold';
 import './zero-balance';

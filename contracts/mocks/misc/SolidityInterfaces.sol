@@ -13,6 +13,7 @@ import "../../external-reward/IExternalRewardWarper.sol";
 import "../../zero-balance/IZeroBalanceWarper.sol";
 import "../../minimum-threshold/IMinimumThresholdWarper.sol";
 import "../../iq-pixelsteins/IIQPixelsteinsArsenalWarper.sol";
+import "../../max-duration-raffle/MaxDurationRaffleWarper.sol";
 
 contract SolidityInterfaces {
     struct Interface {
@@ -28,9 +29,11 @@ contract SolidityInterfaces {
 
         _list.push(Interface("IExternalRewardWarper", type(IExternalRewardWarper).interfaceId));
         _list.push(Interface("IERC20RewardWarperForTRV", type(IERC20RewardWarperForTRV).interfaceId));
+        _list.push(Interface("IExternalRewardWarper", type(IExternalRewardWarper).interfaceId));
         _list.push(Interface("IZeroBalanceWarper", type(IZeroBalanceWarper).interfaceId));
         _list.push(Interface("IMinimumThresholdWarper", type(IMinimumThresholdWarper).interfaceId));
         _list.push(Interface("IIQPixelsteinsArsenalWarper", type(IIQPixelsteinsArsenalWarper).interfaceId));
+        _list.push(Interface("IMaxDurationRaffleWarper", type(IMaxDurationRaffleWarper).interfaceId));
 
         _list.push(Interface("IAvailabilityPeriodMechanics", type(IAvailabilityPeriodMechanics).interfaceId));
         _list.push(Interface("IRentalPeriodMechanics", type(IRentalPeriodMechanics).interfaceId));

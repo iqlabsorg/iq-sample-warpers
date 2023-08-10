@@ -16,6 +16,7 @@ import {
   ERC20RewardWarperForTRV,
   ExternalRewardWarper,
   IQPixelsteinsArsenalWarper,
+  MaxDurationRaffleWarper,
   IWarperManager,
   MinimumThresholdWarper,
   SolidityInterfaces,
@@ -49,6 +50,7 @@ export interface Contracts {
   theRedVillage: TheRedVillageContracts;
   iqPixelsteins: IQPixelsteinsContracts;
   externalReward: ExternalRewardContracts;
+  maxDuration: MaxDurationContracts;
   zeroBalance: ZeroBalanceContracts;
   minimumThreshold: MinimumThresholdContracts;
 }
@@ -74,6 +76,10 @@ interface MinimumThresholdContracts {
 
 interface IQPixelsteinsContracts {
   iqPixelsteinsArsenalWarper: IQPixelsteinsArsenalWarper;
+}
+
+interface MaxDurationContracts {
+  maxDurationRaffleWarper: MaxDurationRaffleWarper;
 }
 
 export interface Mocks {

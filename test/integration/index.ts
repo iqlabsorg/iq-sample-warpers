@@ -2,9 +2,11 @@ import { baseContext } from '../shared/contexts';
 import { unitTestAuth } from './auth/auth';
 import { integrationTestTRV } from './the-red-village';
 import { integrationTestIQPixelsteins } from './iq-pixelsteins';
-import { integrationTestExternalReward } from './external-reward';
+import { integrationTestForExternalRewardWarper } from './external-reward';
+import { integrationTestMaxDurationRaffle } from './max-duration-raffle';
 import { integrationTestMinimumThreshold } from './minimum-threshold';
 import { integrationTestZeroBalance } from './zero-balance';
+
 
 baseContext('Unit Tests', function () {
   unitTestAuth();
@@ -13,7 +15,8 @@ baseContext('Unit Tests', function () {
 baseContext('Integration Tests', function () {
   integrationTestTRV();
   integrationTestIQPixelsteins();
-  integrationTestExternalReward();
+  integrationTestForExternalRewardWarper();
+  integrationTestMaxDurationRaffle();
   integrationTestMinimumThreshold();
   integrationTestZeroBalance();
 });

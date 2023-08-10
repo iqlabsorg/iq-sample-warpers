@@ -7,30 +7,57 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
 import "@iqprotocol/iq-space-protocol/contracts/renting/renting-manager/IRentingManager.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
-import "./IIQPixelsteinsArsenalWarper.sol";
+import "./IMaxDurationRaffleWarper.sol";
 
 /**
- * @title Custom Warper for ERC20 Tournament rewarding.
+ * @title Custom Warper for marketing raffle with max duration algorythm.
  */
-contract IQPixelsteinsArsenalWarper is
-    IIQPixelsteinsArsenalWarper,
+contract MaxDurationRaffleWarper is
+    IMaxDurationRaffleWarper,
     IRentingHookMechanics,
     IAssetRentabilityMechanics,
     ERC721ConfigurablePreset
 {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-    /**
-     * @dev renter => uint256 (renter's current IQPixelstein rental end datetime in seconds).
-     */
-    mapping(address => uint32) internal _currentRentalEndDatetime;
 
+    /**
+     * @dev Reverts when maxDuration - minDuration != 2.
+     */
+    error InvalidRaffleRentalPeriods(uint32 minDuration, uint32 maxDuration);
+
+    /**
+     * @dev Stores current rental end timestamp for each renter.
+     * @notice renter => uint256 (renter's current asset rental end timestamp).
+     */
+    mapping(address => uint32) internal _currentRentalEndTimestamp;
+
+    /**
+     * @dev Stores total rental duration for each renter.
+     */
     EnumerableMap.AddressToUintMap internal _rentersTotalRentalDuration;
 
     /**
-     * @dev Constructor for the IQNFTWarper contract.
+     * @dev Constructor for the MaxDurationRaffleWarper contract.
      */
     constructor(bytes memory config) warperInitializer {
         super.__initialize(config);
+
+        // minDuration and maxDuration are required here in order to provide
+        // a way to set an equal raffle rules for everyone.
+        // e.g. minDuration = 3600 (1 hour in seconds)
+        // e.g. maxDuration = 3600 (1 hour in seconds)
+        // Also this should be acknowledged during the listing creation.
+        // So all listings created should max lock period equal to 3600 seconds (1 day).
+        (
+            ,
+            ,
+            uint32 minDuration,
+            uint32 maxDuration
+        ) = abi.decode(config, (address, address, uint32, uint32));
+
+        if (minDuration != maxDuration) revert InvalidRaffleRentalPeriods(minDuration, maxDuration);
+
+        _setRentalPeriods(minDuration, maxDuration);
     }
 
     /**
@@ -41,10 +68,10 @@ contract IQPixelsteinsArsenalWarper is
         uint256,
         uint256
     ) external view override returns (bool isRentable, string memory errorMessage) {
-        uint32 currentRentalEndDatetime = _currentRentalEndDatetime[renter];
+        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
         if (currentRentalEndDatetime > uint32(block.timestamp)) {
             isRentable = false;
-            errorMessage = "IQ Pixelstein is already rented!";
+            errorMessage = "Asset is already rented!";
         } else {
             isRentable = true;
             errorMessage = "";
@@ -60,7 +87,7 @@ contract IQPixelsteinsArsenalWarper is
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
         address renter = rentalAgreement.renter;
-        _currentRentalEndDatetime[renter] = rentalAgreement.endTime;
+        _currentRentalEndTimestamp[renter] = rentalAgreement.endTime;
         (, uint256 rentalDurationSoFar) = _rentersTotalRentalDuration.tryGet(renter);
         _rentersTotalRentalDuration.set(
             renter,
@@ -71,14 +98,14 @@ contract IQPixelsteinsArsenalWarper is
     }
 
     /**
-     * @inheritdoc IIQPixelsteinsArsenalWarper
+     * @inheritdoc IMaxDurationRaffleWarper
      */
     function getRentersCount() external view returns (uint256) {
         return _rentersTotalRentalDuration.length();
     }
 
     /**
-     * @inheritdoc IIQPixelsteinsArsenalWarper
+     * @inheritdoc IMaxDurationRaffleWarper
      */
     function getTotalRentalDurations(uint256 offset, uint256 limit)
         external
@@ -109,7 +136,8 @@ contract IQPixelsteinsArsenalWarper is
         return
             interfaceId == type(IRentingHookMechanics).interfaceId ||
             interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
-            interfaceId == type(IIQPixelsteinsArsenalWarper).interfaceId ||
+            interfaceId == type(IRentalPeriodMechanics).interfaceId ||
+            interfaceId == type(IMaxDurationRaffleWarper).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 }

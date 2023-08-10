@@ -11,10 +11,12 @@ typechain
 # Hardhat files
 cache
 deployments
-active-deployment
+active-deployment/
 # Exported artifacts
 artifacts
 *.dbg.json
 
 # macOS cache
 .DS_Store
+
+
