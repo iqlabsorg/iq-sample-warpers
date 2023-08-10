@@ -10,7 +10,7 @@ import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 import "./IMaxDurationRaffleWarper.sol";
 
 /**
- * @title Custom Warper for raffling .
+ * @title Custom Warper for marketing raffle with max duration algorythm.
  */
 contract MaxDurationRaffleWarper is
     IMaxDurationRaffleWarper,
@@ -19,18 +19,45 @@ contract MaxDurationRaffleWarper is
     ERC721ConfigurablePreset
 {
     using EnumerableMap for EnumerableMap.AddressToUintMap;
-    /**
-     * @dev renter => uint256 (renter's current asset rental end datetime in seconds).
-     */
-    mapping(address => uint32) internal _currentRentalEndDatetime;
 
+    /**
+     * @dev Reverts when maxDuration - minDuration != 2.
+     */
+    error InvalidRaffleRentalPeriods(uint32 minDuration, uint32 maxDuration);
+
+    /**
+     * @dev Stores current rental end timestamp for each renter.
+     * @notice renter => uint256 (renter's current asset rental end timestamp).
+     */
+    mapping(address => uint32) internal _currentRentalEndTimestamp;
+
+    /**
+     * @dev Stores total rental duration for each renter.
+     */
     EnumerableMap.AddressToUintMap internal _rentersTotalRentalDuration;
 
     /**
-     * @dev Constructor for the IQNFTWarper contract.
+     * @dev Constructor for the MaxDurationRaffleWarper contract.
      */
     constructor(bytes memory config) warperInitializer {
         super.__initialize(config);
+
+        // minDuration and maxDuration are required here in order to provide
+        // a way to set an equal raffle rules for everyone.
+        // e.g. minDuration = 3600 (1 hour in seconds)
+        // e.g. maxDuration = 3600 (1 hour in seconds)
+        // Also this should be acknowledged during the listing creation.
+        // So all listings created should max lock period equal to 3600 seconds (1 day).
+        (
+            ,
+            ,
+            uint32 minDuration,
+            uint32 maxDuration
+        ) = abi.decode(config, (address, address, uint32, uint32));
+
+        if (minDuration != maxDuration) revert InvalidRaffleRentalPeriods(minDuration, maxDuration);
+
+        _setRentalPeriods(minDuration, maxDuration);
     }
 
     /**
@@ -41,7 +68,7 @@ contract MaxDurationRaffleWarper is
         uint256,
         uint256
     ) external view override returns (bool isRentable, string memory errorMessage) {
-        uint32 currentRentalEndDatetime = _currentRentalEndDatetime[renter];
+        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
         if (currentRentalEndDatetime > uint32(block.timestamp)) {
             isRentable = false;
             errorMessage = "Asset is already rented!";
@@ -55,12 +82,12 @@ contract MaxDurationRaffleWarper is
      * @inheritdoc IRentingHookMechanics
      */
     function __onRent(
-        uint256 rentalId,
+        uint256,
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
         address renter = rentalAgreement.renter;
-        _currentRentalEndDatetime[renter] = rentalAgreement.endTime;
+        _currentRentalEndTimestamp[renter] = rentalAgreement.endTime;
         (, uint256 rentalDurationSoFar) = _rentersTotalRentalDuration.tryGet(renter);
         _rentersTotalRentalDuration.set(
             renter,
@@ -109,6 +136,7 @@ contract MaxDurationRaffleWarper is
         return
             interfaceId == type(IRentingHookMechanics).interfaceId ||
             interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
+            interfaceId == type(IRentalPeriodMechanics).interfaceId ||
             interfaceId == type(IMaxDurationRaffleWarper).interfaceId ||
             super.supportsInterface(interfaceId);
     }

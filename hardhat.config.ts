@@ -54,7 +54,8 @@ const config: HardhatUserConfig = {
     },
   },
   mocha: {
-    timeout: 700000, // more time for tests
+    bail: true,
+    timeout: 300000, // more time for tests
   },
   namedAccounts: {
     deployer: 0,

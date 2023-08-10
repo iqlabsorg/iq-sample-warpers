@@ -46,6 +46,11 @@ import { time } from '@nomicfoundation/hardhat-network-helpers';
 
 export function testVariousWarperOperations(): void {
   /**** Constants ****/
+  const MIN_RENTAL_PERIOD = BigNumber.from(1000);
+  const MAX_RENTAL_PERIOD = BigNumber.from(1000);
+  const RENTAL_PERIOD = BigNumber.from(1000);
+  const MORE_THAN_RENTAL_PERIOD = BigNumber.from(1001);
+  const LESS_THAN_RENTAL_PERIOD = BigNumber.from(999);
   const PROTOCOL_GLOBAL_RATE_PERCENT = '5';
   const PROTOCOL_MAX_DURATION_UNISERSE_RATE_PERCENT = '0';
   const LISTER_TOKEN_ID_1 = BigNumber.from(1);
@@ -173,7 +178,7 @@ export function testVariousWarperOperations(): void {
         '7',
         PERIOD_TYPE_DAY,
       ).secondsInProtocolUint32;
-      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+      const RENTAL_A_PERIOD = RENTAL_PERIOD;
 
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
         MAX_DURATION_UNIVERSE_ID,
@@ -273,8 +278,8 @@ export function testVariousWarperOperations(): void {
         PERIOD_TYPE_DAY,
       ).secondsInProtocolUint32;
       const LISTING_2_MAX_LOCK_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_B_PERIOD = BigNumber.from(LISTING_2_MAX_LOCK_PERIOD).div(2);
+      const RENTAL_A_PERIOD = RENTAL_PERIOD;
+      const RENTAL_B_PERIOD = RENTAL_PERIOD;
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
@@ -425,9 +430,9 @@ export function testVariousWarperOperations(): void {
         PERIOD_TYPE_DAY,
       ).secondsInProtocolUint32;
       const LISTING_2_MAX_LOCK_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_B_PERIOD = BigNumber.from(LISTING_2_MAX_LOCK_PERIOD).div(2);
-      const RENTAL_C_PERIOD = RENTAL_B_PERIOD;
+      const RENTAL_A_PERIOD = RENTAL_PERIOD;
+      const RENTAL_B_PERIOD = RENTAL_PERIOD;
+      const RENTAL_C_PERIOD = RENTAL_PERIOD;
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
@@ -569,7 +574,7 @@ export function testVariousWarperOperations(): void {
       /**** Skip time ****/
       await time.increase(BigNumber.from(RENTAL_B_PERIOD).toNumber());
 
-      /**** Rental C ****/
+      // /**** Rental C ****/
       const rentingEstimationParams_C = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
@@ -624,8 +629,8 @@ export function testVariousWarperOperations(): void {
         PERIOD_TYPE_DAY,
       ).secondsInProtocolUint32;
       const LISTING_2_MAX_LOCK_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
-      const RENTAL_B_PERIOD = BigNumber.from(LISTING_2_MAX_LOCK_PERIOD).div(2);
+      const RENTAL_A_PERIOD = RENTAL_PERIOD;
+      const RENTAL_B_PERIOD = RENTAL_PERIOD;
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
@@ -751,6 +756,128 @@ export function testVariousWarperOperations(): void {
           'AssetIsNotRentable',
         )
         .withArgs('Asset is already rented!');
+    });
+
+    it(`reverts when rental time is more than defined`, async () => {
+      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+        '5' /*$*/,
+        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_HOUR).secondsInProtocolUint32,
+      );
+      const LISTING_1_MAX_LOCK_PERIOD = periodValueAndTypeToProtocolConverted(
+        '7',
+        PERIOD_TYPE_DAY,
+      ).secondsInProtocolUint32;
+      const RENTAL_A_PERIOD = MORE_THAN_RENTAL_PERIOD;
+
+      const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
+        MAX_DURATION_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        makeFixedRateListingTermsFromUnconverted(LISTING_1_BASE_RATE),
+      );
+      const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
+      if (!listingId) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId = (
+        await listingTermsRegistry.allListingTerms(
+          {
+            listingId,
+            universeId: MAX_DURATION_UNIVERSE_ID,
+            warperAddress: maxDurationRaffleWarper.address,
+          },
+          0,
+          1,
+        )
+      )[0][0];
+      if (!listingTermsId) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId,
+        maxDurationRaffleWarper.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId,
+      );
+
+      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams))
+        .to.be.revertedWithCustomError(maxDurationRaffleWarper, 'WarperRentalPeriodIsOutOfRange')
+        .withArgs(RENTAL_A_PERIOD, MIN_RENTAL_PERIOD, MAX_RENTAL_PERIOD);
+    });
+
+    it(`reverts when rental time is less than defined`, async () => {
+      const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
+        '5' /*$*/,
+        periodValueAndTypeToProtocolConverted('1', PERIOD_TYPE_HOUR).secondsInProtocolUint32,
+      );
+      const LISTING_1_MAX_LOCK_PERIOD = periodValueAndTypeToProtocolConverted(
+        '7',
+        PERIOD_TYPE_DAY,
+      ).secondsInProtocolUint32;
+      const RENTAL_A_PERIOD = LESS_THAN_RENTAL_PERIOD;
+
+      const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
+        MAX_DURATION_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        makeFixedRateListingTermsFromUnconverted(LISTING_1_BASE_RATE),
+      );
+      const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
+      if (!listingId) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId = (
+        await listingTermsRegistry.allListingTerms(
+          {
+            listingId,
+            universeId: MAX_DURATION_UNIVERSE_ID,
+            warperAddress: maxDurationRaffleWarper.address,
+          },
+          0,
+          1,
+        )
+      )[0][0];
+      if (!listingTermsId) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId,
+        maxDurationRaffleWarper.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId,
+      );
+
+      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams))
+        .to.be.revertedWithCustomError(maxDurationRaffleWarper, 'WarperRentalPeriodIsOutOfRange')
+        .withArgs(RENTAL_A_PERIOD, MIN_RENTAL_PERIOD, MAX_RENTAL_PERIOD);
     });
   });
 }

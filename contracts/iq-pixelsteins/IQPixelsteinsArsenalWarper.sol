@@ -55,7 +55,7 @@ contract IQPixelsteinsArsenalWarper is
      * @inheritdoc IRentingHookMechanics
      */
     function __onRent(
-        uint256 rentalId,
+        uint256,
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata /* rentalEarnings */
     ) external override onlyRentingManager returns (bool, string memory) {
