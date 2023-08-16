@@ -513,6 +513,158 @@ export function testVariousWarperOperations(): void {
         .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
         .withArgs('Renter has NFTs on the balance');
     });
+
+    it(`reverts when balance is not zero #2`, async () => {
+      const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+      const LISTING_2_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_B_PERIOD = LISTING_2_MAX_LOCK_PERIOD;
+
+      await zeroBalanceWarper
+        .connect(universeOwner)
+        .setZeroBalanceAddresses([testZeroBalanceCollection.address, zeroBalanceWarper.address]);
+
+      /**** Listing 1 ****/
+      const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_1,
+      );
+      const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
+      if (!listingId_1) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId_1 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+        createListingTx_1.hash,
+      );
+      if (!listingTermsId_1) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      /**** Listing 2 ****/
+      const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
+        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_2.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_2_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_2,
+      );
+      const listingId_2 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_2.hash);
+      if (!listingId_2) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId_2 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+        createListingTx_2.hash,
+      );
+      if (!listingTermsId_2) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      /**** Rental A ****/
+
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId_1,
+        zeroBalanceWarper.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId_1,
+      );
+
+      const rentalFees = await rentingManagerAdapterA.estimateRent(rentingEstimationParams);
+
+      const expectedListerBaseFee = calculateListerBaseFee(LISTING_1_BASE_RATE, RENTAL_A_PERIOD);
+      expect(rentalFees.listerBaseFee).to.be.equal(convertListerBaseFeeToWei(expectedListerBaseFee));
+      expect(rentalFees.universeBaseFee).to.be.equal(
+        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT),
+      );
+      expect(rentalFees.protocolFee).to.be.equal(
+        calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, PROTOCOL_RATE_PERCENT),
+      );
+
+      await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
+      await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+      const rentTx = await rentingManagerAdapterA.rent({
+        ...rentingEstimationParams,
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
+        maxPaymentAmount: rentalFees.total,
+      });
+
+      const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
+      if (!rentalId) {
+        throw new Error('Rental Agreement was not found!');
+      }
+
+      await expect(rentTx)
+        .to.emit(zeroBalanceWarper, 'OnRentHookEvent')
+        .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
+
+      await expect(zeroBalanceWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+        renterA.address,
+      );
+      await expect(
+        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getLastActiveRentalId(
+          renterA.address,
+          LISTER_TOKEN_ID_1,
+        ),
+      ).to.be.eventually.equal(rentalId);
+      await expect(
+        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getUniverseRewardAddress(),
+      ).to.be.eventually.equal(universeRewardAddress.address);
+      const rentalDetails = await ZeroBalanceWarper__factory.connect(
+        zeroBalanceWarper.address,
+        stranger,
+      ).getRentalDetails(rentalId);
+
+      expect(rentalDetails.listingTerms.strategyId).to.be.equal(listingTerms_1.strategyId);
+      expect(rentalDetails.listingTerms.strategyData).to.be.equal(listingTerms_1.strategyData);
+      expect(rentalDetails.universeTaxTerms.strategyId).to.be.equal(universeTaxTerms.strategyId);
+      expect(rentalDetails.universeTaxTerms.strategyData).to.be.equal(universeTaxTerms.strategyData);
+      expect(rentalDetails.protocolTaxTerms.strategyId).to.be.equal(protocolTaxTerms.strategyId);
+      expect(rentalDetails.protocolTaxTerms.strategyData).to.be.equal(protocolTaxTerms.strategyData);
+      expect(rentalDetails.rentalId).to.be.equal(rentalId);
+      expect(rentalDetails.listingId).to.be.equal(listingId_1);
+      expect(rentalDetails.lister).to.be.equal(lister.address);
+
+      /**** Rental B ****/
+      await testZeroBalanceCollection.connect(renterA).mint(renterA.address, 1);
+
+      const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId_2,
+        zeroBalanceWarper.address,
+        renterA.address,
+        RENTAL_B_PERIOD,
+        baseToken.address,
+        listingTermsId_2,
+      );
+
+      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_B))
+        .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
+        .withArgs('Renter has NFTs on the balance');
+    });
   });
 }
 
