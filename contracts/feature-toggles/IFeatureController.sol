@@ -6,7 +6,7 @@ pragma solidity ^0.8.0;
  * @notice WIP: under development.
  */
 interface IFeatureController {
-    
+
     function execute(address integrationAddress) external view returns (uint256);
 
 }

@@ -14,6 +14,10 @@ contract FeatureController is IFeatureController {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
+    /**
+     * @dev Store an array of addresses that need to be zero balance checked for the specified integration
+     * @notice Integration address => zero balance addresses for check
+     */
     mapping(address => address[]) private _zeroBalanceAddresses;
 
     /**
@@ -41,7 +45,7 @@ contract FeatureController is IFeatureController {
     function setZeroBalanceAddresses(address integrationAddress, address[] calldata zeroBalanceAddresses) external {
         for (uint256 j = 0; j < zeroBalanceAddresses.length; j++) {
             address zeroBalanceAddress = zeroBalanceAddresses[j];
-            
+
             bool isDuplicate = false;
             // Ensure the address being added isn't already in the list
             for (uint256 i = 0; i < _zeroBalanceAddresses[integrationAddress].length; i++) {
@@ -50,7 +54,7 @@ contract FeatureController is IFeatureController {
                     break;
                 }
             }
-            
+
             require(!isDuplicate, "One or more addresses are already added"); // should we use here error function?
 
             _zeroBalanceAddresses[integrationAddress].push(zeroBalanceAddress);
@@ -60,7 +64,7 @@ contract FeatureController is IFeatureController {
     /**
      * @dev Executes a feature using its keys and returns the associated value.
      * @param integrationAddress The address of the Integration.
-     * @return The uint256 JUST FOR TESTING 
+     * @return The uint256 JUST FOR TESTING
      * TODO: Logic is under development and will be added soon.
      */
     function execute(address integrationAddress) external view returns (uint256) {

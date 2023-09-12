@@ -54,7 +54,7 @@ contract FeatureController is IFeatureController {
      */
     function setIntegration(address integrationAddress, address[] calldata collectionAddresses, uint256[] calldata minimumThresholds) external {
         require(collectionAddresses.length == minimumThresholds.length, "Mismatched array lengths");
-        
+
         _requiredCollectionAddresses[integrationAddress] = collectionAddresses;
         _requiredCollectionMinimumThresholds[integrationAddress] = minimumThresholds;
     }

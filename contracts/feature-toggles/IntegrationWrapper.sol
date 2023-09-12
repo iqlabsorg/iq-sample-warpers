@@ -9,7 +9,7 @@ import "./IFeatureController.sol";
  * @notice Manages integration features and storage.
  * @dev Interacts with IntegrationFeatureRegistry for feature operations.
  */
-contract IntegrationWrapper {   
+contract IntegrationWrapper {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
@@ -23,11 +23,14 @@ contract IntegrationWrapper {
 
     /**
      * @notice WIP
-     * @dev Executes a feature.
+     * @dev Checks is the feature is active, then executes a feature.
      * @param featureId ID of the feature.
      * @return Execution result.
      */
     function executeFeature(uint256 featureId) public view returns (uint256) {
+
+        require(isFeatureActive(featureId), "Feature is not active");
+
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
         IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
         return featureControllerInstance.execute(address(this));
@@ -53,7 +56,7 @@ contract IntegrationWrapper {
      * @param featureId Feature's ID.
      * @return Whether the feature is active.
      */
-    function isFeatureActive(uint256 featureId) external view returns (bool) {
+    function isFeatureActive(uint256 featureId) public view returns (bool) {
         return integrationFeatureRegistry.featureEnabled(address(this), featureId);
     }
 

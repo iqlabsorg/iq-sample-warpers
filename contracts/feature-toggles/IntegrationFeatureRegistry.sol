@@ -89,7 +89,7 @@ contract IntegrationFeatureRegistry {
      */
     function getAllIntegrationFeatures(address integrationContract) external view returns (
         uint256[] memory enabledFeatureIdsArray,
-        address[] memory enabledFeatureControllersArray) 
+        address[] memory enabledFeatureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
