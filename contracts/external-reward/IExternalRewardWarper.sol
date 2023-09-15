@@ -40,7 +40,7 @@ interface IExternalRewardWarper {
     event UniverseRewardAddressSet(address universeRewardAddress);
 
     /**
-     * @dev Set reward address for universe
+     * @dev Sets the reward address for the universe.
      * @param universeRewardAddress Universe reward address.
      */
     function setUniverseRewardAddress(address universeRewardAddress) external;

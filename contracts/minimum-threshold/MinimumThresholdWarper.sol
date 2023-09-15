@@ -13,7 +13,7 @@ import "./IMinimumThresholdWarper.sol";
  */
 contract MinimumThresholdWarper is IAssetRentabilityMechanics, IMinimumThresholdWarper, ExternalRewardWarper {
     /**
-     * @dev An array storing the addresses of NFTs a user must own from each collection to be eligible for renting.
+     * @dev An array storing the addresses of NFT collections a user must own token from to be eligible for renting.
      * Each address corresponds to a different NFT collection.
      * The ownership status of NFTs from these collections will be checked for each user.
      */
@@ -68,7 +68,7 @@ contract MinimumThresholdWarper is IAssetRentabilityMechanics, IMinimumThreshold
 
     /**
      * @inheritdoc IAssetRentabilityMechanics
-     * @notice The asset is rentable when the renter has no Universus NFTs.
+     * @notice The asset is rentable when the renter has minimum number of NFTs from required collections
      */
     function __isRentableAsset(
         address renter,

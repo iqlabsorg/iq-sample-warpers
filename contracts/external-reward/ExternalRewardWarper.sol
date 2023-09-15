@@ -16,7 +16,7 @@ import "../auth/Auth.sol";
  */
 contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, ERC721ConfigurablePreset, Auth {
     /**
-     * @dev ListingManager contact key.
+     * @dev ListingManager contract key.
      */
     bytes4 private immutable LISTING_MANAGER;
 
@@ -26,7 +26,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
     address private _universeRewardAddress;
 
     /**
-     * @dev RentingManager contact key.
+     * @dev RentingManager contract key.
      */
     bytes4 private immutable RENTING_MANAGER;
 
@@ -41,7 +41,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
     mapping(uint256 => RentalDetails) internal _rentalDetails;
 
     /**
-     * @dev Constructor for the IQNFTWarper contract.
+     * @dev Constructor for the ExternalRewardWarper contract.
      */
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
@@ -85,7 +85,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
             emit OnRentHookEvent(rentalAgreement.renter, tokenId, rentalId);
         }
 
-        // Inform Renting Manager that everything is fine
+        // Notify the Renting Manager of successful operation
         return (true, "");
     }
 
