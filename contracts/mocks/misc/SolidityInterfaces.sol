@@ -11,7 +11,9 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/ERC721/IERC721Warper.sol"
 import "../../the-red-village/IERC20RewardWarperForTRV.sol";
 import "../../external-reward/IExternalRewardWarper.sol";
 import "../../zero-balance/IZeroBalanceWarper.sol";
+import "../../standard-warper/IStandardWarper.sol";
 import "../../minimum-threshold/IMinimumThresholdWarper.sol";
+import "../../minimum-threshold-v2/IMinimumThresholdWarperV2.sol";
 import "../../iq-pixelsteins/IIQPixelsteinsArsenalWarper.sol";
 import "../../max-duration-raffle/MaxDurationRaffleWarper.sol";
 
@@ -34,6 +36,8 @@ contract SolidityInterfaces {
         _list.push(Interface("IMinimumThresholdWarper", type(IMinimumThresholdWarper).interfaceId));
         _list.push(Interface("IIQPixelsteinsArsenalWarper", type(IIQPixelsteinsArsenalWarper).interfaceId));
         _list.push(Interface("IMaxDurationRaffleWarper", type(IMaxDurationRaffleWarper).interfaceId));
+        _list.push(Interface("IStandardWarper", type(IStandardWarper).interfaceId));
+        _list.push(Interface("IMinimumThresholdWarperV2", type(IMinimumThresholdWarperV2).interfaceId));
 
         _list.push(Interface("IAvailabilityPeriodMechanics", type(IAvailabilityPeriodMechanics).interfaceId));
         _list.push(Interface("IRentalPeriodMechanics", type(IRentalPeriodMechanics).interfaceId));

@@ -6,7 +6,7 @@ import { integrationTestForExternalRewardWarper } from './external-reward';
 import { integrationTestMaxDurationRaffle } from './max-duration-raffle';
 import { integrationTestMinimumThreshold } from './minimum-threshold';
 import { integrationTestZeroBalance } from './zero-balance';
-
+import { integrationTestStandardWarper } from './standard-warper';
 
 baseContext('Unit Tests', function () {
   unitTestAuth();
@@ -19,4 +19,5 @@ baseContext('Integration Tests', function () {
   integrationTestMaxDurationRaffle();
   integrationTestMinimumThreshold();
   integrationTestZeroBalance();
+  integrationTestStandardWarper();
 });

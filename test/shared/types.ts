@@ -21,6 +21,7 @@ import {
   MinimumThresholdWarper,
   SolidityInterfaces,
   ZeroBalanceWarper,
+  StandardWarper,
 } from '../../typechain';
 import type { SignerWithAddress } from '@nomiclabs/hardhat-ethers/dist/src/signer-with-address';
 
@@ -52,6 +53,9 @@ export interface Contracts {
   externalReward: ExternalRewardContracts;
   maxDuration: MaxDurationContracts;
   zeroBalance: ZeroBalanceContracts;
+  multipleConcurrentRentals: MultipleConcurrentRentalsContracts;
+  multipleNonCurrentRentals: MultipleNonConcurrentRentalsContracts;
+  singleNonConcurrentRentals: SingleNonConcurrentRentalsContracts;
   minimumThreshold: MinimumThresholdContracts;
 }
 
@@ -67,6 +71,21 @@ interface ExternalRewardContracts {
 interface ZeroBalanceContracts {
   testZeroBalanceCollection: ERC721Mock;
   zeroBalanceWarper: ZeroBalanceWarper;
+}
+
+interface MultipleConcurrentRentalsContracts {
+  testZeroBalanceCollection: ERC721Mock;
+  multipleConcurrentRentals: StandardWarper;
+}
+
+interface MultipleNonConcurrentRentalsContracts {
+  testZeroBalanceCollection: ERC721Mock;
+  multipleNonConcurrentRentals: StandardWarper;
+}
+
+interface SingleNonConcurrentRentalsContracts {
+  testZeroBalanceCollection: ERC721Mock;
+  singleNonConcurrentRentals: StandardWarper;
 }
 
 interface MinimumThresholdContracts {

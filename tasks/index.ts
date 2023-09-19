@@ -7,3 +7,5 @@ import './external-reward';
 import './max-duration-raffle';
 import './minimum-threshold';
 import './zero-balance';
+import './standard-warper';
+import './minimum-threshold-v2';

@@ -17,7 +17,7 @@ contract ZeroBalanceWarper is IAssetRentabilityMechanics, ExternalRewardWarper, 
      * @dev Array of addresses representing NFT collections that need to be checked in the ZeroBalanceWarper.
      * Renters can only rent if their NFT balance for each collection in this array is zero.
      */
-    address[] private _zeroBalanceCheckAddresses;
+    address[] internal _zeroBalanceCheckAddresses;
 
     /**
      * @dev Constructor for the ZeroBalanceWarper contract.
@@ -45,7 +45,7 @@ contract ZeroBalanceWarper is IAssetRentabilityMechanics, ExternalRewardWarper, 
         address renter,
         uint256,
         uint256
-    ) external view override returns (bool isRentable, string memory errorMessage) {
+    ) external view virtual override returns (bool isRentable, string memory errorMessage) {
         for (uint256 i = 0; i < _zeroBalanceCheckAddresses.length; i++) {
             if (IERC721(_zeroBalanceCheckAddresses[i]).balanceOf(renter) > 0) {
                 return (false, "Renter holds NFTs from restricted collections");
