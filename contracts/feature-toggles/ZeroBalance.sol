@@ -2,15 +2,17 @@
 pragma solidity ^0.8.0;
 
 import "./IFeatureController.sol";
-import "./IIntegrationWrapper.sol";
 import "./IntegrationFeatureRegistry.sol";
+
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 
 /**
  * @title  Zero Balance Feature Controller.
  * @notice This contract allows for the management and execution of integration features.
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
-contract FeatureController is IFeatureController {
+contract ZeroBalance is IFeatureController {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
@@ -64,11 +66,19 @@ contract FeatureController is IFeatureController {
     /**
      * @dev Executes a feature using its keys and returns the associated value.
      * @param integrationAddress The address of the Integration.
-     * @return The uint256 JUST FOR TESTING
+     * @param renter Adress of NFT retner
      * TODO: Logic is under development and will be added soon.
      */
-    function execute(address integrationAddress) external view returns (uint256) {
-        return _zeroBalanceAddresses[integrationAddress].length; //JUST FOR TESTING
+    function execute(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage) {
+        address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
+
+        for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
+            if (IERC721(zeroBalanceAddresses[i]).balanceOf(renter) > 0) {
+                return (false, "Renter has no NFTs on the balance");
+            }
+        }
+
+        return (true, "");
     }
 
 

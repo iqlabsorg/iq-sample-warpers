@@ -117,4 +117,38 @@ contract IntegrationFeatureRegistry {
         }
         return (enabledFeatureIdsArray, enabledFeatureControllersArray);
     }
+
+    /**
+     * @dev Fetches all enabled feature IDs for a given integration contract.
+     * @param integrationContract Address of the integration contract.
+     * @return enabledFeatureIdsArray Array of enabled feature IDs.
+     */
+    function getEnabledFeatureIds(address integrationContract) external view returns (uint256[] memory enabledFeatureIdsArray) {
+        uint256 featureCount = featureAddresses.length();
+        uint256 enabledFeatureCount = 0;
+
+        // Count enabled features
+        for(uint256 i = 0; i < featureCount; i++) {
+            address featureController = featureAddresses.at(i);
+            uint256 featureId = featureIds[featureController];
+            if (featureEnabled[integrationContract][featureId]) {
+                enabledFeatureCount++;
+            }
+        }
+
+        // Allocate memory for the result array
+        enabledFeatureIdsArray = new uint256[](enabledFeatureCount);
+
+        uint256 currentIndex = 0;
+        for(uint256 i = 0; i < featureCount; i++) {
+            address featureController = featureAddresses.at(i);
+            uint256 featureId = featureIds[featureController];
+            if (featureEnabled[integrationContract][featureId]) {
+                enabledFeatureIdsArray[currentIndex] = featureId;
+                currentIndex++;
+            }
+        }
+
+        return enabledFeatureIdsArray;
+    }
 }

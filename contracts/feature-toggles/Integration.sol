@@ -1,15 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.15;
+
+import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "./IntegrationFeatureRegistry.sol";
 import "./IFeatureController.sol";
+import "../external-reward/ExternalRewardWarper.sol";
+import "./IIntegration.sol";
 
 /**
- * @title IntegrationWrapper
- * @notice Manages integration features and storage.
- * @dev Interacts with IntegrationFeatureRegistry for feature operations.
+ * @title Integration
+ * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero, this name represents the core functionality quite accurately.
  */
-contract IntegrationWrapper {
+contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IIntegration {
+
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     /**
@@ -46,7 +51,7 @@ contract IntegrationWrapper {
      * @dev Executes an array of features sequentially.
      * @param featureIds Array of feature IDs.
      */
-    function check(uint256[] memory featureIds) public view returns (ExecutionResult[] memory results) {
+    function check(uint256[] memory featureIds) external view returns (ExecutionResult[] memory results) {
         ExecutionResult[] memory resultsArray = new ExecutionResult[](featureIds.length);
 
         for (uint256 i = 0; i < featureIds.length; i++) {
@@ -58,12 +63,14 @@ contract IntegrationWrapper {
     }
 
     /**
-     * @dev Executes an array of features sequentially.
-     * @return success Indicates whether all features were executed successfully.
-     * @return errorMessage Contains an error message if any of the feature executions fail.
+     * @inheritdoc IAssetRentabilityMechanics
+     * @notice The asset is rentable when all feature-checks passed with true.
      */
-    function executeFeatures() public view returns (bool success, string memory errorMessage) {
-
+    function __isRentableAsset(
+        address renter,
+        uint256,
+        uint256
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
         uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
@@ -77,7 +84,6 @@ contract IntegrationWrapper {
 
         return (true, "");
     }
-
 
     /**
      * @dev Checks if a feature is active.
@@ -95,5 +101,15 @@ contract IntegrationWrapper {
      */
     function getFeatureControllerAddress(uint256 featureId) external view returns (address) {
         return integrationFeatureRegistry.featureControllers(featureId);
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
+        return
+            interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
+            // interfaceId == type(IZeroBalanceWarper).interfaceId ||
+            super.supportsInterface(interfaceId);
     }
 }

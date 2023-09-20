@@ -2,15 +2,18 @@
 pragma solidity ^0.8.0;
 
 import "./IFeatureController.sol";
-import "./IIntegrationWrapper.sol";
 import "./IntegrationFeatureRegistry.sol";
+
+import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
+import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
+
 
 /**
  * @title Minimum Thresholds Feature Controller
  * @notice Manages required NFT collection holdings for eligibility criteria.
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
-contract FeatureController is IFeatureController {
+contract MinimumThreshold is IFeatureController {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
@@ -62,9 +65,18 @@ contract FeatureController is IFeatureController {
     /**
      * @notice Executes the feature and returns the count of required collections.
      * @param integrationAddress The IntegrationWrapper address.
-     * @return Count of required NFT collections.
+     * @param renter Address of the renter.
      */
-    function execute(address integrationAddress) external view returns (uint256) {
-        return _requiredCollectionAddresses[integrationAddress].length;
+    function execute(address renter, address integrationAddress) external view override returns (bool isRentable, string memory errorMessage) {
+        address[] memory requiredAddresses = _requiredCollectionAddresses[integrationAddress];
+        uint256[] memory requiredThresholds = _requiredCollectionMinimumThresholds[integrationAddress];
+
+        for (uint256 i = 0; i < requiredAddresses.length; i++) {
+            if (IERC721(requiredAddresses[i]).balanceOf(renter) < requiredThresholds[i]) {
+                return (false, "Renter has not enough NFTs from required collections");
+            }
+        }
+
+        return (true, "");
     }
 }

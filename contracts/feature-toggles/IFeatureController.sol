@@ -7,6 +7,6 @@ pragma solidity ^0.8.0;
  */
 interface IFeatureController {
 
-    function execute(address integrationAddress) external view returns (uint256);
+    function execute(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage);
 
 }
