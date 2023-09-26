@@ -29,8 +29,64 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      * @notice Represents the result of a feature execution.
      */
     struct ExecutionResult {
+        // or add here
         bool success; //Indicates whether the feature was executed successfully.
         string message; //Contains an error or success message from the feature execution.
+    }
+
+    // TODO
+    struct FeatureExecutionResult {
+        uint256 featureId;
+        ExecutionResult executionResult;
+    }
+
+    struct ExecutionObject {
+        uint256 rentalId;
+        Rentings.Agreement rentalAgreement;
+        Accounts.RentalEarnings rentalEarnings;
+    }
+
+    struct CheckObject {
+        address renter;
+        uint256 tokenId;
+        uint256 amount;
+    }
+
+    /**
+     * @inheritdoc IRentingHookMechanics
+     */
+    function __onRent(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata /* rentalEarnings */
+    ) external override onlyRentingManager returns (bool, string memory) {
+        address renter = rentalAgreement.renter;
+        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+
+        for (uint256 i = 0; i < featureIds.length; i++) {
+            (bool featureSuccess, string memory message) = executeFeature(featureIds[i]);
+
+            if (!featureSuccess) {
+                return (false, message);
+            }
+        }
+
+        return (true, "");
+    }
+
+    function __onRentv2(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata /* rentalEarnings */
+    ) external onlyRentingManager returns (bool, string memory) {
+        address renter = rentalAgreement.renter;
+        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+
+        for (uint256 i = 0; i < featureIds.length; i++) {
+            // IFeatureController.executev2(..)
+        }
+
+        return (true, "");
     }
 
     /**
@@ -40,6 +96,14 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      * @return Execution result.
      */
     function executeFeature(uint256 featureId) public view returns (bool, string memory) {
+        if (!isFeatureActive(featureId)) { return (false, "Feature is not active");}
+
+        address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
+        IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
+        return featureControllerInstance.execute(msg.sender, address(this));
+    }
+
+    function executeFeaturev2(uint256 featureId, ExecutionObject calldata executionObject) public view returns (bool, string memory) {
         if (!isFeatureActive(featureId)) { return (false, "Feature is not active");}
 
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
@@ -68,8 +132,8 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      */
     function __isRentableAsset(
         address renter,
-        uint256,
-        uint256
+        uint256 tokenId,
+        uint256 amount
     ) external view override returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
         uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
@@ -80,6 +144,21 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
             if (!featureSuccess) {
                 return (false, message);
             }
+        }
+
+        return (true, "");
+    }
+
+    function __isRentableAsset_v2(
+        address renter,
+        uint256 tokenId,
+        uint256 amount
+    ) external view returns (bool isRentable, string memory errorMessage) {
+        // Fetching the enabled featureIds for this integration.
+        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+
+        for (uint256 i = 0; i < featureIds.length; i++) {
+            // IFeatureController.checkv2(..);
         }
 
         return (true, "");
