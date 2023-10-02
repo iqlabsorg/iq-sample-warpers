@@ -22,13 +22,6 @@ interface IFeatureController {
     // something that is called within on rent
     function execute(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage);
 
-    // something that is called within on rent
-    function executev2(address integrationAddress, ExecutionObject calldata executionObject) external view returns (bool isRentable, string memory errorMessage);
-
     // it is something that is called within is rentable asset
     function check(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage);
-
-    // it is something that is called within is rentable asset
-    function checkv2(address integrationAddress, CheckObject calldata checkObject) external view returns (bool isRentable, string memory errorMessage);
-
 }

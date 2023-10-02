@@ -13,7 +13,7 @@ import "./IIntegration.sol";
  * @title Integration
  * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero, this name represents the core functionality quite accurately.
  */
-contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IIntegration {
+abstract contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IIntegration {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 

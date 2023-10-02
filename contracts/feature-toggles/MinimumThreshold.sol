@@ -13,7 +13,7 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
  * @notice Manages required NFT collection holdings for eligibility criteria.
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
-contract MinimumThreshold is IFeatureController {
+abstract contract MinimumThreshold is IFeatureController {
 
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
