@@ -37,6 +37,46 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         return (success, message);
     }
 
+    function __onRentLogic(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata rentalEarnings
+    ) private returns (bool, string memory) {
+        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+
+        for (uint256 i = 0; i < featureIds.length; i++) {
+            address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
+            IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
+
+            IFeatureController.ExecutionObject memory executionObject = IFeatureController.ExecutionObject({
+                rentalId: rentalId,
+                rentalAgreement: rentalAgreement,
+                rentalEarnings: rentalEarnings
+            });
+
+            // Execute the feature with the executionObject
+            (bool featureSuccess, string memory message) = featureControllerInstance.execute(
+                address(this),
+                executionObject
+            );
+
+            if (!featureSuccess) {
+                return (false, message); // if any of the features returns false - return false
+            }
+        }
+
+        // If all features execute successfully, return true
+        return (true, "");
+    }
+
+    function __onRent(
+        uint256 rentalId,
+        Rentings.Agreement calldata rentalAgreement,
+        Accounts.RentalEarnings calldata rentalEarnings
+    ) external override onlyRentingManager returns (bool, string memory) {
+        return __onRentLogic(rentalId, rentalAgreement, rentalEarnings);
+    }
+
     /**
      * @inheritdoc IAssetRentabilityMechanics
      * @notice The asset is rentable when all feature-checks passed with true.
