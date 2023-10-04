@@ -13,7 +13,6 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
 contract ZeroBalance is IFeatureController {
-
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     /**
@@ -64,22 +63,30 @@ contract ZeroBalance is IFeatureController {
     }
 
     /**
-     * @dev Executes a feature using its keys and returns the associated value.
-     * @param integrationAddress The address of the Integration.
-     * @param renter Adress of NFT retner
-     * TODO: Logic is under development and will be added soon.
+     * @dev Checks if the renter's balance is zero for all specified collections.
      */
-    function execute(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage) {
+    function check(
+        address integrationAddress,
+        CheckObject calldata checkObject
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
 
         for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
-            if (IERC721(zeroBalanceAddresses[i]).balanceOf(renter) > 0) {
-                return (false, "Renter has no NFTs on the balance");
+            if (IERC721(zeroBalanceAddresses[i]).balanceOf(checkObject.renter) > 0) {
+                return (false, "Renter owns NFTs from a restricted collection");
             }
         }
 
-        return (true, "");
+        return (true, "Renter has zero balance for all specified collections");
     }
 
-
+    /**
+     * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
+     */
+    function execute(
+        address integrationAddress,
+        ExecutionObject calldata executionObject
+    ) external override returns (bool success, string memory errorMessage) {
+        return (true, "Execution successful");
+    }
 }

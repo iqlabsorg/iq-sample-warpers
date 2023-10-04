@@ -31,35 +31,18 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         string message; //Contains an error or success message from the feature execution.
     }
 
-    /**
-     * @notice WIP
-     * @dev Checks is the feature is active, then executes a feature.
-     * @param featureId ID of the feature.
-     * @return Execution result.
-     */
-    function executeFeature(uint256 featureId) public view returns (bool, string memory) {
+    function executeFeature(
+        uint256 featureId,
+        IFeatureController.ExecutionObject calldata executionObject
+    ) public returns (bool, string memory) {
         if (!isFeatureActive(featureId)) {
             return (false, "Feature is not active");
         }
 
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
         IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
-        return featureControllerInstance.execute(msg.sender, address(this));
-    }
-
-    /**
-     * @dev Executes an array of features sequentially.
-     * @param featureIds Array of feature IDs.
-     */
-    function check(uint256[] memory featureIds) external view returns (ExecutionResult[] memory results) {
-        ExecutionResult[] memory resultsArray = new ExecutionResult[](featureIds.length);
-
-        for (uint256 i = 0; i < featureIds.length; i++) {
-            (bool success, string memory message) = executeFeature(featureIds[i]);
-            resultsArray[i] = ExecutionResult(success, message);
-        }
-
-        return resultsArray;
+        (bool success, string memory message) = featureControllerInstance.execute(address(this), executionObject);
+        return (success, message);
     }
 
     /**
@@ -68,15 +51,23 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      */
     function __isRentableAsset(
         address renter,
-        uint256,
-        uint256
-    ) external view override returns (bool isRentable, string memory errorMessage) {
+        uint256 tokenId,
+        uint256 amount
+    ) external view returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
         uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
         for (uint256 i = 0; i < featureIds.length; i++) {
-            (bool featureSuccess, string memory message) = executeFeature(featureIds[i]);
+            address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
+            IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
 
+            IFeatureController.CheckObject memory checkObj = IFeatureController.CheckObject({
+                renter: renter,
+                tokenId: tokenId,
+                amount: amount
+            });
+
+            (bool featureSuccess, string memory message) = featureControllerInstance.check(address(this), checkObj);
             if (!featureSuccess) {
                 return (false, message);
             }
