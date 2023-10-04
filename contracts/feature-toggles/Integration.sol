@@ -37,11 +37,12 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         return (success, message);
     }
 
-    function __onRentLogic(
+    function __onRent(
         uint256 rentalId,
         Rentings.Agreement calldata rentalAgreement,
         Accounts.RentalEarnings calldata rentalEarnings
-    ) private returns (bool, string memory) {
+    ) external override(ExternalRewardWarper, IIntegration) onlyRentingManager returns (bool, string memory) {
+
         uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
         for (uint256 i = 0; i < featureIds.length; i++) {
@@ -67,14 +68,6 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
 
         // If all features execute successfully, return true
         return (true, "");
-    }
-
-    function __onRent(
-        uint256 rentalId,
-        Rentings.Agreement calldata rentalAgreement,
-        Accounts.RentalEarnings calldata rentalEarnings
-    ) external override onlyRentingManager returns (bool, string memory) {
-        return __onRentLogic(rentalId, rentalAgreement, rentalEarnings);
     }
 
     /**
