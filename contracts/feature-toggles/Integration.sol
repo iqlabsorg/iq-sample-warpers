@@ -14,14 +14,12 @@ import "./IIntegration.sol";
  * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero, this name represents the core functionality quite accurately.
  */
 contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IIntegration {
-
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     /**
      * @dev Initializes with IntegrationFeatureRegistry address.
-     * @param _integrationFeatureRegistry Address of IntegrationFeatureRegistry.
      */
-    constructor(address _integrationFeatureRegistry) {
+    constructor(address _integrationFeatureRegistry, bytes memory config) ExternalRewardWarper(config) {
         integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
     }
 
@@ -40,7 +38,9 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      * @return Execution result.
      */
     function executeFeature(uint256 featureId) public view returns (bool, string memory) {
-        if (!isFeatureActive(featureId)) { return (false, "Feature is not active");}
+        if (!isFeatureActive(featureId)) {
+            return (false, "Feature is not active");
+        }
 
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
         IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
