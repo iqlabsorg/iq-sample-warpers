@@ -23,14 +23,6 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
     }
 
-    /**
-     * @notice Represents the result of a feature execution.
-     */
-    struct ExecutionResult {
-        bool success; //Indicates whether the feature was executed successfully.
-        string message; //Contains an error or success message from the feature execution.
-    }
-
     function executeFeature(
         uint256 featureId,
         IFeatureController.ExecutionObject calldata executionObject
@@ -74,6 +66,39 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         }
 
         return (true, "");
+    }
+
+    /**
+     * @notice Checks the rentability of an asset against all active features.
+     * @param renter Address of the renter.
+     * @param tokenId ID of the token to be rented.
+     * @param amount Amount of tokens/units to rent.
+     * @return results Array of execution results for each feature checked. Each result contains the ID of the feature, its success state, and an associated message.
+     */
+    function checkAll(
+        address renter,
+        uint256 tokenId,
+        uint256 amount
+    ) public view returns (ExecutionResult[] memory results) {
+        // Fetching the enabled featureIds for this integration.
+        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+        ExecutionResult[] memory resultsArray = new ExecutionResult[](featureIds.length);
+
+        for (uint256 i = 0; i < featureIds.length; i++) {
+            address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
+            IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
+
+            IFeatureController.CheckObject memory checkObj = IFeatureController.CheckObject({
+                renter: renter,
+                tokenId: tokenId,
+                amount: amount
+            });
+
+            (bool featureSuccess, string memory message) = featureControllerInstance.check(address(this), checkObj);
+            resultsArray[i] = ExecutionResult(featureIds[i], featureSuccess, message);
+        }
+
+        return resultsArray;
     }
 
     /**
