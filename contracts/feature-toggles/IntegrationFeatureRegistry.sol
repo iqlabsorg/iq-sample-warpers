@@ -10,6 +10,7 @@ import "@openzeppelin/contracts-upgradeable/utils/structs/EnumerableSetUpgradeab
 contract IntegrationFeatureRegistry {
     using EnumerableSetUpgradeable for EnumerableSetUpgradeable.AddressSet;
 
+    mapping (address => bool) public featureControllerInUse;
     mapping(uint256 => address) public featureControllers;
     mapping(address => uint256) public featureIds;
     mapping(address => mapping(uint256 => bool)) public featureEnabled;
@@ -22,6 +23,7 @@ contract IntegrationFeatureRegistry {
      * @param featureController Associated controller address.
      */
     function registerFeature(uint256 featureId, address featureController) external {
+        require(featureControllerInUse[featureController] == false, "Feature controller already in use");
         require(featureControllers[featureId] == address(0), "Feature already registered");
         featureAddresses.add(featureController);
         featureControllers[featureId] = featureController;
@@ -61,13 +63,22 @@ contract IntegrationFeatureRegistry {
     }
 
     /**
+     * @dev Returns the controller address for a feature.
+     * @param featureId Unique identifier for the feature.
+     * @return featureController Associated controller address.
+    */
+    function getFeatureController(uint256 featureId) external view returns (address) {
+        return featureControllers[featureId];
+    }
+
+    /**
      * @dev Lists all registered features.
      * @return featureIdsArray Array of feature IDs.
      * @return featureControllersArray Array of their controllers.
      */
     function getAllFeatures() external view returns (
         uint256[] memory featureIdsArray,
-        address[] memory featureControllersArray) 
+        address[] memory featureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
         featureIdsArray = new uint256[](featureCount);

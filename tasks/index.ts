@@ -9,3 +9,4 @@ import './minimum-threshold';
 import './zero-balance';
 import './standard-warper';
 import './minimum-threshold-v2';
+import './feature-toggles';

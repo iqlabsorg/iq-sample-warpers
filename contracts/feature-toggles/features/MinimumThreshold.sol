@@ -2,11 +2,10 @@
 pragma solidity ^0.8.0;
 
 import "./IFeatureController.sol";
-import "./IntegrationFeatureRegistry.sol";
+import "../IntegrationFeatureRegistry.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
-
 
 /**
  * @title Minimum Thresholds Feature Controller
@@ -14,7 +13,6 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
 contract MinimumThreshold is IFeatureController {
-
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     // Stores the NFT collection addresses a user needs to own to be eligible.
@@ -22,6 +20,10 @@ contract MinimumThreshold is IFeatureController {
 
     // Defines the minimum number of NFTs a user needs to hold from the respective collections.
     mapping(address => uint256[]) private _requiredCollectionMinimumThresholds;
+
+    /// @notice Maps a renter's address to their respective rental end timestamp.
+    /// @dev Used to track when a renter's current rental agreement expires.
+    mapping(address => uint32) private _currentRentalEndTimestamp;
 
     /**
      * @dev Sets the address for the IntegrationFeatureRegistry.
@@ -45,7 +47,9 @@ contract MinimumThreshold is IFeatureController {
      * @param integrationAddress Address of integration.
      * @return List of required NFT counts for each collection.
      */
-    function getRequiredCollectionMinimumThresholds(address integrationAddress) external view returns (uint256[] memory) {
+    function getRequiredCollectionMinimumThresholds(
+        address integrationAddress
+    ) external view returns (uint256[] memory) {
         return _requiredCollectionMinimumThresholds[integrationAddress];
     }
 
@@ -55,7 +59,11 @@ contract MinimumThreshold is IFeatureController {
      * @param collectionAddresses List of required collection addresses.
      * @param minimumThresholds Required NFT counts for each collection.
      */
-    function setIntegration(address integrationAddress, address[] calldata collectionAddresses, uint256[] calldata minimumThresholds) external {
+    function setIntegration(
+        address integrationAddress,
+        address[] calldata collectionAddresses,
+        uint256[] calldata minimumThresholds
+    ) external {
         require(collectionAddresses.length == minimumThresholds.length, "Mismatched array lengths");
 
         _requiredCollectionAddresses[integrationAddress] = collectionAddresses;
@@ -63,11 +71,15 @@ contract MinimumThreshold is IFeatureController {
     }
 
     /**
-     * @notice Executes the feature and returns the count of required collections.
+     * @notice Executes the feature to check if a renter has the required NFTs.
      * @param integrationAddress The IntegrationWrapper address.
-     * @param renter Address of the renter.
+     * @param executionObject Object containing details about the rental agreement.
      */
-    function execute(address renter, address integrationAddress) external view override returns (bool isRentable, string memory errorMessage) {
+    function execute(
+        address integrationAddress,
+        ExecutionObject calldata executionObject
+    ) external override returns (bool success, string memory errorMessage) {
+        address renter = executionObject.rentalAgreement.renter;
         address[] memory requiredAddresses = _requiredCollectionAddresses[integrationAddress];
         uint256[] memory requiredThresholds = _requiredCollectionMinimumThresholds[integrationAddress];
 
@@ -76,7 +88,18 @@ contract MinimumThreshold is IFeatureController {
                 return (false, "Renter has not enough NFTs from required collections");
             }
         }
+        return (true, "");
+    }
 
+    function check(
+        address,
+        CheckObject calldata checkObject
+    ) external view override returns (bool isRentable, string memory errorMessage) {
+        address renter = checkObject.renter; // Получите адрес арендатора из CheckObject
+        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
+        if (currentRentalEndDatetime > uint32(block.timestamp)) {
+            return (false, "Asset is already rented!");
+        }
         return (true, "");
     }
 }

@@ -2,7 +2,7 @@
 pragma solidity ^0.8.0;
 
 import "./IFeatureController.sol";
-import "./IntegrationFeatureRegistry.sol";
+import "../IntegrationFeatureRegistry.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
@@ -13,8 +13,18 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
 contract ZeroBalance is IFeatureController {
-
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
+
+    /**
+     * @dev Reverted if the array of zero balance addresses has duplicates.
+     */
+    error DuplicateValueInZeroBalanceArray();
+
+     /**
+     * @dev Emits when zero balance addresses are set.
+     * @param zeroBalanceAddresses Zero balance addresses.
+     */
+    event ZeroBalanceAddressesSet(address[] zeroBalanceAddresses);
 
     /**
      * @dev Store an array of addresses that need to be zero balance checked for the specified integration
@@ -44,42 +54,37 @@ contract ZeroBalance is IFeatureController {
      * @param integrationAddress The integration address for which the zero balance address needs to be added.
      * @param zeroBalanceAddresses The NFT collection addresses for which the zero balance feature needs to be enabled.
      */
-    function setZeroBalanceAddresses(address integrationAddress, address[] calldata zeroBalanceAddresses) external {
-        for (uint256 j = 0; j < zeroBalanceAddresses.length; j++) {
-            address zeroBalanceAddress = zeroBalanceAddresses[j];
+    function setZeroBalanceAddresses(address integrationAddress, address[] zeroBalanceAddresses) external {
+        _zeroBalanceAddresses[integrationAddress] = zeroBalanceAddresses;
 
-            bool isDuplicate = false;
-            // Ensure the address being added isn't already in the list
-            for (uint256 i = 0; i < _zeroBalanceAddresses[integrationAddress].length; i++) {
-                if (_zeroBalanceAddresses[integrationAddress][i] == zeroBalanceAddress) {
-                    isDuplicate = true;
-                    break;
-                }
-            }
-
-            require(!isDuplicate, "One or more addresses are already added"); // should we use here error function?
-
-            _zeroBalanceAddresses[integrationAddress].push(zeroBalanceAddress);
-        }
+        emit ZeroBalanceAddressesSet(zeroBalanceAddresses);
     }
 
     /**
-     * @dev Executes a feature using its keys and returns the associated value.
-     * @param integrationAddress The address of the Integration.
-     * @param renter Adress of NFT retner
-     * TODO: Logic is under development and will be added soon.
+     * @dev Checks if the renter's balance is zero for all specified collections.
      */
-    function execute(address renter, address integrationAddress) external view returns (bool isRentable, string memory errorMessage) {
+    function check(
+        address integrationAddress,
+        CheckObject calldata checkObject
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
 
         for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
-            if (IERC721(zeroBalanceAddresses[i]).balanceOf(renter) > 0) {
-                return (false, "Renter has no NFTs on the balance");
+            if (IERC721(zeroBalanceAddresses[i]).balanceOf(checkObject.renter) > 0) {
+                return (false, "Renter owns NFTs from a restricted collection");
             }
         }
 
-        return (true, "");
+        return (true, "Renter has zero balance for all specified collections");
     }
 
-
+    /**
+     * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
+     */
+    function execute(
+        address,
+        ExecutionObject calldata
+    ) external override returns (bool success, string memory errorMessage) {
+        return (true, "Execution successful");
+    }
 }

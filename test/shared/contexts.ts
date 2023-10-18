@@ -2,7 +2,7 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import hre, { ethers, getChainId } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import type { Contracts, Mocks, Signers } from './types';
+import type { Contracts, FeatureContracts, FeatureToggleContracts, MinimumThresholdFeatureContracts, Mocks, Signers, ZeroBalanceFeatureContracts } from './types';
 import {
   ERC20Mock,
   ERC721Mock,
@@ -24,6 +24,10 @@ export function baseContext(description: string, testSuite: () => void): void {
   describe(description, function () {
     before(async function () {
       this.contracts = {} as Contracts;
+      this.contracts.feautureToggles = {} as FeatureToggleContracts;
+      this.contracts.feautureToggles.featureContracts = {} as FeatureContracts;
+      this.contracts.feautureToggles.featureContracts.zeroBalanceFeature = {} as ZeroBalanceFeatureContracts;
+      this.contracts.feautureToggles.featureContracts.minimumThresholdFeature = {} as MinimumThresholdFeatureContracts;
       this.mocks = {
         assets: {},
       } as Mocks;

@@ -48,7 +48,7 @@ contract ZeroBalanceWarper is IAssetRentabilityMechanics, ExternalRewardWarper, 
     ) external view virtual override returns (bool isRentable, string memory errorMessage) {
         for (uint256 i = 0; i < _zeroBalanceCheckAddresses.length; i++) {
             if (IERC721(_zeroBalanceCheckAddresses[i]).balanceOf(renter) > 0) {
-                return (false, "Renter holds NFTs from restricted collections");
+                return (false, "Renter holds NFTs from restricted collection");
             }
         }
 

@@ -10,60 +10,70 @@ import {
   IUniverseRegistry,
   IUniverseWizardV1,
 } from '@iqprotocol/iq-space-protocol/typechain';
-import { Auth__factory, ZeroBalanceWarper, ZeroBalanceWarper__factory } from '../../../../../typechain';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import {
+  Auth__factory,
+  Integration,
+  IntegrationFeatureRegistry,
+  ZeroBalance,
+  Integration__factory,
+} from '../../../../../typechain';
+import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
+import { BigNumber, BigNumberish } from 'ethers';
+import {
+  AccountId,
+  AddressTranslator,
   ChainId,
+  EMPTY_BYTES_DATA_HEX,
   IQSpace,
+  LISTING_STRATEGIES,
   ListingManagerAdapter,
   ListingTermsRegistryAdapter,
   ListingWizardAdapterV1,
+  MetahubAdapter,
+  PERIOD_TYPE_DAY,
   RentingManagerAdapter,
   UniverseRegistryAdapter,
   UniverseWizardAdapterV1,
-  LISTING_STRATEGIES,
-  EMPTY_BYTES_DATA_HEX,
-  AccountId,
-  AddressTranslator,
-  createAsset,
-  makeFixedRateWithRewardTaxTermsFromUnconverted,
   calculateBaseRateInBaseTokenEthers,
-  periodValueAndTypeToProtocolConverted,
-  PERIOD_TYPE_DAY,
+  createAsset,
   makeFixedRateWithRewardListingTermsFromUnconverted,
-  MetahubAdapter,
+  makeFixedRateWithRewardTaxTermsFromUnconverted,
+  periodValueAndTypeToProtocolConverted,
 } from '@iqprotocol/iq-space-sdk-js';
-import { BigNumber, BigNumberish } from 'ethers';
-import { calculateListerBaseFee, convertListerBaseFeeToWei } from '../../../../shared/utils/pricing-utils';
-import { calculateTaxFeeForFixedRateInWei, SECONDS_IN_DAY } from '../../../../../src';
+import { SECONDS_IN_DAY, calculateTaxFeeForFixedRateInWei } from '../../../../../src';
 import { makeSDKListingParams } from '../../../../shared/utils/listing-sdk-utils';
+import { calculateListerBaseFee, convertListerBaseFeeToWei } from '../../../../shared/utils/pricing-utils';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../shared/utils/renting-sdk-utils';
-import { expect } from 'chai';
+import { ADDRESS_ZERO } from '@iqprotocol/iq-space-protocol';
 
-export function testVariousWarperOperations(): void {
+export function testVariousOperations(): void {
   /**** Constants ****/
   const PROTOCOL_RATE_PERCENT = '5';
   const PROTOCOL_REWARD_RATE_PERCENT = '7';
   const LISTER_TOKEN_ID_1 = BigNumber.from(1);
   const LISTER_TOKEN_ID_2 = BigNumber.from(2);
+  const ZERO_BALANCE_FEATURE_ID = BigNumber.from(1);
   /**** Config ****/
   let chainId: string;
   /**** Tax Terms ****/
   let protocolTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
   /**** Contracts ****/
+  let integrationContract: Integration;
+  let integrationFeatureRegistry: IntegrationFeatureRegistry;
+  let zeroBalanceFeature: ZeroBalance;
   let metahub: IMetahub;
   let listingManager: IListingManager;
   let listingTermsRegistry: IListingTermsRegistry;
   let rentingManager: IRentingManager;
   let taxTermsRegistry: ITaxTermsRegistry;
-  let testZeroBalanceCollection: ERC721Mock;
-  let zeroBalanceWarper: ZeroBalanceWarper;
   let listingWizardV1: IListingWizardV1;
   let universeWizardV1: IUniverseWizardV1;
   let universeRegistry: IUniverseRegistry;
   /**** Mocks & Samples ****/
   let baseToken: ERC20Mock;
   let originalCollection: ERC721Mock;
+  let zeroBalanceTestCollection: ERC721Mock;
   /**** Signers ****/
   let deployer: SignerWithAddress;
   let lister: SignerWithAddress;
@@ -86,6 +96,10 @@ export function testVariousWarperOperations(): void {
     /**** Config ****/
     chainId = (this.testChainId as ChainId).toString();
     /**** Contracts ****/
+    integrationFeatureRegistry =
+      this.contracts.feautureToggles.integrationFeatureRegistryContracts.integrationFeatureRegistry;
+    integrationContract = this.contracts.feautureToggles.integrationContracts.integration;
+    zeroBalanceFeature = this.contracts.feautureToggles.featureContracts.zeroBalanceFeature.controller;
     metahub = this.contracts.metahub;
     listingWizardV1 = this.contracts.wizardsV1.listingWizard;
     listingManager = this.contracts.listingManager;
@@ -94,17 +108,19 @@ export function testVariousWarperOperations(): void {
     universeRegistry = this.contracts.universeRegistry;
     taxTermsRegistry = this.contracts.taxTermsRegistry;
     rentingManager = this.contracts.rentingManager;
-    testZeroBalanceCollection = this.contracts.zeroBalance.testZeroBalanceCollection;
-    zeroBalanceWarper = this.contracts.zeroBalance.zeroBalanceWarper;
     /**** Mocks & Samples ****/
     baseToken = this.mocks.assets.baseToken;
     originalCollection = this.mocks.assets.originalCollection;
+    zeroBalanceTestCollection =
+      this.contracts.feautureToggles.featureContracts.zeroBalanceFeature.zeroBalanceTestCollection;
     /**** Signers ****/
     deployer = this.signers.named.deployer;
-    universeRewardAddress = this.signers.named.universeRewardAddress;
     [lister, renterA, renterB, universeOwner, stranger] = this.signers.unnamed;
 
-    await zeroBalanceWarper.connect(deployer).transferOwnership(universeOwner.address);
+    await zeroBalanceFeature.setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
+    await integrationFeatureRegistry.registerFeature(ZERO_BALANCE_FEATURE_ID, zeroBalanceFeature.address);
+    await integrationFeatureRegistry.enableFeatureForIntegration(integrationContract.address, ZERO_BALANCE_FEATURE_ID);
+    await integrationContract.connect(deployer).transferOwnership(universeOwner.address);
     protocolTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
       PROTOCOL_RATE_PERCENT,
       PROTOCOL_REWARD_RATE_PERCENT,
@@ -130,6 +146,40 @@ export function testVariousWarperOperations(): void {
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_2);
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
   });
+
+  // describe('Integration Contract Operations', function () {
+  //   it('should execute a feature correctly', async function () {
+  //     // Setup a sample feature in the registry
+  //     const featureId = BigNumber.from(1);
+  //     await integrationFeatureRegistry.connect(featureOwner).registerFeatureController(featureId, userA.address);
+
+  //     // Mock ExecutionObject for the test
+  //     const mockExecutionObject = {
+  //       rentalId: BigNumber.from(1),
+  //     };
+
+  //     // Execute the feature
+  //     const [success, message] = await integrationContract.connect(userA).executeFeature(featureId, mockExecutionObject);
+
+  //     expect(success).to.equal(true);
+  //     expect(message).to.equal('');
+  //   });
+
+  //   it('should not execute an inactive feature', async function () {
+  //     const inactiveFeatureId = BigNumber.from(999); // 999 is an inactive feature ID
+  //     const mockExecutionObject = {
+  //       rentalId: BigNumber.from(1),
+  //       // more mock data here
+  //     };
+
+  //     // Try to execute the inactive feature
+  //     await expect(
+  //       integrationContract.connect(userA).executeFeature(inactiveFeatureId, mockExecutionObject),
+  //     ).to.be.revertedWith('Feature is not active');
+  //   });
+
+  //   // ADD TESTS
+  // });
 
   context('Renting `ZERO BALANCE REWARD WARPER ` with various cases', () => {
     const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
@@ -172,7 +222,7 @@ export function testVariousWarperOperations(): void {
 
       const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
         universeParams,
-        AddressTranslator.createAssetType(new AccountId({ chainId, address: zeroBalanceWarper.address }), 'erc721'),
+        AddressTranslator.createAssetType(new AccountId({ chainId, address: integrationContract.address }), 'erc721'),
         universeTaxTerms,
         {
           name: 'External Reward Warper',
@@ -188,7 +238,7 @@ export function testVariousWarperOperations(): void {
         EXTERNAL_REWARD_WARPER_UNIVERSE_ID = newUniverseId;
       }
 
-      await Auth__factory.connect(zeroBalanceWarper.address, universeOwner).setAuthorizationStatus(
+      await Auth__factory.connect(integrationContract.address, universeOwner).setAuthorizationStatus(
         universeOwner.address,
         true,
       );
@@ -223,7 +273,7 @@ export function testVariousWarperOperations(): void {
           {
             listingId,
             universeId: EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
-            warperAddress: zeroBalanceWarper.address,
+            warperAddress: integrationContract.address,
           },
           0,
           1,
@@ -236,7 +286,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -268,25 +318,21 @@ export function testVariousWarperOperations(): void {
       }
 
       await expect(rentTx)
-        .to.emit(zeroBalanceWarper, 'OnRentHookEvent')
+        .to.emit(integrationContract, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
 
-      await expect(zeroBalanceWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(integrationContract.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getLastActiveRentalId(
+        Integration__factory.connect(integrationContract.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId);
-      await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getUniverseRewardAddress(),
-      ).to.be.eventually.equal(universeRewardAddress.address);
-      const rentalDetails = await ZeroBalanceWarper__factory.connect(
-        zeroBalanceWarper.address,
-        stranger,
-      ).getRentalDetails(rentalId);
+      const rentalDetails = await Integration__factory.connect(integrationContract.address, stranger).getRentalDetails(
+        rentalId,
+      );
 
       expect(rentalDetails.listingTerms.strategyId).to.be.equal(listingTerms_1.strategyId);
       expect(rentalDetails.listingTerms.strategyData).to.be.equal(listingTerms_1.strategyData);
@@ -365,7 +411,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -385,20 +431,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_A)
-        .to.emit(zeroBalanceWarper, 'OnRentHookEvent')
+        .to.emit(integrationContract, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId_A);
-      await expect(zeroBalanceWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(integrationContract.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getLastActiveRentalId(
+        Integration__factory.connect(integrationContract.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId_A);
 
-      const rental_A_Details = await ZeroBalanceWarper__factory.connect(
-        zeroBalanceWarper.address,
+      const rental_A_Details = await Integration__factory.connect(
+        integrationContract.address,
         stranger,
       ).getRentalDetails(rentalId_A);
 
@@ -416,7 +462,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_2,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterB.address,
         RENTAL_B_PERIOD,
         baseToken.address,
@@ -436,20 +482,20 @@ export function testVariousWarperOperations(): void {
         throw new Error('Rental Agreement was not found!');
       }
       await expect(rentTx_B)
-        .to.emit(zeroBalanceWarper, 'OnRentHookEvent')
+        .to.emit(integrationContract, 'OnRentHookEvent')
         .withArgs(renterB.address, LISTER_TOKEN_ID_2, rentalId_B);
-      await expect(zeroBalanceWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
+      await expect(integrationContract.connect(stranger).ownerOf(LISTER_TOKEN_ID_2)).to.be.eventually.equal(
         renterB.address,
       );
       await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getLastActiveRentalId(
+        Integration__factory.connect(integrationContract.address, stranger).getLastActiveRentalId(
           renterB.address,
           LISTER_TOKEN_ID_2,
         ),
       ).to.be.eventually.equal(rentalId_B);
 
-      const rental_B_Details = await ZeroBalanceWarper__factory.connect(
-        zeroBalanceWarper.address,
+      const rental_B_Details = await Integration__factory.connect(
+        integrationContract.address,
         stranger,
       ).getRentalDetails(rentalId_B);
 
@@ -496,22 +542,27 @@ export function testVariousWarperOperations(): void {
         throw new Error('Listing Terms were not found!');
       }
 
-      await testZeroBalanceCollection.connect(renterA).mint(renterA.address, 1);
+      await zeroBalanceTestCollection.connect(renterA).mint(renterA.address, 1);
 
       /**** Rental A ****/
       const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
         listingTermsId_1,
       );
 
+
+      const zeroCollections = await zeroBalanceFeature.getZeroBalanceAddresses(integrationContract.address);
+
+      console.log('Zero Collections: ', zeroCollections);
+
       await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
-        .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
-        .withArgs('Renter holds NFTs from restricted collections');
+        .to.be.revertedWithCustomError(integrationContract, 'AssetIsNotRentable')
+        .withArgs('Renter owns NFTs from a restricted collection');
     });
 
     it(`reverts when balance is not zero #2`, async () => {
@@ -520,9 +571,12 @@ export function testVariousWarperOperations(): void {
       const LISTING_2_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_B_PERIOD = LISTING_2_MAX_LOCK_PERIOD;
 
-      await zeroBalanceWarper
+      await zeroBalanceFeature
         .connect(universeOwner)
-        .setZeroBalanceAddresses([testZeroBalanceCollection.address, zeroBalanceWarper.address]);
+        .setZeroBalanceAddresses(integrationContract.address, [
+          integrationContract.address,
+          zeroBalanceTestCollection.address,
+        ]);
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
@@ -585,7 +639,7 @@ export function testVariousWarperOperations(): void {
       const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_1,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterA.address,
         RENTAL_A_PERIOD,
         baseToken.address,
@@ -618,25 +672,24 @@ export function testVariousWarperOperations(): void {
       }
 
       await expect(rentTx)
-        .to.emit(zeroBalanceWarper, 'OnRentHookEvent')
+        .to.emit(integrationContract, 'OnRentHookEvent')
         .withArgs(renterA.address, LISTER_TOKEN_ID_1, rentalId);
 
-      await expect(zeroBalanceWarper.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
+      await expect(integrationContract.connect(stranger).ownerOf(LISTER_TOKEN_ID_1)).to.be.eventually.equal(
         renterA.address,
       );
       await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getLastActiveRentalId(
+        Integration__factory.connect(integrationContract.address, stranger).getLastActiveRentalId(
           renterA.address,
           LISTER_TOKEN_ID_1,
         ),
       ).to.be.eventually.equal(rentalId);
       await expect(
-        ZeroBalanceWarper__factory.connect(zeroBalanceWarper.address, stranger).getUniverseRewardAddress(),
-      ).to.be.eventually.equal(universeRewardAddress.address);
-      const rentalDetails = await ZeroBalanceWarper__factory.connect(
-        zeroBalanceWarper.address,
-        stranger,
-      ).getRentalDetails(rentalId);
+        Integration__factory.connect(integrationContract.address, stranger).getUniverseRewardAddress(),
+      ).to.be.eventually.equal(ADDRESS_ZERO);
+      const rentalDetails = await Integration__factory.connect(integrationContract.address, stranger).getRentalDetails(
+        rentalId,
+      );
 
       expect(rentalDetails.listingTerms.strategyId).to.be.equal(listingTerms_1.strategyId);
       expect(rentalDetails.listingTerms.strategyData).to.be.equal(listingTerms_1.strategyData);
@@ -649,12 +702,12 @@ export function testVariousWarperOperations(): void {
       expect(rentalDetails.lister).to.be.equal(lister.address);
 
       /**** Rental B ****/
-      await testZeroBalanceCollection.connect(renterA).mint(renterA.address, 1);
+      await zeroBalanceTestCollection.connect(renterA).mint(renterA.address, 1);
 
       const rentingEstimationParams_B = makeSDKRentingEstimationParamsERC721(
         chainId,
         listingId_2,
-        zeroBalanceWarper.address,
+        integrationContract.address,
         renterA.address,
         RENTAL_B_PERIOD,
         baseToken.address,
@@ -662,8 +715,8 @@ export function testVariousWarperOperations(): void {
       );
 
       await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_B))
-        .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
-        .withArgs('Renter holds NFTs from restricted collections');
+        .to.be.revertedWithCustomError(integrationContract, 'AssetIsNotRentable')
+        .withArgs('Renter owns NFTs from a restricted collection');
     });
   });
 }
