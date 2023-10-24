@@ -1,8 +1,10 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "@iqprotocol/iq-space-protocol/contracts/renting/Rentings.sol";
 import "@iqprotocol/iq-space-protocol/contracts/accounting/Accounts.sol";
+
+import "../feature-registry/IntegrationFeatureRegistry.sol";
 
 /**
  * @title Interaface for Feature Controllers Contracts.
@@ -35,7 +37,7 @@ interface IFeatureController {
      * @return success Indicates whether the feature was executed successfully.
      * @return errorMessage Contains an error message if the execution fails.
      */
-    function execute(address integrationAddress, ExecutionObject calldata executionObject) external returns (bool success, string memory errorMessage);
+    function execute(address integrationAddress, ExecutionObject memory executionObject) external returns (bool success, string memory errorMessage);
 
     /**
      * @notice Checks the feasibility or eligibility based on the provided parameters.
@@ -46,4 +48,10 @@ interface IFeatureController {
      */
     function check(address integrationAddress, CheckObject calldata checkObject) external view returns (bool isRentable, string memory errorMessage);
 
+    /**
+     * @notice Checks whether the feature is enabled.
+     * @param integrationAddress Address of the integration instance.
+     * @return isEnabled Indicates whether the feature is enabled.
+     */
+    function isEnabledFeature(address integrationAddress) external view returns (bool);
 }

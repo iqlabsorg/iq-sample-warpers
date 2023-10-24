@@ -1,20 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.0;
 
-import "./IFeatureController.sol";
-import "../IntegrationFeatureRegistry.sol";
-
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
+
+import "./FeatureController.sol";
 
 /**
  * @title  Zero Balance Feature Controller.
  * @notice This contract allows for the management and execution of integration features.
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
-contract ZeroBalance is IFeatureController {
-    IntegrationFeatureRegistry internal integrationFeatureRegistry;
-
+contract ZeroBalance is FeatureController {
     /**
      * @dev Reverted if the array of zero balance addresses has duplicates.
      */
@@ -34,10 +31,10 @@ contract ZeroBalance is IFeatureController {
 
     /**
      * @dev Initializes the contract with the IntegrationFeatureRegistry address.
-     * @param _integrationFeatureRegistry The address of IntegrationFeatureRegistry.
+     * @param integrationFeatureRegistry The address of IntegrationFeatureRegistry.
      */
-    constructor(address _integrationFeatureRegistry) {
-        integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
+    constructor(address integrationFeatureRegistry) {
+        _integrationFeatureRegistry = IntegrationFeatureRegistry(integrationFeatureRegistry);
     }
 
     /**
@@ -54,10 +51,21 @@ contract ZeroBalance is IFeatureController {
      * @param integrationAddress The integration address for which the zero balance address needs to be added.
      * @param zeroBalanceAddresses The NFT collection addresses for which the zero balance feature needs to be enabled.
      */
-    function setZeroBalanceAddresses(address integrationAddress, address[] zeroBalanceAddresses) external {
+    function setZeroBalanceAddresses(address integrationAddress, address[] memory zeroBalanceAddresses) onlyAuthorizedIntegrationOwner(integrationAddress) external {
         _zeroBalanceAddresses[integrationAddress] = zeroBalanceAddresses;
 
         emit ZeroBalanceAddressesSet(zeroBalanceAddresses);
+    }
+
+    /**
+     * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
+     */
+    function execute(
+        address integrationAddress,
+        ExecutionObject memory
+    ) external onlyIntegration(integrationAddress) override returns (bool success, string memory errorMessage) {
+        success = true;
+        errorMessage = "Execution successful";
     }
 
     /**
@@ -76,15 +84,5 @@ contract ZeroBalance is IFeatureController {
         }
 
         return (true, "Renter has zero balance for all specified collections");
-    }
-
-    /**
-     * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
-     */
-    function execute(
-        address,
-        ExecutionObject calldata
-    ) external override returns (bool success, string memory errorMessage) {
-        return (true, "Execution successful");
     }
 }

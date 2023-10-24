@@ -62,13 +62,6 @@ interface IIntegration is IExternalRewardWarper {
     ) external view returns (ExecutionResult[] memory results);
 
     /**
-     * @notice Determines if a feature is active.
-     * @param featureId ID of the feature.
-     * @return A boolean indicating if the feature is active.
-     */
-    function isFeatureActive(uint256 featureId) external view returns (bool);
-
-    /**
      * @notice Returns the address of the specified feature controller.
      * @param featureId The ID of the feature.
      * @return Feature controller address.

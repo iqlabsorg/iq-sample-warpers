@@ -5,7 +5,7 @@ import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/a
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../external-reward/ExternalRewardWarper.sol";
-import "./IntegrationFeatureRegistry.sol";
+import "./feature-registry/IntegrationFeatureRegistry.sol";
 import "./IIntegration.sol";
 
 /**
@@ -28,10 +28,6 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         uint256 featureId,
         IFeatureController.ExecutionObject calldata executionObject
     ) public returns (bool, string memory) {
-        if (!isFeatureActive(featureId)) {
-            return (false, "Feature is not active");
-        }
-
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
         IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
         (bool success, string memory message) = featureControllerInstance.execute(address(this), executionObject);
@@ -101,7 +97,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         address renter,
         uint256 tokenId,
         uint256 amount
-    ) external view returns (bool isRentable, string memory errorMessage) {
+    ) external view onlyRentingManager returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
         uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
@@ -155,15 +151,6 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         }
 
         return resultsArray;
-    }
-
-    /**
-     * @dev Checks if a feature is active.
-     * @param featureId Feature's ID.
-     * @return Whether the feature is active.
-     */
-    function isFeatureActive(uint256 featureId) public view returns (bool) {
-        return integrationFeatureRegistry.featureEnabled(address(this), featureId);
     }
 
     /**

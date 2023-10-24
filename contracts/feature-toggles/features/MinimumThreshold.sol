@@ -2,7 +2,6 @@
 pragma solidity ^0.8.0;
 
 import "./IFeatureController.sol";
-import "../IntegrationFeatureRegistry.sol";
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
@@ -78,7 +77,7 @@ contract MinimumThreshold is IFeatureController {
     function execute(
         address integrationAddress,
         ExecutionObject calldata executionObject
-    ) external override returns (bool success, string memory errorMessage) {
+    ) external view override returns (bool success, string memory errorMessage) {
         address renter = executionObject.rentalAgreement.renter;
         address[] memory requiredAddresses = _requiredCollectionAddresses[integrationAddress];
         uint256[] memory requiredThresholds = _requiredCollectionMinimumThresholds[integrationAddress];

@@ -555,7 +555,6 @@ export function testVariousOperations(): void {
         listingTermsId_1,
       );
 
-
       const zeroCollections = await zeroBalanceFeature.getZeroBalanceAddresses(integrationContract.address);
 
       console.log('Zero Collections: ', zeroCollections);
