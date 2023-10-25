@@ -1,11 +1,18 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.13;
 
+import "@openzeppelin/contracts/utils/introspection/ERC165.sol";
 import "@openzeppelin/contracts/utils/Context.sol";
+import "@openzeppelin/contracts/utils/Address.sol";
 
 import "./IFeatureController.sol";
 
-abstract contract FeatureController is Context, IFeatureController {
+abstract contract FeatureController is Context, IFeatureController, ERC165 {
+    /**
+     * @dev Feature ID.
+     */
+    bytes4 internal _featureId;
+
     /**
      * @dev The Warper Integration Feature Registry.
      */
@@ -13,28 +20,29 @@ abstract contract FeatureController is Context, IFeatureController {
 
     /**
      * @dev Thrown when the `feature` is disabled.
-     * @param feature The feature that was checked.
      * @param integrationAddress The Integration address.
+     * @param featureId The feature that was checked.
      */
-    error FeatureIsDisabled(bytes32 feature, address integrationAddress);
+    error FeatureIsDisabled(address integrationAddress, bytes4 featureId);
 
     /**
      * @dev Thrown when the `account` is not a Warper admin for `integration`.
-     * @param integration The Integration address.
+     * @param integrationAddress The Integration address.
      * @param owner The account that was checked.
      */
-    error CallerIsNotIntegrationOwner(address integration, address owner);
+    error CallerIsNotIntegrationOwner(address integrationAddress, address owner);
 
     /**
      * @dev Thrown when the `account` is not a Warper admin for `integration`.
-     * @param integration The address of integration.
+     * @param integrationAddress The address of integrationAddress.
      * @param caller The address provided (_msgSender()).
      */
-    error CallerIsNotAnIntegrationContract(address integration, address caller);
+    error CallerIsNotAnIntegrationContract(address integrationAddress, address caller);
 
-    modifier onlyEnabledFeatures(address integration) {
-        if (!isEnabledFeature(integration)) {
-            revert FeatureIsDisabled(integration);
+
+    modifier onlyEnabledFeatures(address integrationAddress) {
+        if (!isEnabledFeature(integrationAddress)) {
+            revert FeatureIsDisabled(integrationAddress, _featureId);
         }
         _;
     }
@@ -46,29 +54,33 @@ abstract contract FeatureController is Context, IFeatureController {
         _;
     }
 
-    modifier onlyAuthorizedIntegrationOwner(address integration) {
+    modifier onlyAuthorizedIntegrationOwner(address integrationAddress) {
         if (
-            _integrationFeatureRegistry.isIntegrationOwner(integration, _msgSender())
+            _integrationFeatureRegistry.isIntegrationOwner(integrationAddress, _msgSender())
         ) {
-            revert CallerIsNotIntegrationOwner(integration, _msgSender());
+            revert CallerIsNotIntegrationOwner(integrationAddress, _msgSender());
         }
         _;
     }
 
     /**
-     * @inheritdoc IFeatureController
+     * @inheritdoc IERC165
      */
-    function execute(address integrationAddress, ExecutionObject memory executionObject) external virtual returns (bool success, string memory errorMessage);
+    function supportsInterface(bytes4 interfaceId) public view virtual override(IERC165, ERC165) returns (bool) {
+        return interfaceId == type(IFeatureController).interfaceId || super.supportsInterface(interfaceId);
+    }
 
     /**
      * @inheritdoc IFeatureController
      */
-    function check(address integrationAddress, CheckObject calldata checkObject) external virtual view returns (bool isRentable, string memory errorMessage);
+    function isEnabledFeature(address integrationAddress) public virtual view returns (bool) {
+        return _integrationFeatureRegistry.isEnabledFeature(integrationAddress, _featureId);
+    }
 
     /**
      * @inheritdoc IFeatureController
      */
-    function isEnabledFeature(address integrationAddress) external virtual view returns (bool) {
-        return _integrationFeatureRegistry.isEnabledFeature(integrationAddress);
+    function featureId() public view virtual returns (bytes4) {
+        return _featureId;
     }
 }

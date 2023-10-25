@@ -1,17 +1,18 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
+pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 
-import "./FeatureController.sol";
+import "../FeatureController.sol";
+import "./IZeroBalance.sol";
 
 /**
  * @title  Zero Balance Feature Controller.
  * @notice This contract allows for the management and execution of integration features.
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
-contract ZeroBalance is FeatureController {
+contract ZeroBalance is FeatureController, IZeroBalance {
     /**
      * @dev Reverted if the array of zero balance addresses has duplicates.
      */
@@ -35,6 +36,7 @@ contract ZeroBalance is FeatureController {
      */
     constructor(address integrationFeatureRegistry) {
         _integrationFeatureRegistry = IntegrationFeatureRegistry(integrationFeatureRegistry);
+        _featureId = bytes4(keccak256("ZeroBalance"));
     }
 
     /**

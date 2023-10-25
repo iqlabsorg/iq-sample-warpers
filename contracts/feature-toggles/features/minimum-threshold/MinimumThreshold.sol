@@ -1,17 +1,20 @@
 // SPDX-License-Identifier: MIT
-pragma solidity ^0.8.0;
-
-import "./IFeatureController.sol";
+pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
+
+import "../FeatureController.sol";
+import "./IMinimumThreshold.sol";
 
 /**
  * @title Minimum Thresholds Feature Controller
  * @notice Manages required NFT collection holdings for eligibility criteria.
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
-contract MinimumThreshold is IFeatureController {
+contract MinimumThreshold is IMinimumThreshold, FeatureController {
+    using Address for address;
+
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     // Stores the NFT collection addresses a user needs to own to be eligible.
@@ -30,6 +33,7 @@ contract MinimumThreshold is IFeatureController {
      */
     constructor(address _integrationFeatureRegistry) {
         integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
+        _featureId = bytes4(keccak256("MinimumThreshold"));
     }
 
     /**
@@ -91,14 +95,21 @@ contract MinimumThreshold is IFeatureController {
     }
 
     function check(
-        address,
+        address integrationAddress,
         CheckObject calldata checkObject
     ) external view override returns (bool isRentable, string memory errorMessage) {
-        address renter = checkObject.renter; // Получите адрес арендатора из CheckObject
+        address renter = checkObject.renter;
         uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
         if (currentRentalEndDatetime > uint32(block.timestamp)) {
             return (false, "Asset is already rented!");
         }
         return (true, "");
+    }
+
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view override(FeatureController, IERC165) returns (bool) {
+        return interfaceId == type(IListingManager).interfaceId || super.supportsInterface(interfaceId);
     }
 }

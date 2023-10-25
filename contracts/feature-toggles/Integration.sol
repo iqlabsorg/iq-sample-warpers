@@ -25,7 +25,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
     }
 
     function executeFeature(
-        uint256 featureId,
+        bytes4 featureId,
         IFeatureController.ExecutionObject calldata executionObject
     ) public returns (bool, string memory) {
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
@@ -62,7 +62,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
             emit OnRentHookEvent(rentalAgreement.renter, tokenId, rentalId);
         }
 
-        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+        bytes4[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
         for (uint256 i = 0; i < featureIds.length; i++) {
             address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
@@ -99,7 +99,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         uint256 amount
     ) external view onlyRentingManager returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
-        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+        bytes4[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 
         for (uint256 i = 0; i < featureIds.length; i++) {
             address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
@@ -133,7 +133,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         uint256 amount
     ) public view returns (ExecutionResult[] memory results) {
         // Fetching the enabled featureIds for this integration.
-        uint256[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
+        bytes4[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
         ExecutionResult[] memory resultsArray = new ExecutionResult[](featureIds.length);
 
         for (uint256 i = 0; i < featureIds.length; i++) {
@@ -158,7 +158,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
      * @param featureId Feature's ID.
      * @return Feature controller's address.
      */
-    function getFeatureControllerAddress(uint256 featureId) external view returns (address) {
+    function getFeatureControllerAddress(bytes4 featureId) external view returns (address) {
         return integrationFeatureRegistry.featureControllers(featureId);
     }
 

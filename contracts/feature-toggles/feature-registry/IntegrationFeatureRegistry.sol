@@ -22,9 +22,9 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     IACL internal _aclContract;
 
     mapping (address => bool) internal featureControllerInUse;
-    mapping(uint256 => address) public featureControllers;
-    mapping(address => uint256) internal featureIds;
-    mapping(address => mapping(uint256 => bool)) internal featureEnabled;
+    mapping(bytes4 => address) public featureControllers;
+    mapping(address => bytes4) internal featureIds;
+    mapping(address => mapping(bytes4 => bool)) internal featureEnabled;
 
     EnumerableSetUpgradeable.AddressSet private featureAddresses;
 
@@ -69,7 +69,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function registerFeature(uint256 featureId, address featureController) external onlyAuthorizedIntegratedFeatureAdmin {
+    function registerFeature(bytes4 featureId, address featureController) external onlyAuthorizedIntegratedFeatureAdmin {
         require(featureControllerInUse[featureController] == false, "Feature controller already in use");
         require(featureControllers[featureId] == address(0), "Feature already registered");
         featureAddresses.add(featureController);
@@ -80,7 +80,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function deregisterFeature(uint256 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
+    function deregisterFeature(bytes4 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
         address featureController = featureControllers[featureId];
         require(featureController != address(0), "Feature not registered");
         featureAddresses.remove(featureController);
@@ -91,7 +91,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function enableFeatureForIntegration(address integrationContract, uint256 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
+    function enableFeatureForIntegration(address integrationContract, bytes4 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
         require(featureControllers[featureId] != address(0), "Feature does not exist");
         featureEnabled[integrationContract][featureId] = true;
     }
@@ -99,7 +99,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function disableFeatureForIntegration(address integrationContract, uint256 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
+    function disableFeatureForIntegration(address integrationContract, bytes4 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
         require(featureEnabled[integrationContract][featureId], "Feature not enabled");
         featureEnabled[integrationContract][featureId] = false;
     }
@@ -107,7 +107,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function isEnabledFeature(address integrationContract, uint256 featureId) external view returns (bool) {
+    function isEnabledFeature(address integrationContract, bytes4 featureId) external view returns (bool) {
         return featureEnabled[integrationContract][featureId];
     }
 
@@ -121,7 +121,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getFeatureController(uint256 featureId) external view returns (address) {
+    function getFeatureController(bytes4 featureId) external view returns (address) {
         return featureControllers[featureId];
     }
 
@@ -129,11 +129,11 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @inheritdoc IIntegrationFeatureRegistry
      */
     function getAllFeatures() external view returns (
-        uint256[] memory featureIdsArray,
+        bytes4[] memory featureIdsArray,
         address[] memory featureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
-        featureIdsArray = new uint256[](featureCount);
+        featureIdsArray = new bytes4[](featureCount);
         featureControllersArray = new address[](featureCount);
 
         for(uint256 i = 0; i < featureCount; i++) {
@@ -148,7 +148,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @inheritdoc IIntegrationFeatureRegistry
      */
     function getAllIntegrationFeatures(address integrationContract) external view returns (
-        uint256[] memory enabledFeatureIdsArray,
+        bytes4[] memory enabledFeatureIdsArray,
         address[] memory enabledFeatureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
@@ -156,19 +156,19 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
 
         for(uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
-            uint256 featureId = featureIds[featureController];
+            bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
                 enabledFeatureCount++;
             }
         }
 
-        enabledFeatureIdsArray = new uint256[](enabledFeatureCount);
+        enabledFeatureIdsArray = new bytes4[](enabledFeatureCount);
         enabledFeatureControllersArray = new address[](enabledFeatureCount);
 
         uint256 currentIndex = 0;
         for(uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
-            uint256 featureId = featureIds[featureController];
+            bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
                 enabledFeatureIdsArray[currentIndex] = featureId;
                 enabledFeatureControllersArray[currentIndex] = featureController;
@@ -181,26 +181,26 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getEnabledFeatureIds(address integrationContract) external view returns (uint256[] memory enabledFeatureIdsArray) {
+    function getEnabledFeatureIds(address integrationContract) external view returns (bytes4[] memory enabledFeatureIdsArray) {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
 
         // Count enabled features
         for(uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
-            uint256 featureId = featureIds[featureController];
+            bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
                 enabledFeatureCount++;
             }
         }
 
         // Allocate memory for the result array
-        enabledFeatureIdsArray = new uint256[](enabledFeatureCount);
+        enabledFeatureIdsArray = new bytes4[](enabledFeatureCount);
 
         uint256 currentIndex = 0;
         for(uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
-            uint256 featureId = featureIds[featureController];
+            bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
                 enabledFeatureIdsArray[currentIndex] = featureId;
                 currentIndex++;

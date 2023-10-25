@@ -13,34 +13,34 @@ interface IIntegrationFeatureRegistry is IContractEntity {
    * @param featureId Unique identifier for the feature.
    * @param featureController Associated controller address.
    */
-  function registerFeature(uint256 featureId, address featureController) external;
+  function registerFeature(bytes4 featureId, address featureController) external;
 
   /**
    * @dev Deregisters a feature.
    * @param featureId Unique identifier for the feature.
    */
-  function deregisterFeature(uint256 featureId) external;
+  function deregisterFeature(bytes4 featureId) external;
 
   /**
    * @dev Enables a feature for an integration.
    * @param integrationContract Integration's address.
    * @param featureId Unique identifier for the feature.
    */
-  function enableFeatureForIntegration(address integrationContract, uint256 featureId) external;
+  function enableFeatureForIntegration(address integrationContract, bytes4 featureId) external;
 
   /**
    * @dev Disables a feature for an integration.
    * @param integrationContract Integration's address.
    * @param featureId Unique identifier for the feature.
    */
-  function disableFeatureForIntegration(address integrationContract, uint256 featureId) external;
+  function disableFeatureForIntegration(address integrationContract, bytes4 featureId) external;
 
   /**
    * @dev Checks if a feature is registered.
    * @param integrationContract Integration's address.
    * @param featureId Unique identifier for the feature.
    */
-  function isEnabledFeature(address integrationContract, uint256 featureId) external view returns (bool);
+  function isEnabledFeature(address integrationContract, bytes4 featureId) external view returns (bool);
 
   /**
    * @dev Checks if a `account` is an owner of `integration`.
@@ -54,7 +54,7 @@ interface IIntegrationFeatureRegistry is IContractEntity {
    * @param featureId Unique identifier for the feature.
    * @return featureController Associated controller address.
    */
-  function getFeatureController(uint256 featureId) external view returns (address);
+  function getFeatureController(bytes4 featureId) external view returns (address);
 
   /**
    * @dev Lists all registered features.
@@ -62,7 +62,7 @@ interface IIntegrationFeatureRegistry is IContractEntity {
    * @return featureControllersArray Array of their controllers.
    */
   function getAllFeatures() external view returns (
-      uint256[] memory featureIdsArray,
+      bytes4[] memory featureIdsArray,
       address[] memory featureControllersArray
   );
 
@@ -73,7 +73,7 @@ interface IIntegrationFeatureRegistry is IContractEntity {
    * @return enabledFeatureControllersArray Array of their controllers.
    */
   function getAllIntegrationFeatures(address integrationContract) external view returns (
-      uint256[] memory enabledFeatureIdsArray,
+      bytes4[] memory enabledFeatureIdsArray,
       address[] memory enabledFeatureControllersArray
   );
 
@@ -82,5 +82,5 @@ interface IIntegrationFeatureRegistry is IContractEntity {
    * @param integrationContract Address of the integration contract.
    * @return enabledFeatureIdsArray Array of enabled feature IDs.
    */
-  function getEnabledFeatureIds(address integrationContract) external view returns (uint256[] memory enabledFeatureIdsArray);
+  function getEnabledFeatureIds(address integrationContract) external view returns (bytes4[] memory enabledFeatureIdsArray);
 }

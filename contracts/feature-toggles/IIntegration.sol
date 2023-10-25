@@ -18,7 +18,7 @@ interface IIntegration is IExternalRewardWarper {
      * @notice Represents the essential parameters required for feature execution.
      */
     struct ExecutionResult {
-        uint256 featureId; //indicates feature ID of executed feature.
+        bytes4 featureId; //indicates feature ID of executed feature.
         bool success; //Indicates whether the feature was executed successfully.
         string message; //Contains an error or success message from the feature execution.
     }
@@ -30,7 +30,7 @@ interface IIntegration is IExternalRewardWarper {
      * @return A tuple indicating the success of the operation and an associated message.
      */
     function executeFeature(
-        uint256 featureId,
+        bytes4 featureId,
         IFeatureController.ExecutionObject calldata executionObject
     ) external returns (bool, string memory);
 
@@ -66,5 +66,5 @@ interface IIntegration is IExternalRewardWarper {
      * @param featureId The ID of the feature.
      * @return Feature controller address.
      */
-    function getFeatureControllerAddress(uint256 featureId) external view returns (address);
+    function getFeatureControllerAddress(bytes4 featureId) external view returns (address);
 }
