@@ -42,13 +42,13 @@ contract RentalDuration is FeatureController, IRentalDuration {
      * @dev Store the minimal rental duration for the specified integration.
      * @notice Integration address => minimal rental duration in seconds.
      */
-    mapping(address => uint32) private minRentalDuration;
+    mapping(address => uint32) internal minRentalDuration;
 
     /**
      * @dev Store the maximal rental duration for the specified integration.
      * @notice Integration address => maximal rental duration in seconds.
      */
-    mapping(address => uint32) private maxRentalDuration;
+    mapping(address => uint32) internal maxRentalDuration;
 
     /**
      * @dev Sets the address for the IntegrationFeatureRegistry.
@@ -78,29 +78,46 @@ contract RentalDuration is FeatureController, IRentalDuration {
     }
 
     /**
-     * @notice Sets minimal rental duration for specific Integration.
-     * @param integrationAddress The integration address for which the zero balance address needs to be added.
-     * @param minDuration The NFT collection addresses for which the zero balance feature needs to be enabled.
+     * @inheritdoc IRentalDuration
      */
-    function setMinRentalDuration(address integrationAddress, uint32 minDuration) internal {
+    function setMinRentalDuration(
+        address integrationAddress,
+        uint32 minDuration
+    ) external override onlyAuthorizedIntegrationOwner(integrationAddress){
         if (minDuration > maxRentalDuration[integrationAddress]) {
             revert ExceedsMaxRentalDuration();
         }
 
         minRentalDuration[integrationAddress] = uint32(minDuration);
+
+        emit RentalDurationSet(integrationAddress, minDuration, 0);
     }
 
     /**
-     * @notice Sets maximal rental duration for specific Integration.
-     * @param integrationAddress The integration address for which the zero balance address needs to be added.
-     * @param maxDuration The NFT collection addresses for which the zero balance feature needs to be enabled.
+     * @inheritdoc IRentalDuration
      */
-    function setMaxRentalDuration(address integrationAddress, uint32 maxDuration) internal {
+    function setMaxRentalDuration(
+        address integrationAddress,
+        uint32 maxDuration
+    ) external override onlyAuthorizedIntegrationOwner(integrationAddress) {
         if (maxDuration < minRentalDuration[integrationAddress]) {
             revert BelowMinRentalDuration();
         }
 
         maxRentalDuration[integrationAddress] = uint32(maxDuration);
+
+        emit RentalDurationSet(integrationAddress, 0, maxDuration);
+    }
+
+    /**
+     * @inheritdoc IRentalDuration
+     */
+    function getRentalDurations(address integrationAddress) external view returns (
+        uint32 minDuration,
+        uint32 maxDuration
+    ) {
+        minDuration = minRentalDuration[integrationAddress];
+        maxDuration = maxRentalDuration[integrationAddress];
     }
 
     /**
@@ -120,32 +137,35 @@ contract RentalDuration is FeatureController, IRentalDuration {
     /**
      * @inheritdoc IFeatureController
      */
-    function check(
-        address integrationAddress,
-        CheckObject calldata checkObject
-    ) external view override returns (bool isRentable, string memory errorMessage) {
+    function check(address integrationAddress, CheckObject calldata checkObject)
+        external
+        view
+        override
+        returns (bool isRentable, string memory errorMessage)
+    {
+        //DEVELOPMENT IN PROGRESS, IT WILL BE ADDED SOON
+        uint32 rentalDuration = checkObject.rentingParams.rentalPeriod;
 
-    //DEVELOPMENT IN PROGRESS, IT WILL BE ADDED SOON
-    uint32 rentalDuration = checkObject.rentingParams.rentalPeriod;
+        if (rentalDuration < minRentalDuration[integrationAddress]) {
+            return (false, "Rental duration shorter than minimal allowed");
+        }
 
-    if (rentalDuration < minRentalDuration[integrationAddress]) {
-        return (false, "Rental duration shorter than minimal allowed");
-    }
+        if (rentalDuration > maxRentalDuration[integrationAddress]) {
+            return (false, "Rental duration longer than maximal allowed");
+        }
 
-    if (rentalDuration > maxRentalDuration[integrationAddress]) {
-        return (false, "Rental duration longer than maximal allowed");
-    }
-
-    return (true, "");
+        return (true, "");
     }
 
     /**
      * @inheritdoc IFeatureController
      */
-    function execute(
-        address integrationAddress,
-        ExecutionObject memory
-    ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
+    function execute(address integrationAddress, ExecutionObject memory)
+        external
+        override
+        onlyIntegration(integrationAddress)
+        returns (bool success, string memory errorMessage)
+    {
         success = true;
         errorMessage = "Execution successful";
     }

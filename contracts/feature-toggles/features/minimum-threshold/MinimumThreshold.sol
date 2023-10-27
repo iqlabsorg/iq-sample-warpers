@@ -50,9 +50,11 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
      * @param integrationAddress Address of integration.
      * @return List of required NFT counts for each collection.
      */
-    function getRequiredCollectionMinimumThresholds(
-        address integrationAddress
-    ) external view returns (uint256[] memory) {
+    function getRequiredCollectionMinimumThresholds(address integrationAddress)
+        external
+        view
+        returns (uint256[] memory)
+    {
         return _requiredCollectionMinimumThresholds[integrationAddress];
     }
 
@@ -78,10 +80,12 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
      * @param integrationAddress The IntegrationWrapper address.
      * @param executionObject Object containing details about the rental agreement.
      */
-    function execute(
-        address integrationAddress,
-        ExecutionObject calldata executionObject
-    ) external view override returns (bool success, string memory errorMessage) {
+    function execute(address integrationAddress, ExecutionObject calldata executionObject)
+        external
+        view
+        override
+        returns (bool success, string memory errorMessage)
+    {
         address renter = executionObject.rentalAgreement.renter;
         address[] memory requiredAddresses = _requiredCollectionAddresses[integrationAddress];
         uint256[] memory requiredThresholds = _requiredCollectionMinimumThresholds[integrationAddress];
@@ -94,11 +98,13 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
         return (true, "");
     }
 
-    function check(
-        address integrationAddress,
-        CheckObject calldata checkObject
-    ) external view override returns (bool isRentable, string memory errorMessage) {
-        address renter = checkObject.renter;
+    function check(address integrationAddress, CheckObject calldata checkObject)
+        external
+        view
+        override
+        returns (bool isRentable, string memory errorMessage)
+    {
+        address renter = checkObject.rentingParams.renter;
         uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
         if (currentRentalEndDatetime > uint32(block.timestamp)) {
             return (false, "Asset is already rented!");

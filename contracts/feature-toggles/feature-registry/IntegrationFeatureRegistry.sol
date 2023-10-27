@@ -21,7 +21,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
 
     IACL internal _aclContract;
 
-    mapping (address => bool) internal featureControllerInUse;
+    mapping(address => bool) internal featureControllerInUse;
     mapping(bytes4 => address) public featureControllers;
     mapping(address => bytes4) internal featureIds;
     mapping(address => mapping(bytes4 => bool)) internal featureEnabled;
@@ -45,10 +45,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @dev Modifier to check is runner has INTEGRATION_FEATURES_ADMIN role
      */
     modifier onlyAuthorizedIntegratedFeatureAdmin() {
-        if (
-            !_isIntegrationFeaturesAdminAddress(_msgSender()) &&
-            _aclContract.hasRole(Roles.ADMIN, _msgSender())
-        ) {
+        if (!_isIntegrationFeaturesAdminAddress(_msgSender()) && _aclContract.hasRole(Roles.ADMIN, _msgSender())) {
             revert CallerIsNotIntegrationFeaturesAdmin(_msgSender());
         }
         _;
@@ -56,11 +53,9 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
 
     /**
      * @dev Modifier to check is runner has INTEGRATION_FEATURES_ADMIN role
-    */
+     */
     modifier onlyAuthorizedIntegrationOwner(address integration) {
-        if (
-            _isIntegrationOwner(integration, _msgSender())
-        ) {
+        if (_isIntegrationOwner(integration, _msgSender())) {
             revert CallerIsNotIntegrationOwner(integration, _msgSender());
         }
         _;
@@ -69,7 +64,10 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function registerFeature(bytes4 featureId, address featureController) external onlyAuthorizedIntegratedFeatureAdmin {
+    function registerFeature(bytes4 featureId, address featureController)
+        external
+        onlyAuthorizedIntegratedFeatureAdmin
+    {
         require(featureControllerInUse[featureController] == false, "Feature controller already in use");
         require(featureControllers[featureId] == address(0), "Feature already registered");
         featureAddresses.add(featureController);
@@ -91,7 +89,10 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function enableFeatureForIntegration(address integrationContract, bytes4 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
+    function enableFeatureForIntegration(address integrationContract, bytes4 featureId)
+        external
+        onlyAuthorizedIntegratedFeatureAdmin
+    {
         require(featureControllers[featureId] != address(0), "Feature does not exist");
         featureEnabled[integrationContract][featureId] = true;
     }
@@ -99,7 +100,10 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function disableFeatureForIntegration(address integrationContract, bytes4 featureId) external onlyAuthorizedIntegratedFeatureAdmin {
+    function disableFeatureForIntegration(address integrationContract, bytes4 featureId)
+        external
+        onlyAuthorizedIntegratedFeatureAdmin
+    {
         require(featureEnabled[integrationContract][featureId], "Feature not enabled");
         featureEnabled[integrationContract][featureId] = false;
     }
@@ -128,15 +132,16 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getAllFeatures() external view returns (
-        bytes4[] memory featureIdsArray,
-        address[] memory featureControllersArray)
+    function getAllFeatures()
+        external
+        view
+        returns (bytes4[] memory featureIdsArray, address[] memory featureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
         featureIdsArray = new bytes4[](featureCount);
         featureControllersArray = new address[](featureCount);
 
-        for(uint256 i = 0; i < featureCount; i++) {
+        for (uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
             featureIdsArray[i] = featureIds[featureController];
             featureControllersArray[i] = featureController;
@@ -147,14 +152,15 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getAllIntegrationFeatures(address integrationContract) external view returns (
-        bytes4[] memory enabledFeatureIdsArray,
-        address[] memory enabledFeatureControllersArray)
+    function getAllIntegrationFeatures(address integrationContract)
+        external
+        view
+        returns (bytes4[] memory enabledFeatureIdsArray, address[] memory enabledFeatureControllersArray)
     {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
 
-        for(uint256 i = 0; i < featureCount; i++) {
+        for (uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
             bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
@@ -166,7 +172,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
         enabledFeatureControllersArray = new address[](enabledFeatureCount);
 
         uint256 currentIndex = 0;
-        for(uint256 i = 0; i < featureCount; i++) {
+        for (uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
             bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
@@ -181,12 +187,16 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getEnabledFeatureIds(address integrationContract) external view returns (bytes4[] memory enabledFeatureIdsArray) {
+    function getEnabledFeatureIds(address integrationContract)
+        external
+        view
+        returns (bytes4[] memory enabledFeatureIdsArray)
+    {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
 
         // Count enabled features
-        for(uint256 i = 0; i < featureCount; i++) {
+        for (uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
             bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
@@ -198,7 +208,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
         enabledFeatureIdsArray = new bytes4[](enabledFeatureCount);
 
         uint256 currentIndex = 0;
-        for(uint256 i = 0; i < featureCount; i++) {
+        for (uint256 i = 0; i < featureCount; i++) {
             address featureController = featureAddresses.at(i);
             bytes4 featureId = featureIds[featureController];
             if (featureEnabled[integrationContract][featureId]) {
@@ -230,10 +240,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @param account The account to check.
      */
     function _isIntegrationOwner(address integration, address account) internal view returns (bool) {
-        return
-            IWarperManager(_metahub.getContract(Contracts.WARPER_MANAGER)).isWarperAdmin(
-                integration, account
-            );
+        return IWarperManager(_metahub.getContract(Contracts.WARPER_MANAGER)).isWarperAdmin(integration, account);
     }
 
     /**
@@ -241,7 +248,6 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @param account The account to check.
      */
     function _isIntegrationFeaturesAdminAddress(address account) internal view returns (bool) {
-        return
-            _aclContract.hasRole(IntegrationRoles.INTEGRATION_FEATURES_ADMIN, account);
+        return _aclContract.hasRole(IntegrationRoles.INTEGRATION_FEATURES_ADMIN, account);
     }
 }

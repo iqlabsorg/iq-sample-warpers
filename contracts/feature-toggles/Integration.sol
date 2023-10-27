@@ -12,7 +12,7 @@ import "./IIntegration.sol";
  * @title Integration
  * @dev Warper allows a renter to rent an NFT only when their NFT balance for each defined address is zero, this name represents the core functionality quite accurately.
  */
-contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IIntegration {
+contract Integration is ExternalRewardWarper, IIntegration {
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     /**
@@ -24,10 +24,10 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
         integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
     }
 
-    function executeFeature(
-        bytes4 featureId,
-        IFeatureController.ExecutionObject calldata executionObject
-    ) public returns (bool, string memory) {
+    function executeFeature(bytes4 featureId, IFeatureController.ExecutionObject calldata executionObject)
+        public
+        returns (bool, string memory)
+    {
         address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureId);
         IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
         (bool success, string memory message) = featureControllerInstance.execute(address(this), executionObject);
@@ -90,11 +90,12 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
     }
 
     /**
-     * @inheritdoc IAssetRentabilityMechanics
      * @notice The asset is rentable when all feature-checks passed with true.
+     * @dev This function redesigns original __isRentableAsset
+     * Main protocol should be updated to include new __isRentableAsset
      */
     function __isRentableAsset(
-        address renter,
+        Rentings.Params calldata rentingParams,
         uint256 tokenId,
         uint256 amount
     ) external view onlyRentingManager returns (bool isRentable, string memory errorMessage) {
@@ -106,7 +107,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
             IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
 
             IFeatureController.CheckObject memory checkObj = IFeatureController.CheckObject({
-                renter: renter,
+                rentingParams: rentingParams,
                 tokenId: tokenId,
                 amount: amount
             });
@@ -122,13 +123,13 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
 
     /**
      * @notice Checks the rentability of an asset against all active features.
-     * @param renter Address of the renter.
+     * @param rentingParams Renting params.
      * @param tokenId ID of the token to be rented.
      * @param amount Amount of tokens/units to rent.
      * @return results Array of execution results for each feature checked. Each result contains the ID of the feature, its success state, and an associated message.
      */
     function checkAll(
-        address renter,
+        Rentings.Params calldata rentingParams,
         uint256 tokenId,
         uint256 amount
     ) public view returns (ExecutionResult[] memory results) {
@@ -141,7 +142,7 @@ contract Integration is IAssetRentabilityMechanics, ExternalRewardWarper, IInteg
             IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
 
             IFeatureController.CheckObject memory checkObj = IFeatureController.CheckObject({
-                renter: renter,
+                rentingParams: rentingParams,
                 tokenId: tokenId,
                 amount: amount
             });

@@ -18,7 +18,7 @@ contract ZeroBalance is FeatureController, IZeroBalance {
      */
     error DuplicateValueInZeroBalanceArray();
 
-     /**
+    /**
      * @dev Emits when zero balance addresses are set.
      * @param zeroBalanceAddresses Zero balance addresses.
      */
@@ -53,7 +53,10 @@ contract ZeroBalance is FeatureController, IZeroBalance {
      * @param integrationAddress The integration address for which the zero balance address needs to be added.
      * @param zeroBalanceAddresses The NFT collection addresses for which the zero balance feature needs to be enabled.
      */
-    function setZeroBalanceAddresses(address integrationAddress, address[] memory zeroBalanceAddresses) onlyAuthorizedIntegrationOwner(integrationAddress) external {
+    function setZeroBalanceAddresses(address integrationAddress, address[] memory zeroBalanceAddresses)
+        external
+        onlyAuthorizedIntegrationOwner(integrationAddress)
+    {
         _zeroBalanceAddresses[integrationAddress] = zeroBalanceAddresses;
 
         emit ZeroBalanceAddressesSet(zeroBalanceAddresses);
@@ -62,10 +65,12 @@ contract ZeroBalance is FeatureController, IZeroBalance {
     /**
      * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
      */
-    function execute(
-        address integrationAddress,
-        ExecutionObject memory
-    ) external onlyIntegration(integrationAddress) override returns (bool success, string memory errorMessage) {
+    function execute(address integrationAddress, ExecutionObject memory)
+        external
+        override
+        onlyIntegration(integrationAddress)
+        returns (bool success, string memory errorMessage)
+    {
         success = true;
         errorMessage = "Execution successful";
     }
@@ -73,14 +78,16 @@ contract ZeroBalance is FeatureController, IZeroBalance {
     /**
      * @dev Checks if the renter's balance is zero for all specified collections.
      */
-    function check(
-        address integrationAddress,
-        CheckObject calldata checkObject
-    ) external view override returns (bool isRentable, string memory errorMessage) {
+    function check(address integrationAddress, CheckObject calldata checkObject)
+        external
+        view
+        override
+        returns (bool isRentable, string memory errorMessage)
+    {
         address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
 
         for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
-            if (IERC721(zeroBalanceAddresses[i]).balanceOf(checkObject.renter) > 0) {
+            if (IERC721(zeroBalanceAddresses[i]).balanceOf(checkObject.rentingParams.renter) > 0) {
                 return (false, "Renter owns NFTs from a restricted collection");
             }
         }

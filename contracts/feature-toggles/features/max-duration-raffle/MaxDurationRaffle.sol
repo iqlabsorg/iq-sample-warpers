@@ -45,13 +45,13 @@ contract MaxDurationRaffle is FeatureController, IMaxDurationRaffle {
         address integrationAddress,
         uint32 minDuration,
         uint32 maxDuration
-        ) external onlyAuthorizedIntegrationOwner(integrationAddress) returns (uint256) {
-            return 1; // DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!!
+    ) external onlyAuthorizedIntegrationOwner(integrationAddress) returns (uint256) {
+        return 1; // DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!!
 
-            //i guess we should create 2 mappings, which will store ingrationAddress --> uint
-            //than create custom checkRentalPeriods function and modificator
-            //and use this modificator with check() function to prevent renting outside the renting period
-        }
+        //i guess we should create 2 mappings, which will store ingrationAddress --> uint
+        //than create custom checkRentalPeriods function and modificator
+        //and use this modificator with check() function to prevent renting outside the renting period
+    }
 
     /**
      * @inheritdoc IMaxDurationRaffle
@@ -91,11 +91,13 @@ contract MaxDurationRaffle is FeatureController, IMaxDurationRaffle {
      * @inheritdoc IFeatureController
      */
 
-    function check(
-        address integrationAddress,
-        CheckObject calldata checkObject
-    ) external view override returns (bool isRentable, string memory errorMessage) {
-        address renter = checkObject.renter;
+    function check(address integrationAddress, CheckObject calldata checkObject)
+        external
+        view
+        override
+        returns (bool isRentable, string memory errorMessage)
+    {
+        address renter = checkObject.rentingParams.renter;
         uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[integrationAddress][renter];
         if (currentRentalEndDatetime > uint32(block.timestamp)) {
             isRentable = false;
@@ -106,10 +108,12 @@ contract MaxDurationRaffle is FeatureController, IMaxDurationRaffle {
         }
     }
 
-    function execute(
-        address integrationAddress,
-        ExecutionObject calldata executionObject
-    ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
+    function execute(address integrationAddress, ExecutionObject calldata executionObject)
+        external
+        override
+        onlyIntegration(integrationAddress)
+        returns (bool success, string memory errorMessage)
+    {
         address renter = executionObject.rentalAgreement.renter;
 
         _currentRentalEndTimestamp[integrationAddress][renter] = executionObject.rentalAgreement.endTime;

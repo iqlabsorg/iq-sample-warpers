@@ -4,7 +4,6 @@ pragma solidity ^0.8.13;
 import "../IFeatureController.sol";
 
 interface IMaxDurationRaffle is IFeatureController {
-
     /**
      * @notice Set rental periods for specific integration.
      * minDuration and maxDuration are required here in order to provide
@@ -21,7 +20,7 @@ interface IMaxDurationRaffle is IFeatureController {
         address integrationAddress,
         uint32 minDuration,
         uint32 maxDuration
-        ) external returns (uint256);
+    ) external returns (uint256);
 
     /**
      * @notice Return quantity of renters for specific integration.
@@ -35,8 +34,9 @@ interface IMaxDurationRaffle is IFeatureController {
      * @return renterAddresses The array with renter addresses.
      * @return totalRentalDurations the array with rental durations corresponding to renterAddresses.
      */
-    function getTotalRentalDurations(address integrationAddress, uint256 offset, uint256 limit)
-        external
-        view
-        returns (address[] memory renterAddresses, uint256[] memory totalRentalDurations);
+    function getTotalRentalDurations(
+        address integrationAddress,
+        uint256 offset,
+        uint256 limit
+    ) external view returns (address[] memory renterAddresses, uint256[] memory totalRentalDurations);
 }

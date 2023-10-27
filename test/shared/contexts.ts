@@ -2,7 +2,15 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import hre, { ethers, getChainId } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import type { Contracts, FeatureContracts, FeatureToggleContracts, MinimumThresholdFeatureContracts, Mocks, Signers, ZeroBalanceFeatureContracts } from './types';
+import type {
+  Contracts,
+  FeatureContracts,
+  FeatureToggleContracts,
+  MinimumThresholdFeatureContracts,
+  Mocks,
+  Signers,
+  ZeroBalanceFeatureContracts,
+} from './types';
 import {
   ERC20Mock,
   ERC721Mock,

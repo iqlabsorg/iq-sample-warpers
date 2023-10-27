@@ -30,10 +30,19 @@ interface IFeatureController is IERC165 {
      * @notice Represents the essential parameters required for feature check.
      */
     struct CheckObject {
-        address renter;
+        Rentings.Params rentingParams;
         uint256 tokenId;
         uint256 amount;
     }
+
+    //  Rentings.Params params:
+    //  * @param listingId Listing ID. Also allows to identify the asset(s) being rented.
+    //  * @param warper Warper address.
+    //  * @param renter Renter address.
+    //  * @param rentalPeriod Desired period of asset(s) renting.
+    //  * @param paymentToken The token address which renter offers as a mean of payment.
+    //  * @param listingTermsId Listing terms ID.
+    //  * @param selectedConfiguratorListingTerms
 
     /**
      * @notice Executes the feature based on the provided parameters.
@@ -42,7 +51,9 @@ interface IFeatureController is IERC165 {
      * @return success Indicates whether the feature was executed successfully.
      * @return errorMessage Contains an error message if the execution fails.
      */
-    function execute(address integrationAddress, ExecutionObject memory executionObject) external returns (bool success, string memory errorMessage);
+    function execute(address integrationAddress, ExecutionObject memory executionObject)
+        external
+        returns (bool success, string memory errorMessage);
 
     /**
      * @notice Checks the feasibility or eligibility based on the provided parameters.
@@ -51,7 +62,10 @@ interface IFeatureController is IERC165 {
      * @return isRentable Indicates whether the asset or NFT is rentable.
      * @return errorMessage Contains an error message if the check determines the asset isn't rentable.
      */
-    function check(address integrationAddress, CheckObject calldata checkObject) external view returns (bool isRentable, string memory errorMessage);
+    function check(address integrationAddress, CheckObject calldata checkObject)
+        external
+        view
+        returns (bool isRentable, string memory errorMessage);
 
     /**
      * @notice Checks whether the feature is enabled.

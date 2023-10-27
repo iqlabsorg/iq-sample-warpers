@@ -48,12 +48,7 @@ contract MaxDurationRaffleWarper is
         // e.g. maxDuration = 3600 (1 hour in seconds)
         // Also this should be acknowledged during the listing creation.
         // So all listings created should max lock period equal to 3600 seconds (1 day).
-        (
-            ,
-            ,
-            uint32 minDuration,
-            uint32 maxDuration
-        ) = abi.decode(config, (address, address, uint32, uint32));
+        (, , uint32 minDuration, uint32 maxDuration) = abi.decode(config, (address, address, uint32, uint32));
 
         if (minDuration != maxDuration) revert InvalidRaffleRentalPeriods(minDuration, maxDuration);
 

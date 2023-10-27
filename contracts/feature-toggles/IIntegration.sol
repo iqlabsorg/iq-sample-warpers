@@ -29,10 +29,9 @@ interface IIntegration is IExternalRewardWarper {
      * @param executionObject The object containing execution parameters.
      * @return A tuple indicating the success of the operation and an associated message.
      */
-    function executeFeature(
-        bytes4 featureId,
-        IFeatureController.ExecutionObject calldata executionObject
-    ) external returns (bool, string memory);
+    function executeFeature(bytes4 featureId, IFeatureController.ExecutionObject calldata executionObject)
+        external
+        returns (bool, string memory);
 
     /**
      * @notice Triggers when a new rent action occurs, ensuring all active features execute successfully.
@@ -50,13 +49,13 @@ interface IIntegration is IExternalRewardWarper {
 
     /**
      * @notice Checks all active features for the given parameters.
-     * @param renter Address of the user attempting the action.
+     * @param rentingParams Renting params.
      * @param tokenId ID of the token involved in the action.
      * @param amount The quantity or value associated with the action.
      * @return results An array of ExecutionResult, each indicating the success or failure (with an associated message) of each active feature's check.
      */
     function checkAll(
-        address renter,
+        Rentings.Params calldata rentingParams,
         uint256 tokenId,
         uint256 amount
     ) external view returns (ExecutionResult[] memory results);

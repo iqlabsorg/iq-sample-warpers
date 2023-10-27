@@ -39,7 +39,6 @@ abstract contract FeatureController is Context, IFeatureController, ERC165 {
      */
     error CallerIsNotAnIntegrationContract(address integrationAddress, address caller);
 
-
     modifier onlyEnabledFeatures(address integrationAddress) {
         if (!isEnabledFeature(integrationAddress)) {
             revert FeatureIsDisabled(integrationAddress, _featureId);
@@ -55,9 +54,7 @@ abstract contract FeatureController is Context, IFeatureController, ERC165 {
     }
 
     modifier onlyAuthorizedIntegrationOwner(address integrationAddress) {
-        if (
-            _integrationFeatureRegistry.isIntegrationOwner(integrationAddress, _msgSender())
-        ) {
+        if (_integrationFeatureRegistry.isIntegrationOwner(integrationAddress, _msgSender())) {
             revert CallerIsNotIntegrationOwner(integrationAddress, _msgSender());
         }
         _;
@@ -73,7 +70,7 @@ abstract contract FeatureController is Context, IFeatureController, ERC165 {
     /**
      * @inheritdoc IFeatureController
      */
-    function isEnabledFeature(address integrationAddress) public virtual view returns (bool) {
+    function isEnabledFeature(address integrationAddress) public view virtual returns (bool) {
         return _integrationFeatureRegistry.isEnabledFeature(integrationAddress, _featureId);
     }
 
