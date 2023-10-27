@@ -4,6 +4,19 @@ pragma solidity ^0.8.15;
 import "../IFeatureController.sol";
 
 interface IMinimumThreshold is IFeatureController {
+
+  /**
+   * @notice Sets the required NFT collections and their minimum holdings.
+   * @param integrationAddress Address of integration.
+   * @param collectionAddresses List of required collection addresses.
+   * @param minimumThresholds Required NFT counts for each collection.
+   */
+  function setIntegration(
+        address integrationAddress,
+        address[] calldata collectionAddresses,
+        uint256[] calldata minimumThresholds
+    ) external;
+
   /**
    * @notice Fetches required collection addresses for an integration.
    * @param integrationAddress Address of integration.
@@ -22,15 +35,4 @@ interface IMinimumThreshold is IFeatureController {
     address integrationAddress
   ) external view returns (uint256[] memory);
 
-  /**
-   * @notice Sets the required NFT collections and their minimum holdings.
-   * @param integrationAddress Address of integration.
-   * @param collectionAddresses List of required collection addresses.
-   * @param minimumThresholds Required NFT counts for each collection.
-   */
-  function setIntegration(
-        address integrationAddress,
-        address[] calldata collectionAddresses,
-        uint256[] calldata minimumThresholds
-    ) external;
 }

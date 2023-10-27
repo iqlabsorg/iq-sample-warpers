@@ -45,7 +45,7 @@ contract MaxDurationRaffle is FeatureController, IMaxDurationRaffle {
         address integrationAddress,
         uint32 minDuration,
         uint32 maxDuration
-        ) external returns (uint256) {
+        ) external onlyAuthorizedIntegrationOwner(integrationAddress) returns (uint256) {
             return 1; // DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!! DEVELOPMENT IN PROGRESS!!!
 
             //i guess we should create 2 mappings, which will store ingrationAddress --> uint
@@ -86,6 +86,10 @@ contract MaxDurationRaffle is FeatureController, IMaxDurationRaffle {
             totalRentalDurations[i] = totalRentalDuration;
         }
     }
+
+    /**
+     * @inheritdoc IFeatureController
+     */
 
     function check(
         address integrationAddress,
