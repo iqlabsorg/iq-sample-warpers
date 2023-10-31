@@ -137,12 +137,10 @@ contract RentalDuration is FeatureController, IRentalDuration {
     /**
      * @inheritdoc IFeatureController
      */
-    function check(address integrationAddress, CheckObject calldata checkObject)
-        external
-        view
-        override
-        returns (bool isRentable, string memory errorMessage)
-    {
+    function check(
+        address integrationAddress,
+        CheckObject calldata checkObject
+    ) external view override returns (bool isRentable, string memory errorMessage) {
         //DEVELOPMENT IN PROGRESS, IT WILL BE ADDED SOON
         uint32 rentalDuration = checkObject.rentingParams.rentalPeriod;
 
@@ -160,12 +158,10 @@ contract RentalDuration is FeatureController, IRentalDuration {
     /**
      * @inheritdoc IFeatureController
      */
-    function execute(address integrationAddress, ExecutionObject memory)
-        external
-        override
-        onlyIntegration(integrationAddress)
-        returns (bool success, string memory errorMessage)
-    {
+    function execute(
+        address integrationAddress,
+        ExecutionObject memory
+    ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
         success = true;
         errorMessage = "Execution successful";
     }
