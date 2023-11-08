@@ -2,9 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
-import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
-
 import "../FeatureController.sol";
 import "./IRentalPeriod.sol";
 
