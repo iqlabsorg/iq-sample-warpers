@@ -10,6 +10,7 @@ import {
   IListingManager,
   IListingTermsRegistry,
   ITaxTermsRegistry,
+  IACL,
 } from '@iqprotocol/iq-space-protocol/typechain';
 import {
   Auth,
@@ -39,6 +40,7 @@ declare module 'mocha' {
 
 export interface Contracts {
   /// Protocol
+  acl: IACL;
   auth: Auth;
   metahub: IMetahub;
   listingManager: IListingManager;

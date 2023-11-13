@@ -1,8 +1,10 @@
-import { task } from 'hardhat/config';
+import { task, types } from 'hardhat/config';
 import { IntegrationFeatureRegistry__factory } from '../../../typechain';
 
-task('deploy:feature-toggles:integration-feature-registry', 'Deploy the IntegrationFeatureRegistry contract').setAction(
-  async (taskArgs, hre) => {
+task('deploy:feature-toggles:integration-feature-registry', 'Deploy the IntegrationFeatureRegistry contract')
+  .addParam('metahub', 'The Metahub contract', undefined, types.string)
+  .addParam('acl', 'The ACL contract address', undefined, types.string)
+  .setAction(async ({ metahub, acl }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     await hre.deployments.delete('IntegrationFeatureRegistry');
@@ -11,6 +13,7 @@ task('deploy:feature-toggles:integration-feature-registry', 'Deploy the Integrat
 
     const { address, transactionHash } = await hre.deployments.deploy('IntegrationFeatureRegistry', {
       from: deployer.address,
+      args: [metahub, acl],
     });
 
     console.log('Tx:', transactionHash);
@@ -19,5 +22,4 @@ task('deploy:feature-toggles:integration-feature-registry', 'Deploy the Integrat
     const instance = new IntegrationFeatureRegistry__factory(deployer).attach(address);
 
     return instance;
-  },
-);
+  });

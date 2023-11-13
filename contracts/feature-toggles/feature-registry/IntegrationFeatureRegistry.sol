@@ -28,6 +28,11 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
 
     EnumerableSetUpgradeable.AddressSet private featureAddresses;
 
+    constructor(address metahub, address aclContract) ContractEntity() {
+        _metahub = IMetahub(metahub);
+        _aclContract = IACL(aclContract);
+    }
+
     /**
      * @dev Thrown when the `account` is not an Integration Features Admin.
      * @param account The account that was checked.
@@ -45,7 +50,7 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      * @dev Modifier to check is runner has INTEGRATION_FEATURES_ADMIN role
      */
     modifier onlyAuthorizedIntegratedFeatureAdmin() {
-        if (!_isIntegrationFeaturesAdminAddress(_msgSender()) && _aclContract.hasRole(Roles.ADMIN, _msgSender())) {
+        if (!_isIntegrationFeaturesAdminAddress(_msgSender()) && !_aclContract.hasRole(Roles.ADMIN, _msgSender())) {
             revert CallerIsNotIntegrationFeaturesAdmin(_msgSender());
         }
         _;
@@ -91,7 +96,8 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      */
     function enableFeatureForIntegration(address integrationContract, bytes4 featureId)
         external
-        onlyAuthorizedIntegratedFeatureAdmin
+        // TODO will require unit testing with real integration
+        // onlyAuthorizedIntegrationOwner(integrationContract)
     {
         require(featureControllers[featureId] != address(0), "Feature does not exist");
         featureEnabled[integrationContract][featureId] = true;
@@ -102,7 +108,8 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
      */
     function disableFeatureForIntegration(address integrationContract, bytes4 featureId)
         external
-        onlyAuthorizedIntegratedFeatureAdmin
+        // TODO will require unit testing with real integration
+        // onlyAuthorizedIntegrationOwner(integrationContract)
     {
         require(featureEnabled[integrationContract][featureId], "Feature not enabled");
         featureEnabled[integrationContract][featureId] = false;

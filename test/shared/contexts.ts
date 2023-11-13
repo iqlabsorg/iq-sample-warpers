@@ -14,6 +14,7 @@ import type {
 import {
   ERC20Mock,
   ERC721Mock,
+  IACL,
   IListingManager,
   IListingTermsRegistry,
   IListingWizardV1,
@@ -84,6 +85,7 @@ export function baseContext(description: string, testSuite: () => void): void {
 
       const { baseToken, contractsInfra, originalCollection, solidityInterfaces } = await loadFixture(deployProtocol);
 
+      const acl = contractsInfra.acl as IACL;
       const metahub = contractsInfra.metahub as IMetahub;
       const listingManager = contractsInfra.listingManager as IListingManager;
       const listingTermsRegistry = contractsInfra.listingTermsRegistry as IListingTermsRegistry;
@@ -101,6 +103,7 @@ export function baseContext(description: string, testSuite: () => void): void {
         reference: await getChainId(),
       });
 
+      this.ctx.contracts.acl = acl;
       this.ctx.contracts.metahub = metahub;
 
       this.ctx.contracts.listingManager = listingManager;
