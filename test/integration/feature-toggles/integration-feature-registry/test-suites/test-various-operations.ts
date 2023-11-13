@@ -6,8 +6,8 @@ import { BigNumber } from 'ethers';
 
 export function testVariousOperations(): void {
   /**** Constants ****/
-  const FEATURE_ID_1 = BigNumber.from(1);
-  const FEATURE_ID_2 = BigNumber.from(2);
+  const FEATURE_ID_1 = '0x12345678';
+  const FEATURE_ID_2 = '0x12345644';
 
   /*** Contracts ***/
   let integrationFeatureRegistry: IntegrationFeatureRegistry;
@@ -60,7 +60,7 @@ export function testVariousOperations(): void {
       await integrationFeatureRegistry.enableFeatureForIntegration(integrationContract.address, FEATURE_ID_1);
 
       // Verify the feature is enabled for the integration
-      const isEnabled = await integrationFeatureRegistry.featureEnabled(integrationContract.address, FEATURE_ID_1);
+      const isEnabled = await integrationFeatureRegistry.isEnabledFeature(integrationContract.address, FEATURE_ID_1);
       expect(isEnabled).to.be.true;
     });
 
@@ -73,7 +73,7 @@ export function testVariousOperations(): void {
       await integrationFeatureRegistry.disableFeatureForIntegration(integrationContract.address, FEATURE_ID_1);
 
       // Verify the feature is disabled for the integration
-      const isEnabled = await integrationFeatureRegistry.featureEnabled(integrationContract.address, FEATURE_ID_1);
+      const isEnabled = await integrationFeatureRegistry.isEnabledFeature(integrationContract.address, FEATURE_ID_1);
       expect(isEnabled).to.be.false;
     });
 

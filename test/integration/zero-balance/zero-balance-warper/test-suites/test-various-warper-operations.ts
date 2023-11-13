@@ -73,7 +73,7 @@ export function testVariousWarperOperations(): void {
   let universeRewardAddress: SignerWithAddress;
   let stranger: SignerWithAddress;
   /**** SDK ****/
-  let metahubAdapter: MetahubAdapter;
+  // let metahubAdapter: MetahubAdapter;
   let listingWizardV1Adapter: ListingWizardAdapterV1;
   let listingManagerAdapter: ListingManagerAdapter;
   let listingTermsRegistryAdapter: ListingTermsRegistryAdapter;

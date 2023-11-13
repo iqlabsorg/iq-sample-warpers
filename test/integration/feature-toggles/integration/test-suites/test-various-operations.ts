@@ -53,7 +53,7 @@ export function testVariousOperations(): void {
   const PROTOCOL_REWARD_RATE_PERCENT = '7';
   const LISTER_TOKEN_ID_1 = BigNumber.from(1);
   const LISTER_TOKEN_ID_2 = BigNumber.from(2);
-  const ZERO_BALANCE_FEATURE_ID = BigNumber.from(1);
+  const ZERO_BALANCE_FEATURE_ID = '0x12345678';
   /**** Config ****/
   let chainId: string;
   /**** Tax Terms ****/

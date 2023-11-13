@@ -14,7 +14,7 @@ export function integrationTestIntegration(): void {
         zeroBalanceTestCollection: ERC721Mock;
         integration: Integration;
       }> => {
-        // деплоим IntegrationFeatureRegistry
+        // deploy IntegrationFeatureRegistry
         const integrationFeatureRegistry = (await hre.run(
           'deploy:feature-toggles:integration-feature-registry',
         )) as IntegrationFeatureRegistry;
