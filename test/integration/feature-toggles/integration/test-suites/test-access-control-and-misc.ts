@@ -21,7 +21,6 @@ export function testAccessControlAndMisc(): void {
   let authorizedCaller: SignerWithAddress;
   let stranger: SignerWithAddress;
 
-
   beforeEach(async function () {
     /**** Contracts ****/
     // integrationInstance = this.contracts.integrationInstance;

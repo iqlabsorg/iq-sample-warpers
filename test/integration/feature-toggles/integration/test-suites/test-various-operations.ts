@@ -5,6 +5,7 @@ import {
   IListingTermsRegistry,
   IListingWizardV1,
   IMetahub,
+  IACL,
   IRentingManager,
   ITaxTermsRegistry,
   IUniverseRegistry,
@@ -45,7 +46,7 @@ import { SECONDS_IN_DAY, calculateTaxFeeForFixedRateInWei } from '../../../../..
 import { makeSDKListingParams } from '../../../../shared/utils/listing-sdk-utils';
 import { calculateListerBaseFee, convertListerBaseFeeToWei } from '../../../../shared/utils/pricing-utils';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../shared/utils/renting-sdk-utils';
-import { ADDRESS_ZERO } from '@iqprotocol/iq-space-protocol';
+import { ADDRESS_ZERO, solidityIdBytes4, solidityIdBytes32 } from '@iqprotocol/iq-space-protocol';
 
 export function testVariousOperations(): void {
   /**** Constants ****/
@@ -53,7 +54,9 @@ export function testVariousOperations(): void {
   const PROTOCOL_REWARD_RATE_PERCENT = '7';
   const LISTER_TOKEN_ID_1 = BigNumber.from(1);
   const LISTER_TOKEN_ID_2 = BigNumber.from(2);
-  const ZERO_BALANCE_FEATURE_ID = '0x12345678';
+  const ZERO_BALANCE_FEATURE_ID = solidityIdBytes4('FeatureController1');
+  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
+  const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
   /**** Config ****/
   let chainId: string;
   /**** Tax Terms ****/
@@ -63,6 +66,7 @@ export function testVariousOperations(): void {
   let integrationFeatureRegistry: IntegrationFeatureRegistry;
   let zeroBalanceFeature: ZeroBalance;
   let metahub: IMetahub;
+  let acl: IACL;
   let listingManager: IListingManager;
   let listingTermsRegistry: IListingTermsRegistry;
   let rentingManager: IRentingManager;
@@ -82,6 +86,7 @@ export function testVariousOperations(): void {
   let universeOwner: SignerWithAddress;
   let universeRewardAddress: SignerWithAddress;
   let stranger: SignerWithAddress;
+  let featuresAdmin: SignerWithAddress;
   /**** SDK ****/
   let metahubAdapter: MetahubAdapter;
   let listingWizardV1Adapter: ListingWizardAdapterV1;
@@ -101,6 +106,7 @@ export function testVariousOperations(): void {
     integrationContract = this.contracts.feautureToggles.integrationContracts.integration;
     zeroBalanceFeature = this.contracts.feautureToggles.featureContracts.zeroBalanceFeature.controller;
     metahub = this.contracts.metahub;
+    acl = this.contracts.acl;
     listingWizardV1 = this.contracts.wizardsV1.listingWizard;
     listingManager = this.contracts.listingManager;
     listingTermsRegistry = this.contracts.listingTermsRegistry;
@@ -145,6 +151,11 @@ export function testVariousOperations(): void {
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_1);
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_2);
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
+    /*** Setup ***/
+    await metahub
+      .connect(deployer)
+      .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
+    await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
   });
 
   // describe('Integration Contract Operations', function () {
@@ -242,6 +253,10 @@ export function testVariousOperations(): void {
         universeOwner.address,
         true,
       );
+    });
+
+    it('should pass this placeholder test', async () => {
+      expect(true).to.be.true;
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
