@@ -7,7 +7,9 @@ import { IntegrationFeatureRegistry, ZeroBalance } from '../../../../../typechai
 import { ADDRESS_ZERO, solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 
 export function integrationTestZeroBalance(): void {
-  const ZERO_BALANCE_FEATURE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
+
+  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
+  const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
   const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
 
   /*** Contracts ***/
@@ -23,21 +25,16 @@ export function integrationTestZeroBalance(): void {
       metahub = this.contracts.metahub;
       acl = this.contracts.acl;
 
-      /*** Setup ***/
-      // await metahub
-      //   .connect(deployer)
-      //   .registerContract(ZERO_BALANCE_FEATURE_CONTRACT_KEY, integrationFeatureRegistry.address);
-      // await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
-
       const fixtureZeroBalance = async (): Promise<{
         integrationFeatureRegistry: IntegrationFeatureRegistry;
         zeroBalance: ZeroBalance;
         zeroBalanceTestCollection: ERC721Mock;
       }> => {
         // Deploy IntegrationFeatureRegistry
-        const integrationFeatureRegistry = (await hre.run(
-          'deploy:feature-toggles:integration-feature-registry',
-        )) as IntegrationFeatureRegistry;
+        const integrationFeatureRegistry = (await hre.run('deploy:feature-toggles:integration-feature-registry', {
+          metahub: metahub.address,
+          acl: acl.address,
+        })) as IntegrationFeatureRegistry;
 
         // Deploy ZeroBalance.sol
         const zeroBalance = (await hre.run('deploy:features:zero-balance', {

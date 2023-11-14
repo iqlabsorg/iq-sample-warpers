@@ -1,30 +1,59 @@
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
-
-import { ERC721Mock } from '@iqprotocol/iq-space-protocol/typechain';
+import { IACL, IMetahub, ERC721Mock } from '@iqprotocol/iq-space-protocol/typechain';
+import { solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 import { IntegrationFeatureRegistry, ZeroBalance } from '../../../../../../typechain';
 
 export function testVariousOperations(): void {
+  /*** Contracts ***/
   let zeroBalance: ZeroBalance;
-  let integrationFeatureRegistry: IntegrationFeatureRegistry;
-
-  let deployer: SignerWithAddress;
-  let owner: SignerWithAddress;
-  let unauthorizedUser: SignerWithAddress;
-
-  // If we need ERC721 MOCK for tests
   let testZeroBalanceCollection: ERC721Mock;
 
+  let metahub: IMetahub;
+  let acl: IACL;
+  let integrationFeatureRegistry: IntegrationFeatureRegistry;
+
+  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
+  const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
+  const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
+
+  /*** Mocks & Samples ***/
+  // Mocked data or samples to be added as needed
+
+  /*** Signers ***/
+  let deployer: SignerWithAddress;
+  let featuresAdmin: SignerWithAddress;
+  let integrationContract: SignerWithAddress;
+  let stranger: SignerWithAddress;
+  let owner: SignerWithAddress;
+
   beforeEach(async function () {
-    // zeroBalance = this.contracts.zeroBalance.zeroBalance;
-    // integrationFeatureRegistry = this.contracts.zeroBalance.integrationFeatureRegistry;
+    /*** Contracts ***/
+    metahub = this.contracts.metahub;
+    acl = this.contracts.acl;
+    integrationFeatureRegistry =
+      this.contracts.feautureToggles.integrationFeatureRegistryContracts.integrationFeatureRegistry;
 
-    testZeroBalanceCollection = this.contracts.zeroBalance.testZeroBalanceCollection; // if we need ERC721 MOCK
+    /*** Mocks & Samples ***/
+    testZeroBalanceCollection = this.contracts.zeroBalance.testZeroBalanceCollection;
 
-    // Signers
+    /*** Signers ***/
     deployer = this.signers.named.deployer;
-    [owner, unauthorizedUser] = this.signers.unnamed;
+    [featuresAdmin, integrationContract, stranger, owner, deployer] = this.signers.unnamed;
+
+    /*** Setup ***/
+    await metahub
+      .connect(deployer)
+      .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
+    await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
   });
+
+  context('Zero Balance Feature Operations', () => {
+    it('should pass tests', async () => {
+      console.log('test');
+    });
+  });
+
 
   // context('Setting Zero Balance Addresses for an Integration', () => {
   //   it('should allow owner to set zero balance addresses', async () => {
