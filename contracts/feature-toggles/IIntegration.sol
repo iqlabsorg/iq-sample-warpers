@@ -47,6 +47,12 @@ interface IIntegration is IExternalRewardWarper {
         Accounts.RentalEarnings calldata rentalEarnings
     ) external returns (bool success, string memory errorMessage);
 
+    function __isRentableAsset(
+        Rentings.Params calldata rentingParams,
+        uint256 tokenId,
+        uint256 amount
+    ) external view returns (bool isRentable, string memory errorMessage);
+
     /**
      * @notice Checks all active features for the given parameters.
      * @param rentingParams Renting params.

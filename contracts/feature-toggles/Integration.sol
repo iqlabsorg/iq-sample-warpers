@@ -98,7 +98,7 @@ contract Integration is ExternalRewardWarper, IIntegration {
         Rentings.Params calldata rentingParams,
         uint256 tokenId,
         uint256 amount
-    ) external view onlyRentingManager returns (bool isRentable, string memory errorMessage) {
+    ) external view virtual override returns (bool isRentable, string memory errorMessage) {
         // Fetching the enabled featureIds for this integration.
         bytes4[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
 

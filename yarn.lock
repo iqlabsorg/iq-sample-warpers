@@ -1107,10 +1107,10 @@
     ethers "5.6.4"
     typechain "^8.0.0"
 
-"@iqprotocol/iq-space-protocol@2.1.20":
-  version "2.1.20"
-  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-protocol/-/iq-space-protocol-2.1.20.tgz#c484f9e950391b019362f1ac02900cfec6b8446b"
-  integrity sha512-2a/cJsvf7qjU53WPa31yuYWPQHA2oxE27/R6pNJ9RHwZli69j8Dt1btbHae9prmvo3fSk01SCj/vbWeydLtVVQ==
+"@iqprotocol/iq-space-protocol@2.1.22-alpha.0":
+  version "2.1.22-alpha.0"
+  resolved "https://registry.yarnpkg.com/@iqprotocol/iq-space-protocol/-/iq-space-protocol-2.1.22-alpha.0.tgz#2c549aad29947fc475f04db09f9e10c54b760f0c"
+  integrity sha512-1085HIQJEF9XF3uTcsUQBqXaiqoVUt7io4bJ4dqRXY0LLPqexrsNx2Ho2A984PoxvXaFru3ozRBf3cGN3HCxsA==
   dependencies:
     "@ethersproject/abstract-signer" "^5.5.0"
     "@openzeppelin/contracts" "^4.6.0"
