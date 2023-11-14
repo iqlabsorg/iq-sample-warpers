@@ -546,9 +546,12 @@ export function testVariousOperations(): void {
 
       console.log('Zero Collections: ', zeroCollections);
 
+      const checkError = await rentingManagerAdapterA.estimateRent(rentingEstimationParams_A);
+      console.log('ERROR: ', checkError);
+
       await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
         .to.be.revertedWithCustomError(integrationContract, 'AssetIsNotRentable')
-        .withArgs('Renter owns NFTs from a restricted collection');
+        .withArgs(false, 'Renter owns NFTs from a restricted collection');
     });
 
     it(`reverts when balance is not zero #2`, async () => {
