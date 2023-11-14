@@ -24,10 +24,10 @@ export function integrationTestZeroBalance(): void {
       acl = this.contracts.acl;
 
       /*** Setup ***/
-      await metahub
-        .connect(deployer)
-        .registerContract(ZERO_BALANCE_FEATURE_CONTRACT_KEY, integrationFeatureRegistry.address);
-      await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
+      // await metahub
+      //   .connect(deployer)
+      //   .registerContract(ZERO_BALANCE_FEATURE_CONTRACT_KEY, integrationFeatureRegistry.address);
+      // await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
 
       const fixtureZeroBalance = async (): Promise<{
         integrationFeatureRegistry: IntegrationFeatureRegistry;

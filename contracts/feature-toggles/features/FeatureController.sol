@@ -54,7 +54,7 @@ abstract contract FeatureController is Context, IFeatureController, ERC165 {
     }
 
     modifier onlyAuthorizedIntegrationOwner(address integrationAddress) {
-        if (_integrationFeatureRegistry.isIntegrationOwner(integrationAddress, _msgSender())) {
+        if (!_integrationFeatureRegistry.isIntegrationOwner(integrationAddress, _msgSender())) {
             revert CallerIsNotIntegrationOwner(integrationAddress, _msgSender());
         }
         _;

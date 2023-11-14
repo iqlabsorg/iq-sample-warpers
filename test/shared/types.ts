@@ -11,6 +11,7 @@ import {
   IListingTermsRegistry,
   ITaxTermsRegistry,
   IACL,
+  IUniverseToken,
 } from '@iqprotocol/iq-space-protocol/typechain';
 import {
   Auth,
@@ -47,6 +48,7 @@ export interface Contracts {
   listingTermsRegistry: IListingTermsRegistry;
   rentingManager: IRentingManager;
   universeRegistry: IUniverseRegistry;
+  universeToken: IUniverseToken;
   warperManager: IWarperManager;
   taxTermsRegistry: ITaxTermsRegistry;
 

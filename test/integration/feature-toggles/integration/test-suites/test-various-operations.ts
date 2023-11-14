@@ -10,6 +10,8 @@ import {
   ITaxTermsRegistry,
   IUniverseRegistry,
   IUniverseWizardV1,
+  IUniverseToken__factory,
+  IUniverseToken,
 } from '@iqprotocol/iq-space-protocol/typechain';
 import {
   Auth__factory,
@@ -73,6 +75,7 @@ export function testVariousOperations(): void {
   let taxTermsRegistry: ITaxTermsRegistry;
   let listingWizardV1: IListingWizardV1;
   let universeWizardV1: IUniverseWizardV1;
+  let universeToken: IUniverseToken;
   let universeRegistry: IUniverseRegistry;
   /**** Mocks & Samples ****/
   let baseToken: ERC20Mock;
@@ -112,6 +115,7 @@ export function testVariousOperations(): void {
     listingTermsRegistry = this.contracts.listingTermsRegistry;
     universeWizardV1 = this.contracts.wizardsV1.universeWizard;
     universeRegistry = this.contracts.universeRegistry;
+    universeToken = this.contracts.universeToken;
     taxTermsRegistry = this.contracts.taxTermsRegistry;
     rentingManager = this.contracts.rentingManager;
     /**** Mocks & Samples ****/
@@ -121,12 +125,8 @@ export function testVariousOperations(): void {
       this.contracts.feautureToggles.featureContracts.zeroBalanceFeature.zeroBalanceTestCollection;
     /**** Signers ****/
     deployer = this.signers.named.deployer;
-    [lister, renterA, renterB, universeOwner, stranger] = this.signers.unnamed;
+    [lister, renterA, renterB, universeOwner, stranger, featuresAdmin] = this.signers.unnamed;
 
-    await zeroBalanceFeature.setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
-    await integrationFeatureRegistry.registerFeature(ZERO_BALANCE_FEATURE_ID, zeroBalanceFeature.address);
-    await integrationFeatureRegistry.enableFeatureForIntegration(integrationContract.address, ZERO_BALANCE_FEATURE_ID);
-    await integrationContract.connect(deployer).transferOwnership(universeOwner.address);
     protocolTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
       PROTOCOL_RATE_PERCENT,
       PROTOCOL_REWARD_RATE_PERCENT,
@@ -151,48 +151,9 @@ export function testVariousOperations(): void {
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_1);
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_2);
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
-    /*** Setup ***/
-    await metahub
-      .connect(deployer)
-      .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
-    await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
   });
 
-  // describe('Integration Contract Operations', function () {
-  //   it('should execute a feature correctly', async function () {
-  //     // Setup a sample feature in the registry
-  //     const featureId = BigNumber.from(1);
-  //     await integrationFeatureRegistry.connect(featureOwner).registerFeatureController(featureId, userA.address);
-
-  //     // Mock ExecutionObject for the test
-  //     const mockExecutionObject = {
-  //       rentalId: BigNumber.from(1),
-  //     };
-
-  //     // Execute the feature
-  //     const [success, message] = await integrationContract.connect(userA).executeFeature(featureId, mockExecutionObject);
-
-  //     expect(success).to.equal(true);
-  //     expect(message).to.equal('');
-  //   });
-
-  //   it('should not execute an inactive feature', async function () {
-  //     const inactiveFeatureId = BigNumber.from(999); // 999 is an inactive feature ID
-  //     const mockExecutionObject = {
-  //       rentalId: BigNumber.from(1),
-  //       // more mock data here
-  //     };
-
-  //     // Try to execute the inactive feature
-  //     await expect(
-  //       integrationContract.connect(userA).executeFeature(inactiveFeatureId, mockExecutionObject),
-  //     ).to.be.revertedWith('Feature is not active');
-  //   });
-
-  //   // ADD TESTS
-  // });
-
-  context('Renting `ZERO BALANCE REWARD WARPER ` with various cases', () => {
+  context('Renting `Integration` with various cases', () => {
     const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT = '3.5';
     const EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT = '5.9';
     const LISTING_1_BASE_RATE = calculateBaseRateInBaseTokenEthers(
@@ -206,7 +167,7 @@ export function testVariousOperations(): void {
     const LISTING_1_REWARD_RATE_PERCENT = '0.34'; /*%*/
     const LISTING_2_REWARD_RATE_PERCENT = '53.21'; /*%*/
 
-    let EXTERNAL_REWARD_WARPER_UNIVERSE_ID: BigNumberish;
+    let INTEGRATION_UNIVERSE_ID: BigNumberish;
     let universeTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
     let listingTerms_1: IListingTermsRegistry.ListingTermsStruct;
     let listingTerms_2: IListingTermsRegistry.ListingTermsStruct;
@@ -246,17 +207,28 @@ export function testVariousOperations(): void {
       if (!newUniverseId) {
         throw new Error('Universe was not created!');
       } else {
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID = newUniverseId;
+        INTEGRATION_UNIVERSE_ID = newUniverseId;
       }
 
-      await Auth__factory.connect(integrationContract.address, universeOwner).setAuthorizationStatus(
-        universeOwner.address,
-        true,
-      );
+      /*** Setup ***/
+      await integrationFeatureRegistry
+        .connect(deployer)
+        .registerFeature(ZERO_BALANCE_FEATURE_ID, zeroBalanceFeature.address);
+      await integrationFeatureRegistry
+        .connect(deployer)
+        .enableFeatureForIntegration(integrationContract.address, ZERO_BALANCE_FEATURE_ID);
+      await metahub
+        .connect(deployer)
+        .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
+      await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
+      await integrationContract.connect(deployer).transferOwnership(universeOwner.address);
+      await zeroBalanceFeature
+        .connect(universeOwner)
+        .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
     });
 
     it('should pass this placeholder test', async () => {
-      expect(true).to.be.true;
+      console.log('test');
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
@@ -264,7 +236,7 @@ export function testVariousOperations(): void {
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
       const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -287,7 +259,7 @@ export function testVariousOperations(): void {
         await listingTermsRegistry.allListingTerms(
           {
             listingId,
-            universeId: EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+            universeId: INTEGRATION_UNIVERSE_ID,
             warperAddress: integrationContract.address,
           },
           0,
@@ -368,7 +340,7 @@ export function testVariousOperations(): void {
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -396,7 +368,7 @@ export function testVariousOperations(): void {
 
       /**** Listing 2 ****/
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -531,7 +503,7 @@ export function testVariousOperations(): void {
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -594,7 +566,7 @@ export function testVariousOperations(): void {
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(
@@ -622,7 +594,7 @@ export function testVariousOperations(): void {
 
       /**** Listing 2 ****/
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
-        EXTERNAL_REWARD_WARPER_UNIVERSE_ID,
+        INTEGRATION_UNIVERSE_ID,
         {
           assets: [
             createAsset(

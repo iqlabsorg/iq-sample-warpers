@@ -22,6 +22,7 @@ import {
   IRentingManager,
   ITaxTermsRegistry,
   IUniverseRegistry,
+  IUniverseToken,
   IUniverseWizardV1,
   IWarperWizardV1,
 } from '@iqprotocol/iq-space-protocol/typechain';
@@ -91,6 +92,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       const listingTermsRegistry = contractsInfra.listingTermsRegistry as IListingTermsRegistry;
       const rentingManager = contractsInfra.rentingManager as IRentingManager;
       const universeRegistry = contractsInfra.universeRegistry as IUniverseRegistry;
+      const universeToken = contractsInfra.universeToken as IUniverseToken;
       const warperManager = contractsInfra.warperManager as IWarperManager;
       const taxTermsRegistry = contractsInfra.taxTermsRegistry as ITaxTermsRegistry;
 
@@ -110,6 +112,7 @@ export function baseContext(description: string, testSuite: () => void): void {
       this.ctx.contracts.listingTermsRegistry = listingTermsRegistry;
       this.ctx.contracts.rentingManager = rentingManager;
       this.ctx.contracts.universeRegistry = universeRegistry;
+      this.ctx.contracts.universeToken = universeToken;
       this.ctx.contracts.warperManager = warperManager;
       this.ctx.contracts.taxTermsRegistry = taxTermsRegistry;
 
