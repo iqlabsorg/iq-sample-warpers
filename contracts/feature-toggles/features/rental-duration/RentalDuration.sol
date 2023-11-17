@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import "../FeatureController.sol";
@@ -160,16 +159,26 @@ contract RentalDuration is FeatureController, IRentalDuration {
      */
     function execute(
         address integrationAddress,
-        ExecutionObject memory
+        ExecutionObject calldata executionObject
     ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
-        success = true;
-        errorMessage = "Execution successful";
+        uint32 rentalDuration = executionObject.rentalAgreement.endTime - executionObject.rentalAgreement.startTime;
+
+        if (rentalDuration < minRentalDuration[integrationAddress]) {
+            return (false, "Rental duration shorter than minimal allowed");
+        }
+
+        if (rentalDuration > maxRentalDuration[integrationAddress]) {
+            return (false, "Rental duration longer than maximal allowed");
+        }
+
+        return (true, "");
     }
 
     /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(FeatureController, IERC165) returns (bool) {
-        return interfaceId == type(IListingManager).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IRentalDuration).interfaceId ||
+        super.supportsInterface(interfaceId);
     }
 }

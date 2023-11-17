@@ -3,7 +3,7 @@ pragma solidity ^0.8.13;
 
 import "../IFeatureController.sol";
 
-interface iRentalCounter is IFeatureController {
+interface IRentalCounter is IFeatureController {
 
     /**
      * @notice Return quantity of renters for specific integration.

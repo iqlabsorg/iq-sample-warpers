@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 
 import "../FeatureController.sol";
 import "./IMinimumThreshold.sol";
@@ -104,18 +103,14 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
         override
         returns (bool isRentable, string memory errorMessage)
     {
-        address renter = checkObject.rentingParams.renter;
-        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[renter];
-        if (currentRentalEndDatetime > uint32(block.timestamp)) {
-            return (false, "Asset is already rented!");
-        }
-        return (true, "");
+        isRentable = true;
+        errorMessage = "Check successful";
     }
 
     /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(FeatureController, IERC165) returns (bool) {
-        return interfaceId == type(IListingManager).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IMinimumThreshold).interfaceId || super.supportsInterface(interfaceId);
     }
 }

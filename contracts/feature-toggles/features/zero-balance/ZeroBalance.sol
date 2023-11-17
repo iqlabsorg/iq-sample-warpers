@@ -2,7 +2,6 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 
 import "../FeatureController.sol";
 import "./IZeroBalance.sol";
@@ -65,14 +64,23 @@ contract ZeroBalance is FeatureController, IZeroBalance {
     /**
      * @dev Executes the feature. Since this is a zero-balance feature, there's no active execution required.
      */
-    function execute(address integrationAddress, ExecutionObject memory)
+    function execute(address integrationAddress, ExecutionObject calldata executionObject)
         external
         override
         onlyIntegration(integrationAddress)
         returns (bool success, string memory errorMessage)
     {
-        success = true;
-        errorMessage = "Execution successful";
+        address renter = executionObject.rentalAgreement.renter;
+
+        address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
+
+        for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
+            if (IERC721(zeroBalanceAddresses[i]).balanceOf(renter) > 0) {
+                return (false, "Renter owns NFTs from a restricted collection");
+            }
+        }
+
+        return (true, "Renter has zero balance for all specified collections");
     }
 
     /**
@@ -84,14 +92,15 @@ contract ZeroBalance is FeatureController, IZeroBalance {
         override
         returns (bool isRentable, string memory errorMessage)
     {
-        address[] memory zeroBalanceAddresses = _zeroBalanceAddresses[integrationAddress];
+        isRentable = true;
+        errorMessage = "Check successful";
+    }
 
-        for (uint256 i = 0; i < zeroBalanceAddresses.length; i++) {
-            if (IERC721(zeroBalanceAddresses[i]).balanceOf(checkObject.rentingParams.renter) > 0) {
-                return (false, "Renter owns NFTs from a restricted collection");
-            }
-        }
-
-        return (true, "Renter has zero balance for all specified collections");
+    /**
+     * @inheritdoc IERC165
+     */
+    function supportsInterface(bytes4 interfaceId) public view override(FeatureController, IERC165) returns (bool) {
+        return interfaceId == type(IZeroBalance).interfaceId ||
+        super.supportsInterface(interfaceId);
     }
 }

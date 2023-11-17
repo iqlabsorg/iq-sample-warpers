@@ -105,19 +105,8 @@ contract RentalPeriod is FeatureController, IRentalPeriod {
      */
     function execute(
         address integrationAddress,
-        ExecutionObject memory
+        ExecutionObject calldata executionObject
     ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
-        success = true;
-        errorMessage = "Execution successful";
-    }
-
-    /**
-     * @inheritdoc IFeatureController
-     */
-    function check(
-        address integrationAddress,
-        CheckObject calldata checkObject
-    ) external view override returns (bool isRentable, string memory errorMessage) {
         uint256 currentTimestamp = block.timestamp;
         uint256 startTime = rentalStart[integrationAddress];
         uint256 endTime = rentalEnd[integrationAddress];
@@ -131,6 +120,17 @@ contract RentalPeriod is FeatureController, IRentalPeriod {
         }
 
         return (true, "");
+    }
+
+    /**
+     * @inheritdoc IFeatureController
+     */
+    function check(
+        address integrationAddress,
+        CheckObject calldata checkObject
+    ) external view override returns (bool isRentable, string memory errorMessage) {
+        isRentable = true;
+        errorMessage = "Execution successful";
     }
 
     /**

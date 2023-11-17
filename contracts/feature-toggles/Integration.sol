@@ -1,7 +1,6 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.15;
 
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
 
 import "../external-reward/ExternalRewardWarper.sol";
@@ -90,38 +89,6 @@ contract Integration is ExternalRewardWarper, IIntegration {
     }
 
     /**
-     * @notice The asset is rentable when all feature-checks passed with true.
-     * @dev This function redesigns original __isRentableAsset
-     * Main protocol should be updated to include new __isRentableAsset
-     */
-    function __isRentableAsset(
-        Rentings.Params calldata rentingParams,
-        uint256 tokenId,
-        uint256 amount
-    ) external view onlyRentingManager returns (bool isRentable, string memory errorMessage) {
-        // Fetching the enabled featureIds for this integration.
-        bytes4[] memory featureIds = integrationFeatureRegistry.getEnabledFeatureIds(address(this));
-
-        for (uint256 i = 0; i < featureIds.length; i++) {
-            address featureControllerAddress = integrationFeatureRegistry.featureControllers(featureIds[i]);
-            IFeatureController featureControllerInstance = IFeatureController(featureControllerAddress);
-
-            IFeatureController.CheckObject memory checkObj = IFeatureController.CheckObject({
-                rentingParams: rentingParams,
-                tokenId: tokenId,
-                amount: amount
-            });
-
-            (bool featureSuccess, string memory message) = featureControllerInstance.check(address(this), checkObj);
-            if (!featureSuccess) {
-                return (false, message);
-            }
-        }
-
-        return (true, "");
-    }
-
-    /**
      * @notice Checks the rentability of an asset against all active features.
      * @param rentingParams Renting params.
      * @param tokenId ID of the token to be rented.
@@ -168,8 +135,7 @@ contract Integration is ExternalRewardWarper, IIntegration {
      */
     function supportsInterface(bytes4 interfaceId) public view virtual override returns (bool) {
         return
-            interfaceId == type(IAssetRentabilityMechanics).interfaceId ||
-            // interfaceId == type(IZeroBalanceWarper).interfaceId ||
+            interfaceId == type(IIntegration).interfaceId ||
             super.supportsInterface(interfaceId);
     }
 }

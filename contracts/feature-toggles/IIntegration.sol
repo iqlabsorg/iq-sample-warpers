@@ -48,19 +48,6 @@ interface IIntegration is IExternalRewardWarper {
     ) external returns (bool success, string memory errorMessage);
 
     /**
-     * @notice Checks all active features for the given parameters.
-     * @param rentingParams Renting params.
-     * @param tokenId ID of the token involved in the action.
-     * @param amount The quantity or value associated with the action.
-     * @return results An array of ExecutionResult, each indicating the success or failure (with an associated message) of each active feature's check.
-     */
-    function checkAll(
-        Rentings.Params calldata rentingParams,
-        uint256 tokenId,
-        uint256 amount
-    ) external view returns (ExecutionResult[] memory results);
-
-    /**
      * @notice Returns the address of the specified feature controller.
      * @param featureId The ID of the feature.
      * @return Feature controller address.

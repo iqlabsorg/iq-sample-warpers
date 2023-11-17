@@ -2,17 +2,16 @@
 pragma solidity ^0.8.13;
 
 import "@openzeppelin/contracts/token/ERC721/IERC721.sol";
-import "@iqprotocol/iq-space-protocol/contracts/warper/mechanics/v1-controller/asset-rentability/IAssetRentabilityMechanics.sol";
 import "@openzeppelin/contracts/utils/structs/EnumerableMap.sol";
 
 import "../FeatureController.sol";
-import "./iRentalCounter.sol";
+import "./IRentalCounter.sol";
 
 /**
  * @title Rental Counter Feature Controller.
  * @notice Custom feature for counting rental duration of each renter for specific integration.
  */
-contract MaxDurationRaffle is FeatureController, iRentalCounter {
+contract MaxDurationRaffle is FeatureController, IRentalCounter {
     IntegrationFeatureRegistry internal integrationFeatureRegistry;
     using EnumerableMap for EnumerableMap.AddressToUintMap;
 
@@ -37,14 +36,14 @@ contract MaxDurationRaffle is FeatureController, iRentalCounter {
     }
 
     /**
-     * @inheritdoc iRentalCounter
+     * @inheritdoc IRentalCounter
      */
     function getRentersCount(address integrationAddress) external view returns (uint256) {
         return _rentersTotalRentalDuration[integrationAddress].length();
     }
 
     /**
-     * @inheritdoc iRentalCounter
+     * @inheritdoc IRentalCounter
      */
     function getTotalRentalDurations(
         address integrationAddress,
@@ -77,16 +76,8 @@ contract MaxDurationRaffle is FeatureController, iRentalCounter {
         address integrationAddress,
         CheckObject calldata checkObject
     ) external view override returns (bool isRentable, string memory errorMessage) {
-        address renter = checkObject.rentingParams.renter;
-        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[integrationAddress][renter];
-
-        if (currentRentalEndDatetime > uint32(block.timestamp)) {
-            isRentable = false;
-            errorMessage = "Asset is already rented!";
-        } else {
-            isRentable = true;
-            errorMessage = "";
-        }
+        isRentable = true;
+        errorMessage = "Check successful";
     }
 
     /**
@@ -97,22 +88,27 @@ contract MaxDurationRaffle is FeatureController, iRentalCounter {
         ExecutionObject calldata executionObject
     ) external override onlyIntegration(integrationAddress) returns (bool success, string memory errorMessage) {
         address renter = executionObject.rentalAgreement.renter;
+        uint32 currentRentalEndDatetime = _currentRentalEndTimestamp[integrationAddress][renter];
 
-        _currentRentalEndTimestamp[integrationAddress][renter] = executionObject.rentalAgreement.endTime;
-        (, uint256 rentalDurationSoFar) = _rentersTotalRentalDuration[integrationAddress].tryGet(renter);
-        _rentersTotalRentalDuration[integrationAddress].set(
+        if (currentRentalEndDatetime > uint32(block.timestamp)) {
+            return (false, "Asset is already rented!");
+        } else {
+            _currentRentalEndTimestamp[integrationAddress][renter] = executionObject.rentalAgreement.endTime;
+            (, uint256 rentalDurationSoFar) = _rentersTotalRentalDuration[integrationAddress].tryGet(renter);
+            _rentersTotalRentalDuration[integrationAddress].set(
             renter,
             uint256(executionObject.rentalAgreement.endTime - executionObject.rentalAgreement.startTime) +
                 rentalDurationSoFar
         );
-
-        return (true, "");
+            return (true, "");
+        }
     }
 
     /**
      * @inheritdoc IERC165
      */
     function supportsInterface(bytes4 interfaceId) public view override(FeatureController, IERC165) returns (bool) {
-        return interfaceId == type(IListingManager).interfaceId || super.supportsInterface(interfaceId);
+        return interfaceId == type(IRentalCounter).interfaceId ||
+        super.supportsInterface(interfaceId);
     }
 }
