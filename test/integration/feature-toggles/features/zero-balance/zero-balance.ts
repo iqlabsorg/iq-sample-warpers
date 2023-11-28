@@ -3,34 +3,36 @@ import hre from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { ERC721Mock, IACL, IMetahub } from '@iqprotocol/iq-space-protocol/typechain'; // предполагая, что у вас также может быть потребность в моках ERC721
-import { IntegrationFeatureRegistry, ZeroBalance } from '../../../../../typechain';
+import { Integration, IntegrationFeatureRegistry, ZeroBalance } from '../../../../../typechain';
 import { ADDRESS_ZERO, solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 
 export function integrationTestZeroBalance(): void {
 
-  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
-  const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
-  const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
+  // const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
+  // const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
+  // const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
 
-  /*** Contracts ***/
-  let metahub: IMetahub;
-  let acl: IACL;
-  let integrationFeatureRegistry: IntegrationFeatureRegistry;
+  // /*** Contracts ***/
+  // let metahub: IMetahub;
+  // let acl: IACL;
+  // let integrationFeatureRegistry: IntegrationFeatureRegistry;
 
-  let deployer: SignerWithAddress;
+  // let deployer: SignerWithAddress;
 
   describe('ZeroBalance', function () {
     beforeEach(async function () {
-
-      metahub = this.contracts.metahub;
-      acl = this.contracts.acl;
-
       const fixtureZeroBalance = async (): Promise<{
+        metahub: IMetahub;
+        acl: IACL;
         integrationFeatureRegistry: IntegrationFeatureRegistry;
         zeroBalance: ZeroBalance;
         zeroBalanceTestCollection: ERC721Mock;
+        integration: Integration;
       }> => {
-        // Deploy IntegrationFeatureRegistry
+        const metahub = this.contracts.metahub;
+        const acl = this.contracts.acl;
+
+        // deploy IntegrationFeatureRegistry
         const integrationFeatureRegistry = (await hre.run('deploy:feature-toggles:integration-feature-registry', {
           metahub: metahub.address,
           acl: acl.address,
@@ -47,16 +49,32 @@ export function integrationTestZeroBalance(): void {
           symbol: 'TZNFT',
         })) as ERC721Mock;
 
+        const integration = (await hre.run('deploy:feature-toggles:integration-contract', {
+          original: this.mocks.assets.originalCollection.address,
+          metahub: metahub.address,
+          universeRewardAddress: ADDRESS_ZERO,
+          integrationFeatureRegistry: integrationFeatureRegistry.address,
+        })) as Integration;
+
         return {
+          metahub,
+          acl,
           integrationFeatureRegistry,
           zeroBalance,
           zeroBalanceTestCollection,
+          integration,
         };
       };
 
-      const { integrationFeatureRegistry, zeroBalance, zeroBalanceTestCollection } = await loadFixture(
-        fixtureZeroBalance,
-      );
+      const { metahub, acl, integrationFeatureRegistry, zeroBalance, zeroBalanceTestCollection, integration } =
+        await loadFixture(fixtureZeroBalance);
+
+      this.contracts.metahub = metahub;
+      this.contracts.acl = acl;
+
+      this.contracts.feautureToggles.integrationContracts = {
+        integration,
+      };
 
       this.contracts.feautureToggles.featureContracts.zeroBalanceFeature = {
         controller: zeroBalance,

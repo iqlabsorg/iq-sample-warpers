@@ -557,32 +557,34 @@ export function testVariousOperations(): void {
         new AccountId({ chainId, address: originalCollection.address }),
         LISTER_TOKEN_ID_1.toString(),
       );
-      const isRentableAsset = await integrationContract.__isRentableAsset(
-        {
-          listingId: listingId_1,
-          warper: integrationContract.address,
-          renter: renterA.address,
-          rentalPeriod: RENTAL_A_PERIOD,
-          paymentToken: baseToken.address,
-          listingTermsId: listingTermsId_1,
-          selectedConfiguratorListingTerms: {
-            strategyId: EMPTY_BYTES4_DATA_HEX,
-            strategyData: EMPTY_BYTES_DATA_HEX,
-          },
-        },
-        LISTER_TOKEN_ID_1.toString(),
-        assets.value,
-      );
+      });
+      // const isRentableAsset = await integrationContract.__isRentableAsset(
+      //   {
+      //     listingId: listingId_1,
+      //     warper: integrationContract.address,
+      //     renter: renterA.address,
+      //     rentalPeriod: RENTAL_A_PERIOD,
+      //     paymentToken: baseToken.address,
+      //     listingTermsId: listingTermsId_1,
+      //     selectedConfiguratorListingTerms: {
+      //       strategyId: EMPTY_BYTES4_DATA_HEX,
+      //       strategyData: EMPTY_BYTES_DATA_HEX,
+      //     },
+      //   },
+      //   LISTER_TOKEN_ID_1.toString(),
+      //   assets.value,
+      // );
 
-      console.log('IsRentable Asset: ', isRentableAsset);
+      // console.log('IsRentable Asset: ', isRentableAsset);
 
-      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
-        .to.be.revertedWithCustomError(
-          { interface: IAssetRentabilityMechanics__factory.createInterface() },
-          'AssetIsNotRentable',
-        )
-      .withArgs(false, 'Renter owns NFTs from a restricted collection');
-    });
+    //   await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
+    //     .to.be.revertedWithCustomError(
+    //       { interface: IAssetRentabilityMechanics__factory.createInterface() },
+    //       'AssetIsNotRentable',
+    //     )
+    //   .withArgs(false, 'Renter owns NFTs from a restricted collection');
+    // });
+    // WE DON'T NEED IT BECAUSE WE CUT OFF isRentableAsset from feature toggless smart contracts
 
     it(`reverts when balance is not zero #2`, async () => {
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
@@ -625,6 +627,8 @@ export function testVariousOperations(): void {
         throw new Error('Listing Terms were not found!');
       }
 
+      console.log('test');
+
       /**** Listing 2 ****/
       const createListingTx_2 = await listingWizardV1Adapter.createListingWithTerms(
         INTEGRATION_UNIVERSE_ID,
@@ -642,16 +646,23 @@ export function testVariousOperations(): void {
         },
         listingTerms_2,
       );
+
+      //here console.log('test2'); works
+
       const listingId_2 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_2.hash);
       if (!listingId_2) {
         throw new Error('Listing was not created!');
       }
+
+      //here console.log('test2'); works
+
       const listingTermsId_2 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
         createListingTx_2.hash,
       );
       if (!listingTermsId_2) {
         throw new Error('Listing Terms were not found!');
       }
+
 
       /**** Rental A ****/
 
@@ -678,12 +689,17 @@ export function testVariousOperations(): void {
 
       await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
       await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
+      console.log('test2'); //here console.log('test2'); works
+
       const rentTx = await rentingManagerAdapterA.rent({
         ...rentingEstimationParams,
         tokenQuote: EMPTY_BYTES_DATA_HEX,
         tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
         maxPaymentAmount: rentalFees.total,
       });
+
+      console.log('test3'); ////here console.log('test3'); don't work
 
       const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
       if (!rentalId) {

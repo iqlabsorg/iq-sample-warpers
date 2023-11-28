@@ -9,4 +9,10 @@ export function integrationTestMinimumThreshold(): void {
     let integrationFeatureRegistry: IntegrationFeatureRegistry;
     let erc721: IERC721;
   });
+
+  context('Minimum Trhreshold Feature Operations', () => {
+    it('should pass tests', async () => {
+      console.log('test');
+    });
+  });
 }
