@@ -18,7 +18,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
     /**
      * @dev ListingManager contract key.
      */
-    bytes4 internal immutable LISTING_MANAGER;
+    bytes4 public immutable LISTING_MANAGER;
 
     /**
      * @dev Reward address for this universe.
@@ -28,7 +28,7 @@ contract ExternalRewardWarper is IExternalRewardWarper, IRentingHookMechanics, E
     /**
      * @dev RentingManager contract key.
      */
-    bytes4 internal immutable RENTING_MANAGER;
+    bytes4 public immutable RENTING_MANAGER;
 
     /**
      * @dev renter address => tokenId => rentalId.

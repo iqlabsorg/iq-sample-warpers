@@ -2,7 +2,6 @@ import { shouldBeLikeIntegration } from './integration.behaviour';
 import hre from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
 import { Integration, IntegrationFeatureRegistry, ZeroBalance } from '../../../../typechain';
-import { ADDRESS_ZERO } from '@iqprotocol/iq-space-protocol';
 import { IACL, IMetahub, ERC721Mock } from '@iqprotocol/iq-space-protocol/typechain';
 
 export function integrationTestIntegration(): void {
@@ -39,7 +38,6 @@ export function integrationTestIntegration(): void {
         const integration = (await hre.run('deploy:feature-toggles:integration-contract', {
           original: this.mocks.assets.originalCollection.address,
           metahub: metahub.address,
-          universeRewardAddress: ADDRESS_ZERO,
           integrationFeatureRegistry: integrationFeatureRegistry.address,
         })) as Integration;
 

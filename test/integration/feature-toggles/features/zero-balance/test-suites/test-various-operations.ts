@@ -126,7 +126,6 @@ export function testVariousOperations(): void {
       .connect(deployer)
       .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
     await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address); //error here?
-    await integrationContract.connect(deployer).transferOwnership(universeOwner.address);
     await zeroBalanceFeature
       .connect(universeOwner)
       .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);

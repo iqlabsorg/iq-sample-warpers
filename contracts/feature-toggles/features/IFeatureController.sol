@@ -35,15 +35,6 @@ interface IFeatureController is IERC165 {
         uint256 amount;
     }
 
-    //  Rentings.Params params:
-    //  * @param listingId Listing ID. Also allows to identify the asset(s) being rented.
-    //  * @param warper Warper address.
-    //  * @param renter Renter address.
-    //  * @param rentalPeriod Desired period of asset(s) renting.
-    //  * @param paymentToken The token address which renter offers as a mean of payment.
-    //  * @param listingTermsId Listing terms ID.
-    //  * @param selectedConfiguratorListingTerms
-
     /**
      * @notice Executes the feature based on the provided parameters.
      * @param integrationAddress Address of the integration instance.

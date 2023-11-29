@@ -7,7 +7,6 @@ import { Integration, IntegrationFeatureRegistry, ZeroBalance } from '../../../.
 import { ADDRESS_ZERO, solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 
 export function integrationTestZeroBalance(): void {
-
   // const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
   // const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
   // const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
@@ -52,7 +51,6 @@ export function integrationTestZeroBalance(): void {
         const integration = (await hre.run('deploy:feature-toggles:integration-contract', {
           original: this.mocks.assets.originalCollection.address,
           metahub: metahub.address,
-          universeRewardAddress: ADDRESS_ZERO,
           integrationFeatureRegistry: integrationFeatureRegistry.address,
         })) as Integration;
 
