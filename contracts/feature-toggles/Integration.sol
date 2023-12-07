@@ -49,6 +49,8 @@ contract Integration is ERC721ConfigurablePreset, IIntegration {
      * @dev Initializes with IntegrationFeatureRegistry address.
      */
     constructor(bytes memory config) {
+        super.__initialize(config);
+
         (, , address _integrationFeatureRegistry) = abi.decode(config, (address, address, address));
 
         integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);

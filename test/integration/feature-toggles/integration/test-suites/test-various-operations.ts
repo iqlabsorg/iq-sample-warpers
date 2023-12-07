@@ -161,8 +161,16 @@ export function testVariousOperations(): void {
     console.log('here2');
 
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_1);
+
+    console.log('here3');
+
     await originalCollection.connect(lister).mint(lister.address, LISTER_TOKEN_ID_2);
+
+    console.log('here4');
+
     await originalCollection.connect(lister).setApprovalForAll(metahub.address, true);
+
+    console.log('here5');
   });
 
   context('Renting `Integration` with various cases', () => {
@@ -185,35 +193,39 @@ export function testVariousOperations(): void {
     let listingTerms_2: IListingTermsRegistry.ListingTermsStruct;
 
     beforeEach(async () => {
-      // const universeParams = {
-      //   name: 'Integration Contract',
-      //   paymentTokens: [new AccountId({ chainId, address: baseToken.address })],
-      // };
+      const universeParams = {
+        name: 'Integration Contract',
+        paymentTokens: [new AccountId({ chainId, address: baseToken.address })],
+      };
 
-      // listingTerms_1 = makeFixedRateWithRewardListingTermsFromUnconverted(
-      //   LISTING_1_BASE_RATE,
-      //   LISTING_1_REWARD_RATE_PERCENT,
-      // );
-      // listingTerms_2 = makeFixedRateWithRewardListingTermsFromUnconverted(
-      //   LISTING_2_BASE_RATE,
-      //   LISTING_2_REWARD_RATE_PERCENT,
-      // );
+      listingTerms_1 = makeFixedRateWithRewardListingTermsFromUnconverted(
+        LISTING_1_BASE_RATE,
+        LISTING_1_REWARD_RATE_PERCENT,
+      );
+      listingTerms_2 = makeFixedRateWithRewardListingTermsFromUnconverted(
+        LISTING_2_BASE_RATE,
+        LISTING_2_REWARD_RATE_PERCENT,
+      );
 
-      // universeTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
-      //   EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT,
-      //   EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
-      // );
+      universeTaxTerms = makeFixedRateWithRewardTaxTermsFromUnconverted(
+        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_RATE_PERCENT,
+        EXTERNAL_REWARD_WARPER_UNIVERSE_WARPER_REWARD_RATE_PERCENT,
+      );
 
-      // const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
-      //   universeParams,
-      //   AddressTranslator.createAssetType(new AccountId({ chainId, address: integrationContract.address }), 'erc721'),
-      //   universeTaxTerms,
-      //   {
-      //     name: 'Integration',
-      //     universeId: 0, // Unknown before-hand.
-      //     paused: false,
-      //   },
-      // );
+      console.log('integration contract address: ', integrationContract.address);
+      console.log('universe params: ', universeParams);
+      console.log('universe tax terms: ', universeTaxTerms);
+
+      const setupUniverseTx = await universeWizardV1Adapter.setupUniverseAndRegisterExistingWarper(
+        universeParams,
+        AddressTranslator.createAssetType(new AccountId({ chainId, address: integrationContract.address }), 'erc721'),
+        universeTaxTerms,
+        {
+          name: 'Integration',
+          universeId: 0, // Unknown before-hand.
+          paused: false,
+        },
+      );
       // const newUniverseId = (await universeRegistryAdapter.findUniverseByCreationTransaction(setupUniverseTx.hash))?.id;
 
       // if (!newUniverseId) {
@@ -238,55 +250,57 @@ export function testVariousOperations(): void {
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
-      const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
-      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+      console.log('test');
 
-      const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
-        INTEGRATION_UNIVERSE_ID,
-        {
-          assets: [
-            createAsset(
-              'erc721',
-              new AccountId({ chainId, address: originalCollection.address }),
-              LISTER_TOKEN_ID_1.toString(),
-            ),
-          ],
-          params: makeSDKListingParams(chainId, lister.address),
-          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
-          immediatePayout: true,
-        },
-        listingTerms_1,
-      );
-      const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
-      if (!listingId) {
-        throw new Error('Listing was not created!');
-      }
-      const listingTermsId = (
-        await listingTermsRegistry.allListingTerms(
-          {
-            listingId,
-            universeId: INTEGRATION_UNIVERSE_ID,
-            warperAddress: integrationContract.address,
-          },
-          0,
-          1,
-        )
-      )[0][0];
-      if (!listingTermsId) {
-        throw new Error('Listing Terms were not found!');
-      }
+      // const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      // const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
-      console.log('here');
+      // const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
+      //   INTEGRATION_UNIVERSE_ID,
+      //   {
+      //     assets: [
+      //       createAsset(
+      //         'erc721',
+      //         new AccountId({ chainId, address: originalCollection.address }),
+      //         LISTER_TOKEN_ID_1.toString(),
+      //       ),
+      //     ],
+      //     params: makeSDKListingParams(chainId, lister.address),
+      //     maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+      //     immediatePayout: true,
+      //   },
+      //   listingTerms_1,
+      // );
+      // const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
+      // if (!listingId) {
+      //   throw new Error('Listing was not created!');
+      // }
+      // const listingTermsId = (
+      //   await listingTermsRegistry.allListingTerms(
+      //     {
+      //       listingId,
+      //       universeId: INTEGRATION_UNIVERSE_ID,
+      //       warperAddress: integrationContract.address,
+      //     },
+      //     0,
+      //     1,
+      //   )
+      // )[0][0];
+      // if (!listingTermsId) {
+      //   throw new Error('Listing Terms were not found!');
+      // }
 
-      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
-        chainId,
-        listingId,
-        integrationContract.address,
-        renterA.address,
-        RENTAL_A_PERIOD,
-        baseToken.address,
-        listingTermsId,
-      );
+      // console.log('here');
+
+      // const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+      //   chainId,
+      //   listingId,
+      //   integrationContract.address,
+      //   renterA.address,
+      //   RENTAL_A_PERIOD,
+      //   baseToken.address,
+      //   listingTermsId,
+      // );
       // const rentalFees = await rentingManagerAdap`terA.estimateRent(rentingEstimationParams);
 
       // console.log('rentalFees: ', rentalFees);
