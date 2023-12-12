@@ -12,7 +12,6 @@ import {
   IUniverseWizardV1,
   IUniverseToken__factory,
   IUniverseToken,
-  IAssetRentabilityMechanics__factory,
 } from '@iqprotocol/iq-space-protocol/typechain';
 import {
   Auth__factory,
@@ -222,14 +221,6 @@ export function testVariousOperations(): void {
         INTEGRATION_UNIVERSE_ID = newUniverseId;
       }
 
-      //IF THIS ENABLED = FIRST TEST DOES NOT WORKS!!!!!!!
-
-      // await Auth__factory.connect(integrationContract.address, universeOwner).setAuthorizationStatus(
-      //   universeOwner.address,
-      //   true,
-      // );
-
-
       /*** Setup ***/
       await integrationFeatureRegistry
         .connect(deployer)
@@ -247,8 +238,6 @@ export function testVariousOperations(): void {
     });
 
     it(`works with ${LISTING_STRATEGIES.FIXED_RATE_WITH_REWARD} strategy`, async () => {
-      console.log('test');
-
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
@@ -520,10 +509,9 @@ export function testVariousOperations(): void {
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
-      await zeroBalanceFeature.connect(universeOwner).setZeroBalanceAddresses(integrationContract.address, [
-        // integrationContract.address, because we don't need i here
-        zeroBalanceTestCollection.address,
-      ]);
+      await zeroBalanceFeature
+        .connect(universeOwner)
+        .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
 
       await zeroBalanceTestCollection.connect(renterA).mint(renterA.address, 1);
 
@@ -554,9 +542,6 @@ export function testVariousOperations(): void {
       if (!listingTermsId_1) {
         throw new Error('Listing Terms were not found!');
       }
-
-      //await zeroBalanceTestCollection.connect(renterA).mint(renterA.address, 1);
-      //console.log('check'); HERE WE HET TOKEN ALREADY MINTED ERROR^
 
       /**** Rental A ****/
       const rentingEstimationParams_A = makeSDKRentingEstimationParamsERC721(
@@ -687,10 +672,6 @@ export function testVariousOperations(): void {
         calculateTaxFeeForFixedRateInWei(expectedListerBaseFee, PROTOCOL_RATE_PERCENT),
       );
 
-      // console.log('test2'); //here console.log('test2'); works
-
-      console.log('test3'); ////here console.log('test3'); don't work
-
       const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
       if (!rentalId) {
         throw new Error('Rental Agreement was not found!');
@@ -724,7 +705,7 @@ export function testVariousOperations(): void {
       expect(rentalDetails.lister).to.be.equal(lister.address);
     });
 
-    it(`returns data array when checkAll executed`, async () => {
+    it(`checkAll returns data array`, async () => {
       const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
       const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
 
@@ -797,21 +778,165 @@ export function testVariousOperations(): void {
     });
 
     it(`getFeatureControllerAddress returns proper address`, async () => {
-      const rentalDetails = await Integration__factory.connect(
+      const featureControllerAddress = await Integration__factory.connect(
         integrationContract.address,
         stranger,
       ).getFeatureControllerAddress(ZERO_BALANCE_FEATURE_ID);
 
-      expect(rentalDetails).to.be.equal(zeroBalanceFeature.address);
-
-      // console.log('ZB Address:', zeroBalanceFeature.address);
-      // console.log('Rental Detaiols:', rentalDetails);
+      expect(featureControllerAddress).to.be.equal(zeroBalanceFeature.address);
     });
 
-    it(`returns anal`, async () => {
-      console.log("anal");
+    it(`getLastActiveRentalId returns proper address`, async () => {
+      const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+
+      await zeroBalanceFeature
+        .connect(universeOwner)
+        .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
+
+      /**** Listing 1 ****/
+      const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
+        INTEGRATION_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_1,
+      );
+      const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
+      if (!listingId_1) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId_1 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+        createListingTx_1.hash,
+      );
+      if (!listingTermsId_1) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      /**** Rental 1 ****/
+
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId_1,
+        integrationContract.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId_1,
+      );
+
+      const rentalFees = await rentingManagerAdapterA.estimateRent(rentingEstimationParams);
+
+      await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
+      await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
+      const rentTx = await rentingManagerAdapterA.rent({
+        ...rentingEstimationParams,
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
+        maxPaymentAmount: rentalFees.total,
+      });
+
+      //get rental Id
+
+      const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
+      if (!rentalId) {
+        throw new Error('Rental Agreement was not found!');
+      }
+
+      const lastActiveRentalId = await Integration__factory.connect(
+        integrationContract.address,
+        stranger,
+      ).getLastActiveRentalId(renterA.address, LISTER_TOKEN_ID_1);
+
+      await expect(lastActiveRentalId).not.to.be.reverted;
+      expect(lastActiveRentalId).to.be.equal(rentalId);
     });
 
+    it(`getRentalDetails returns proper data`, async () => {
+      const LISTING_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_A_PERIOD = LISTING_MAX_LOCK_PERIOD;
+
+      /**** Listing ****/
+      const createListingTx = await listingWizardV1Adapter.createListingWithTerms(
+        INTEGRATION_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_1,
+      );
+
+      const listingId = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx.hash);
+      if (!listingId) {
+        throw new Error('Listing was not created!');
+      }
+
+      /**** Rental A ****/
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId,
+        integrationContract.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingId,
+      );
+
+      const rentalFees = await rentingManagerAdapterA.estimateRent(rentingEstimationParams);
+
+      await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
+      await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
+      const rentTx = await rentingManagerAdapterA.rent({
+        ...rentingEstimationParams,
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
+        maxPaymentAmount: rentalFees.total,
+      });
+
+      const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
+      if (!rentalId) {
+        throw new Error('Rental Agreement was not found!');
+      }
+
+      //Get rental details and check it
+
+      const rentalDetails = await Integration__factory.connect(integrationContract.address, stranger).getRentalDetails(
+        rentalId,
+      );
+
+      expect(rentalDetails.listingTerms.strategyId).to.be.equal(listingTerms_1.strategyId);
+      expect(rentalDetails.listingTerms.strategyData).to.be.equal(listingTerms_1.strategyData);
+      expect(rentalDetails.universeTaxTerms.strategyId).to.be.equal(universeTaxTerms.strategyId);
+      expect(rentalDetails.universeTaxTerms.strategyData).to.be.equal(universeTaxTerms.strategyData);
+      expect(rentalDetails.protocolTaxTerms.strategyId).to.be.equal(protocolTaxTerms.strategyId);
+      expect(rentalDetails.protocolTaxTerms.strategyData).to.be.equal(protocolTaxTerms.strategyData);
+      expect(rentalDetails.rentalId).to.be.equal(rentalId);
+      expect(rentalDetails.listingId).to.be.equal(listingId);
+      expect(rentalDetails.lister).to.be.equal(lister.address);
+    });
+
+    // it(`returns test`, async () => {
+    //   console.log("test")
+    // });
   });
 }
 
