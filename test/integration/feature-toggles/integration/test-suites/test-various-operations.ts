@@ -12,6 +12,7 @@ import {
   IUniverseWizardV1,
   IUniverseToken__factory,
   IUniverseToken,
+  SolidityInterfaces,
 } from '@iqprotocol/iq-space-protocol/typechain';
 import { convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution } from '../../../../shared/utils/accounting-helpers';
 import {
@@ -58,6 +59,7 @@ import {
   makeListingTerms,
 } from '@iqprotocol/iq-space-protocol';
 import { renting } from '@iqprotocol/iq-space-protocol/typechain/contracts';
+import { getSolidityInterfaceId } from '../../../../shared/utils/solidity-interfaces';
 
 export function testVariousOperations(): void {
   /**** Constants ****/
@@ -69,6 +71,7 @@ export function testVariousOperations(): void {
   const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
   const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
   /**** Config ****/
+  let solidityInterfaces: SolidityInterfaces;
   let chainId: string;
   /**** Tax Terms ****/
   let protocolTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
@@ -125,6 +128,7 @@ export function testVariousOperations(): void {
     universeWizardV1 = this.contracts.wizardsV1.universeWizard;
     universeRegistry = this.contracts.universeRegistry;
     universeToken = this.contracts.universeToken;
+    solidityInterfaces = this.mocks.misc.solidityInterfaces;
     taxTermsRegistry = this.contracts.taxTermsRegistry;
     rentingManager = this.contracts.rentingManager;
     /**** Mocks & Samples ****/
@@ -1090,36 +1094,278 @@ export function testVariousOperations(): void {
       expect(executeFeatureResult[0]).to.be.true;
       expect(executeFeatureResult[1]).to.equal('Renter has zero balance for all specified collections');
     });
+
+    it(`__onRent reverts if coller is not Rentin Manager`, async () => {
+      const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+      const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+
+      await zeroBalanceFeature
+        .connect(universeOwner)
+        .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
+
+      /**** Listing 1 ****/
+      const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
+        INTEGRATION_UNIVERSE_ID,
+        {
+          assets: [
+            createAsset(
+              'erc721',
+              new AccountId({ chainId, address: originalCollection.address }),
+              LISTER_TOKEN_ID_1.toString(),
+            ),
+          ],
+          params: makeSDKListingParams(chainId, lister.address),
+          maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+          immediatePayout: true,
+        },
+        listingTerms_1,
+      );
+      const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
+      if (!listingId_1) {
+        throw new Error('Listing was not created!');
+      }
+      const listingTermsId_1 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+        createListingTx_1.hash,
+      );
+      if (!listingTermsId_1) {
+        throw new Error('Listing Terms were not found!');
+      }
+
+      /**** Rental A ****/
+
+      const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+        chainId,
+        listingId_1,
+        integrationContract.address,
+        renterA.address,
+        RENTAL_A_PERIOD,
+        baseToken.address,
+        listingTermsId_1,
+      );
+
+      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams)).not.to.be.reverted;
+
+      const rentalFees = await rentingManagerAdapterA.estimateRent(rentingEstimationParams);
+
+      await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
+      await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
+      const rentTx = await rentingManagerAdapterA.rent({
+        ...rentingEstimationParams,
+        tokenQuote: EMPTY_BYTES_DATA_HEX,
+        tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
+        maxPaymentAmount: rentalFees.total,
+      });
+
+      const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
+      if (!rentalId) {
+        throw new Error('Rental Agreement was not found!');
+      }
+
+      await expect(
+        integrationContract.connect(stranger).__onRent(
+          0,
+          {
+            warpedAssets: [],
+            universeId: 0,
+            collectionId: EMPTY_BYTES32_DATA_HEX,
+            listingId: 0,
+            renter: renterA.address,
+            startTime: 0,
+            endTime: 0,
+            agreementTerms: {
+              listingTerms: {
+                strategyId: EMPTY_BYTES4_DATA_HEX,
+                strategyData: EMPTY_BYTES_DATA_HEX,
+              },
+              universeTaxTerms: {
+                strategyId: EMPTY_BYTES4_DATA_HEX,
+                strategyData: EMPTY_BYTES_DATA_HEX,
+              },
+              protocolTaxTerms: {
+                strategyId: EMPTY_BYTES4_DATA_HEX,
+                strategyData: EMPTY_BYTES_DATA_HEX,
+              },
+              paymentTokenData: {
+                paymentToken: ADDRESS_ZERO,
+                paymentTokenQuote: 0,
+              },
+            },
+          },
+          convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
+            '0',
+            '0',
+            '0',
+            '0',
+            ADDRESS_ZERO,
+            ADDRESS_ZERO,
+            ADDRESS_ZERO,
+            0,
+          ),
+        ),
+      ).to.be.revertedWithCustomError(integrationContract, 'CallerIsNotRentingManager');
+    });
+
+    // it(`__onRent returns proper data`, async () => {
+    //   const LISTING_1_MAX_LOCK_PERIOD = SECONDS_IN_DAY;
+    //   const RENTAL_A_PERIOD = LISTING_1_MAX_LOCK_PERIOD;
+
+    //   await zeroBalanceFeature
+    //     .connect(universeOwner)
+    //     .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
+
+    //   /**** Listing 1 ****/
+    //   const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(
+    //     INTEGRATION_UNIVERSE_ID,
+    //     {
+    //       assets: [
+    //         createAsset(
+    //           'erc721',
+    //           new AccountId({ chainId, address: originalCollection.address }),
+    //           LISTER_TOKEN_ID_1.toString(),
+    //         ),
+    //       ],
+    //       params: makeSDKListingParams(chainId, lister.address),
+    //       maxLockPeriod: LISTING_1_MAX_LOCK_PERIOD,
+    //       immediatePayout: true,
+    //     },
+    //     listingTerms_1,
+    //   );
+    //   const listingId_1 = await listingManagerAdapter.findListingIdByCreationTransaction(createListingTx_1.hash);
+    //   if (!listingId_1) {
+    //     throw new Error('Listing was not created!');
+    //   }
+    //   const listingTermsId_1 = await listingTermsRegistryAdapter.findListingTermsIdByCreationTransaction(
+    //     createListingTx_1.hash,
+    //   );
+    //   if (!listingTermsId_1) {
+    //     throw new Error('Listing Terms were not found!');
+    //   }
+
+    //   /**** Rental A ****/
+
+    //   const rentingEstimationParams = makeSDKRentingEstimationParamsERC721(
+    //     chainId,
+    //     listingId_1,
+    //     integrationContract.address,
+    //     renterA.address,
+    //     RENTAL_A_PERIOD,
+    //     baseToken.address,
+    //     listingTermsId_1,
+    //   );
+
+    //   await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams)).not.to.be.reverted;
+
+    //   const rentalFees = await rentingManagerAdapterA.estimateRent(rentingEstimationParams);
+
+    //   await baseToken.connect(renterA).mint(renterA.address, rentalFees.total);
+    //   await baseToken.connect(renterA).increaseAllowance(metahub.address, rentalFees.total);
+
+    //   const rentTx = await rentingManagerAdapterA.rent({
+    //     ...rentingEstimationParams,
+    //     tokenQuote: EMPTY_BYTES_DATA_HEX,
+    //     tokenQuoteSignature: EMPTY_BYTES_DATA_HEX,
+    //     maxPaymentAmount: rentalFees.total,
+    //   });
+
+    //   console.log('__onRentResult:', rentTx);
+    //   console.log('__onRentResult:', rentTx.hash);
+
+    //   const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
+    //   if (!rentalId) {
+    //     throw new Error('Rental Agreement was not found!');
+    //   }
+
+    //   await acl.connect(deployer).grantRole(RENTING_MANAGER_ROLE, featuresAdmin.address);
+
+    //   const __onRentResult = await integrationContract.connect(featuresAdmin.address).callStatic.__onRent(
+    //     0,
+    //     {
+    //       warpedAssets: [],
+    //       universeId: 0,
+    //       collectionId: EMPTY_BYTES32_DATA_HEX,
+    //       listingId: 0,
+    //       renter: renterA.address,
+    //       startTime: 0,
+    //       endTime: 0,
+    //       agreementTerms: {
+    //         listingTerms: {
+    //           strategyId: EMPTY_BYTES4_DATA_HEX,
+    //           strategyData: EMPTY_BYTES_DATA_HEX,
+    //         },
+    //         universeTaxTerms: {
+    //           strategyId: EMPTY_BYTES4_DATA_HEX,
+    //           strategyData: EMPTY_BYTES_DATA_HEX,
+    //         },
+    //         protocolTaxTerms: {
+    //           strategyId: EMPTY_BYTES4_DATA_HEX,
+    //           strategyData: EMPTY_BYTES_DATA_HEX,
+    //         },
+    //         paymentTokenData: {
+    //           paymentToken: ADDRESS_ZERO,
+    //           paymentTokenQuote: 0,
+    //         },
+    //       },
+    //     },
+    //     convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
+    //       '0',
+    //       '0',
+    //       '0',
+    //       '0',
+    //       ADDRESS_ZERO,
+    //       ADDRESS_ZERO,
+    //       ADDRESS_ZERO,
+    //       0,
+    //     ),
+    //   );
+
+    //   console.log('__onRentResult:', __onRentResult);
+
+    //   await expect(
+    //     integrationContract.connect(featuresAdmin.address).__onRent(
+    //       0,
+    //       {
+    //         warpedAssets: [],
+    //         universeId: 0,
+    //         collectionId: EMPTY_BYTES32_DATA_HEX,
+    //         listingId: 0,
+    //         renter: renterA.address,
+    //         startTime: 0,
+    //         endTime: 0,
+    //         agreementTerms: {
+    //           listingTerms: {
+    //             strategyId: EMPTY_BYTES4_DATA_HEX,
+    //             strategyData: EMPTY_BYTES_DATA_HEX,
+    //           },
+    //           universeTaxTerms: {
+    //             strategyId: EMPTY_BYTES4_DATA_HEX,
+    //             strategyData: EMPTY_BYTES_DATA_HEX,
+    //           },
+    //           protocolTaxTerms: {
+    //             strategyId: EMPTY_BYTES4_DATA_HEX,
+    //             strategyData: EMPTY_BYTES_DATA_HEX,
+    //           },
+    //           paymentTokenData: {
+    //             paymentToken: ADDRESS_ZERO,
+    //             paymentTokenQuote: 0,
+    //           },
+    //         },
+    //       },
+    //       convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
+    //         '0',
+    //         '0',
+    //         '0',
+    //         '0',
+    //         ADDRESS_ZERO,
+    //         ADDRESS_ZERO,
+    //         ADDRESS_ZERO,
+    //         0,
+    //       ),
+    //     ),
+    //   ).to.be.not.reverted;
+    // });
   });
 }
-
-// export type ExecutionObjectStruct = {
-//   rentalId: PromiseOrValue<BigNumberish>;
-//   rentalAgreement: Rentings.AgreementStruct;
-//   rentalEarnings: Accounts.RentalEarningsStruct;
-// };
-
-// export type AgreementStruct = {
-//   warpedAssets: Assets.AssetStruct[];
-//   universeId: PromiseOrValue<BigNumberish>;
-//   collectionId: PromiseOrValue<BytesLike>;
-//   listingId: PromiseOrValue<BigNumberish>;
-//   renter: PromiseOrValue<string>;
-//   startTime: PromiseOrValue<BigNumberish>;
-//   endTime: PromiseOrValue<BigNumberish>;
-//   agreementTerms: Rentings.AgreementTermsStruct;
-// };
-
-// export type AssetStruct = {
-//   id: Assets.AssetIdStruct;
-//   value: PromiseOrValue<BigNumberish>;
-// };
-
-// export type RentalEarningsStruct = {
-//   userEarnings: Accounts.UserEarningStruct[];
-//   universeEarning: Accounts.UniverseEarningStruct;
-//   protocolEarning: Accounts.ProtocolEarningStruct;
-// };
 
 async function findRentalIdByRentTransaction(
   rentingManager: IRentingManager,

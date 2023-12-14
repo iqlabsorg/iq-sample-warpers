@@ -1,4 +1,4 @@
-import { SolidityInterfaces, Integration } from '../../../../../typechain';
+import { SolidityInterfaces, Integration, Auth__factory } from '../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
 import { expect } from 'chai';
 import { getSolidityInterfaceId } from '../../../../shared/utils/solidity-interfaces';
@@ -12,7 +12,7 @@ import { convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution } from 
 
 export function testAccessControlAndMisc(): void {
   /**** Contracts ****/
-  let integrationInstance: Integration;
+  let integrationContract: Integration;
   /**** Mocks & Samples ****/
   let solidityInterfaces: SolidityInterfaces;
   /**** Signers ****/
@@ -21,9 +21,9 @@ export function testAccessControlAndMisc(): void {
   let authorizedCaller: SignerWithAddress;
   let stranger: SignerWithAddress;
 
-  beforeEach(async function () {
+  beforeEach(function () {
     /**** Contracts ****/
-    // integrationInstance = this.contracts.integrationInstance;
+    integrationContract = this.contracts.feautureToggles.integrationContracts.integration;
     /**** Mocks & Samples ****/
     solidityInterfaces = this.mocks.misc.solidityInterfaces;
     /**** Signers ****/
@@ -31,52 +31,65 @@ export function testAccessControlAndMisc(): void {
     [integrationOwner, authorizedCaller, stranger] = this.signers.unnamed;
   });
 
-  // it(`does not work when __onRent is called by not Renting Manager`, async () => {
-  //   await expect(
-  //     integrationInstance.connect(stranger).__onRent(
-  //       0,
-  //       {
-  //         // put right data
-  //         universeId: 22,
-  //         collectionId: 33,
-  //         listingId: 33,
-  //         renter: 0xFA24A4B96E7d3DfbBaFB9D4D84267e4Ba7297469,
-  //         assetId: 22,
-  //         amount: 1,
-  //         rentEndTimestamp: 1
-  //       },
-  //       convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
-  //         '0',
-  //         '0',
-  //         '0',
-  //         '0',
-  //         ADDRESS_ZERO,
-  //         ADDRESS_ZERO,
-  //         ADDRESS_ZERO,
-  //         0,
-  //       ),
-  //     ),
-  //   ).to.be.revertedWithCustomError(integrationInstance, 'CallerIsNotRentingManager');
-  // });
+  it(`does not work when __onRent is called by not Renting Manager`, async () => {
+    await expect(
+      integrationContract.connect(stranger).__onRent(
+        0,
+        {
+          warpedAssets: [],
+          universeId: 0,
+          collectionId: EMPTY_BYTES32_DATA_HEX,
+          listingId: 0,
+          renter: ADDRESS_ZERO,
+          startTime: 0,
+          endTime: 0,
+          agreementTerms: {
+            listingTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
+            universeTaxTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
+            protocolTaxTerms: {
+              strategyId: EMPTY_BYTES4_DATA_HEX,
+              strategyData: EMPTY_BYTES_DATA_HEX,
+            },
+            paymentTokenData: {
+              paymentToken: ADDRESS_ZERO,
+              paymentTokenQuote: 0,
+            },
+          },
+        },
+        convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
+          '0',
+          '0',
+          '0',
+          '0',
+          ADDRESS_ZERO,
+          ADDRESS_ZERO,
+          ADDRESS_ZERO,
+          0,
+        ),
+      ),
+    ).to.be.revertedWithCustomError(integrationContract, 'CallerIsNotRentingManager');
+  });
 
-  // it('supports necessary interfaces', async () => {
-  //   await expect(
-  //     integrationInstance
-  //       .connect(stranger)
-  //       .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IERC721')),
-  //   ).to.be.fulfilled;
+  it('supports necessary interfaces', async () => {
+    const isIRentingHookMechanicsSupported = await integrationContract
+      .connect(stranger)
+      .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IRentingHookMechanics'));
+    console.log('isIRentingHookMechanicsSupported:', isIRentingHookMechanicsSupported);
 
-  //   await expect(
-  //     integrationInstance
-  //       .connect(stranger)
-  //       .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IIntegration')),
-  //   ).to.be.fulfilled;
+    expect(isIRentingHookMechanicsSupported).to.be.true;
 
-  //   await expect(
-  //     integrationInstance
-  //       .connect(stranger)
-  //       .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IAssetRentabilityMechanics')),
-  //   ).to.be.fulfilled;
+    //FOUND BUG HERE!!!!
+    // const isIIntegrationSupported = await integrationContract
+    //   .connect(authorizedCaller)
+    //   .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IIntegration'));
+    // console.log('isIIntegrationSupported:', isIIntegrationSupported);
 
-  // });
+    // expect(isIIntegrationSupported).to.be.true;
+  });
 }
