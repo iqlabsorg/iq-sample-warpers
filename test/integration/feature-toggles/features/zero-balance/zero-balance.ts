@@ -7,16 +7,16 @@ import { Integration, IntegrationFeatureRegistry, ZeroBalance } from '../../../.
 import { ADDRESS_ZERO, solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 
 export function integrationTestZeroBalance(): void {
-  // const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
-  // const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
-  // const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
+  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
+  const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
+  const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
 
-  // /*** Contracts ***/
-  // let metahub: IMetahub;
-  // let acl: IACL;
-  // let integrationFeatureRegistry: IntegrationFeatureRegistry;
+  /*** Contracts ***/
+  let metahub: IMetahub;
+  let acl: IACL;
+  let integrationFeatureRegistry: IntegrationFeatureRegistry;
 
-  // let deployer: SignerWithAddress;
+  let deployer: SignerWithAddress;
 
   describe('ZeroBalance', function () {
     beforeEach(async function () {
