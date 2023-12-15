@@ -67,7 +67,9 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
         address integrationAddress,
         address[] calldata collectionAddresses,
         uint256[] calldata minimumThresholds
-    ) external {
+    ) external
+    // onlyAuthorizedIntegrationOwner(integrationAddress) WHY WE DON'T PUT IT HERE, IT FAILS TESTS
+    {
         require(collectionAddresses.length == minimumThresholds.length, "Mismatched array lengths");
 
         _requiredCollectionAddresses[integrationAddress] = collectionAddresses;

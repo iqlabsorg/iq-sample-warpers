@@ -230,9 +230,6 @@ export function testVariousOperations(): void {
         INTEGRATION_UNIVERSE_ID = newUniverseId;
       }
 
-      //HOW TO MINT
-      //await zeroBalanceTestCollection.connect(renterA).mint(renterA.address, 1);
-
       /*** Setup ***/
       await integrationFeatureRegistry
         .connect(deployer)
@@ -244,15 +241,7 @@ export function testVariousOperations(): void {
         .connect(deployer)
         .registerContract(INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY, integrationFeatureRegistry.address);
       await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
-      //await zeroBalanceFeature
-      //  .connect(universeOwner)
-      //  .setZeroBalanceAddresses(integrationContract.address, [zeroBalanceTestCollection.address]);
-      // const zeroBalanceAddresses = await zeroBalanceFeature
-      // .connect(universeOwner)
-      // .getZeroBalanceAddresses(integrationContract.address);
     });
-
-    // TESTS
 
     it(`setZeroBalanceAddresses should set address correctly`, async () => {
       await expect(
