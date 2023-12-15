@@ -1,23 +1,10 @@
 import { shouldBeLikeZeroBalance } from './zero-balance.behaviour';
 import hre from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
-import { ERC721Mock, IACL, IMetahub } from '@iqprotocol/iq-space-protocol/typechain'; // предполагая, что у вас также может быть потребность в моках ERC721
+import { ERC721Mock, IACL, IMetahub } from '@iqprotocol/iq-space-protocol/typechain';
 import { Integration, IntegrationFeatureRegistry, ZeroBalance } from '../../../../../typechain';
-import { ADDRESS_ZERO, solidityIdBytes32, solidityIdBytes4 } from '@iqprotocol/iq-space-protocol';
 
 export function integrationTestZeroBalance(): void {
-  const INTEGRATION_FEATURE_REGISTRY_CONTRACT_KEY = solidityIdBytes4('IntegrationFeatureRegistry');
-  const ZERO_BALANCE_CONTRACT_KEY = solidityIdBytes4('ZeroBalance');
-  const INTEGRATION_FEATURES_ADMIN_ROLE = solidityIdBytes32('INTEGRATION_FEATURES_ADMIN_ROLE');
-
-  /*** Contracts ***/
-  let metahub: IMetahub;
-  let acl: IACL;
-  let integrationFeatureRegistry: IntegrationFeatureRegistry;
-
-  let deployer: SignerWithAddress;
-
   describe('ZeroBalance', function () {
     beforeEach(async function () {
       const fixtureZeroBalance = async (): Promise<{
