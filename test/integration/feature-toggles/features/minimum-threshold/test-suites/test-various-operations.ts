@@ -49,6 +49,7 @@ import { expect } from 'chai';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../../shared/utils/renting-sdk-utils';
 import { makeSDKListingParams } from '../../../../../shared/utils/listing-sdk-utils';
 import { convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution } from '../../../../../shared/utils/accounting-helpers';
+import { getSolidityInterfaceId } from '../../../../../shared/utils/solidity-interfaces';
 
 export function testVariousOperations(): void {
   let minimumThresholdFeature: MinimumThreshold;
@@ -466,6 +467,16 @@ export function testVariousOperations(): void {
           ),
         }),
       ).to.be.reverted;
+    });
+
+    //CAN'T GET IZeroBalance interface
+    it('supports necessary interfaces', async () => {
+      const isIMinimumThresholdSupported = await minimumThresholdFeature
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IMinimumThreshold'));
+      console.log('isIZeroBalanceSupported:', isIMinimumThresholdSupported);
+
+      expect(isIMinimumThresholdSupported).to.be.true;
     });
 
     it(`check returns proper data`, async () => {

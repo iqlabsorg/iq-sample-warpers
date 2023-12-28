@@ -843,14 +843,14 @@ export function testVariousOperations(): void {
     });
 
     //CAN'T GET IZeroBalance interface
-    // it('supports necessary interfaces', async () => {
-    //   const isIZeroBalanceSupported = await zeroBalanceFeature
-    //     .connect(stranger)
-    //     .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IZeroBalance'));
-    //   console.log('isIZeroBalanceSupported:', isIZeroBalanceSupported);
+    it('supports necessary interfaces', async () => {
+      const isIZeroBalanceSupported = await zeroBalanceFeature
+        .connect(stranger)
+        .supportsInterface(await getSolidityInterfaceId(solidityInterfaces, 'IZeroBalance'));
+      console.log('isIZeroBalanceSupported:', isIZeroBalanceSupported);
 
-    //   expect(isIZeroBalanceSupported).to.be.true;
-    // });
+      expect(isIZeroBalanceSupported).to.be.true;
+    });
   });
 }
 
