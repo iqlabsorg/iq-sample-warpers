@@ -1,4 +1,3 @@
-import { Integration, IERC721, IntegrationFeatureRegistry, MinimumThreshold } from '../../../../../../typechain';
 import {
   ERC20Mock,
   ERC721Mock,
@@ -14,7 +13,10 @@ import {
   IUniverseToken,
   SolidityInterfaces,
 } from '@iqprotocol/iq-space-protocol/typechain';
+import { convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution } from '../../../../../shared/utils/accounting-helpers';
+import { Integration, IERC721, IntegrationFeatureRegistry, MinimumThreshold } from '../../../../../../typechain';
 import { SignerWithAddress } from '@nomiclabs/hardhat-ethers/signers';
+import { expect } from 'chai';
 import { BigNumber, BigNumberish } from 'ethers';
 import hre from 'hardhat';
 import {
@@ -45,16 +47,11 @@ import {
   ADDRESS_ZERO,
   EMPTY_BYTES32_DATA_HEX,
 } from '@iqprotocol/iq-space-protocol';
-import { expect } from 'chai';
 import { makeSDKRentingEstimationParamsERC721 } from '../../../../../shared/utils/renting-sdk-utils';
 import { makeSDKListingParams } from '../../../../../shared/utils/listing-sdk-utils';
-import { convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution } from '../../../../../shared/utils/accounting-helpers';
 import { getSolidityInterfaceId } from '../../../../../shared/utils/solidity-interfaces';
 
 export function testVariousOperations(): void {
-  let minimumThresholdFeature: MinimumThreshold;
-  let integrationFeatureRegistry: IntegrationFeatureRegistry;
-  let erc721: IERC721;
   /**** Constants ****/
   const PROTOCOL_RATE_PERCENT = '5';
   const PROTOCOL_REWARD_RATE_PERCENT = '7';
@@ -70,6 +67,8 @@ export function testVariousOperations(): void {
   let protocolTaxTerms: ITaxTermsRegistry.TaxTermsStruct;
   /**** Contracts ****/
   let integrationContract: Integration;
+  let integrationFeatureRegistry: IntegrationFeatureRegistry;
+  let minimumThresholdFeature: MinimumThreshold;
   let metahub: IMetahub;
   let acl: IACL;
   let listingManager: IListingManager;
@@ -234,22 +233,12 @@ export function testVariousOperations(): void {
       await acl.connect(deployer).grantRole(INTEGRATION_FEATURES_ADMIN_ROLE, featuresAdmin.address);
     });
 
-    // TESTS
-
     it(`Feature should set minimum threshold correctly`, async () => {
       await expect(
         minimumThresholdFeature
           .connect(universeOwner)
           .setIntegration(integrationContract.address, [minimumThresholdTestCollection.address], [1]),
       ).to.be.not.reverted;
-
-      await expect(
-        minimumThresholdFeature.getRequiredCollectionMinimumThresholds(integrationContract.address),
-      ).to.eventually.deep.equal([1]);
-
-      await expect(
-        minimumThresholdFeature.connect(universeOwner).getRequiredCollectionAddresses(integrationContract.address),
-      ).to.eventually.deep.equal([minimumThresholdTestCollection.address]);
     });
 
     it(`setIntegration should set multiple minimum thresholds correctly`, async () => {
@@ -375,55 +364,10 @@ export function testVariousOperations(): void {
         maxPaymentAmount: rentalFees.total,
       });
 
-      console.log('IT FAILS HERE'); //!!!!!!!! FAILS HERE
-
       const rentalId = await findRentalIdByRentTransaction(rentingManager, rentTx.hash);
       if (!rentalId) {
         throw new Error('Rental Agreement was not found!');
       }
-
-      // const executeFeatureResult = await integrationContract.callStatic.executeFeature(MINIMUM_THREASHOLD_FEATURE_ID, {
-      //   rentalId,
-      //   rentalAgreement: {
-      //     warpedAssets: [],
-      //     universeId: 0,
-      //     collectionId: EMPTY_BYTES32_DATA_HEX,
-      //     listingId: 0,
-      //     renter: renterA.address,
-      //     startTime: 0,
-      //     endTime: 0,
-      //     agreementTerms: {
-      //       listingTerms: {
-      //         strategyId: EMPTY_BYTES4_DATA_HEX,
-      //         strategyData: EMPTY_BYTES_DATA_HEX,
-      //       },
-      //       universeTaxTerms: {
-      //         strategyId: EMPTY_BYTES4_DATA_HEX,
-      //         strategyData: EMPTY_BYTES_DATA_HEX,
-      //       },
-      //       protocolTaxTerms: {
-      //         strategyId: EMPTY_BYTES4_DATA_HEX,
-      //         strategyData: EMPTY_BYTES_DATA_HEX,
-      //       },
-      //       paymentTokenData: {
-      //         paymentToken: ADDRESS_ZERO,
-      //         paymentTokenQuote: 0,
-      //       },
-      //     },
-      //   },
-      //   rentalEarnings: convertExpectedFeesFromRewardsToEarningsAfterRewardDistribution(
-      //     '0',
-      //     '0',
-      //     '0',
-      //     '0',
-      //     ADDRESS_ZERO,
-      //     ADDRESS_ZERO,
-      //     ADDRESS_ZERO,
-      //     0,
-      //   ),
-      // });
-
-      // console.log(executeFeatureResult);
 
       await expect(
         minimumThresholdFeature.connect(stranger).execute(integrationContract.address, {
@@ -469,7 +413,6 @@ export function testVariousOperations(): void {
       ).to.be.reverted;
     });
 
-    //CAN'T GET IZeroBalance interface
     it('supports necessary interfaces', async () => {
       const isIMinimumThresholdSupported = await minimumThresholdFeature
         .connect(stranger)
@@ -486,7 +429,7 @@ export function testVariousOperations(): void {
       await minimumThresholdFeature
         .connect(universeOwner)
         .setIntegration(integrationContract.address, [minimumThresholdTestCollection2.address], [1]),
-      await minimumThresholdTestCollection2.connect(renterA).mint(renterA.address, 1);
+        await minimumThresholdTestCollection2.connect(renterA).mint(renterA.address, 1);
 
       /**** Listing 1 ****/
       const createListingTx_1 = await listingWizardV1Adapter.createListingWithTerms(

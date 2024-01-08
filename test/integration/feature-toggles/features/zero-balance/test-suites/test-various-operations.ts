@@ -842,7 +842,6 @@ export function testVariousOperations(): void {
       expect(checkResult.errorMessage).to.equal('Check successful');
     });
 
-    //CAN'T GET IZeroBalance interface
     it('supports necessary interfaces', async () => {
       const isIZeroBalanceSupported = await zeroBalanceFeature
         .connect(stranger)

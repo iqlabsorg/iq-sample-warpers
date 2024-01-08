@@ -24,16 +24,16 @@ export function integrationTestMinimumThreshold(): void {
           acl: acl.address,
         })) as IntegrationFeatureRegistry;
 
+        // Deploy MinimumThreshold contract
+        const minimumThreshold = (await hre.run('deploy:features:minimum-threshold', {
+          integrationFeatureRegistry: integrationFeatureRegistry.address,
+        })) as MinimumThreshold;
+
         // ERC721 MOCK
         const minimumThresholdTestCollection = (await hre.run('deploy:test:mock:erc721', {
           name: 'Test Minimum Threshold Collection',
           symbol: 'TMTC',
         })) as ERC721Mock;
-
-        // Deploy MinimumThreshold contract
-        const minimumThreshold = (await hre.run('deploy:features:minimum-threshold', {
-          integrationFeatureRegistry: integrationFeatureRegistry.address,
-        })) as MinimumThreshold;
 
         const integration = (await hre.run('deploy:feature-toggles:integration-contract', {
           original: this.mocks.assets.originalCollection.address,

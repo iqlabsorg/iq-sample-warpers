@@ -12,9 +12,6 @@ import "./IMinimumThreshold.sol";
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
 contract MinimumThreshold is IMinimumThreshold, FeatureController {
-    using Address for address;
-
-    IntegrationFeatureRegistry internal integrationFeatureRegistry;
 
     // Stores the NFT collection addresses a user needs to own to be eligible.
     mapping(address => address[]) private _requiredCollectionAddresses;
@@ -28,10 +25,10 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
 
     /**
      * @dev Sets the address for the IntegrationFeatureRegistry.
-     * @param _integrationFeatureRegistry Address of IntegrationFeatureRegistry.
+     * @param integrationFeatureRegistry Address of IntegrationFeatureRegistry.
      */
-    constructor(address _integrationFeatureRegistry) {
-        integrationFeatureRegistry = IntegrationFeatureRegistry(_integrationFeatureRegistry);
+    constructor(address integrationFeatureRegistry) {
+        _integrationFeatureRegistry = IntegrationFeatureRegistry(integrationFeatureRegistry);
         _featureId = bytes4(keccak256("MinimumThreshold"));
     }
 
@@ -65,10 +62,10 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
      */
     function setIntegration(
         address integrationAddress,
-        address[] calldata collectionAddresses,
-        uint256[] calldata minimumThresholds
+        address[] memory collectionAddresses,
+        uint256[] memory minimumThresholds
     ) external
-    // onlyAuthorizedIntegrationOwner(integrationAddress) WHY WE DON'T PUT IT HERE, IT FAILS TESTS
+    onlyAuthorizedIntegrationOwner(integrationAddress)
     {
         require(collectionAddresses.length == minimumThresholds.length, "Mismatched array lengths");
 
@@ -83,8 +80,8 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
      */
     function execute(address integrationAddress, ExecutionObject calldata executionObject)
         external
-        view
         override
+        onlyIntegration(integrationAddress)
         returns (bool success, string memory errorMessage)
     {
         address renter = executionObject.rentalAgreement.renter;
