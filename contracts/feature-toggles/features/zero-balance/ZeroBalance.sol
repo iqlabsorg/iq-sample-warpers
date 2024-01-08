@@ -12,6 +12,7 @@ import "./IZeroBalance.sol";
  * @dev Interfaces with IntegrationWrapper for feature operations and Feature Registry for feature registration and status management.
  */
 contract ZeroBalance is FeatureController, IZeroBalance {
+
     /**
      * @dev Reverted if the array of zero balance addresses has duplicates.
      */
@@ -53,8 +54,7 @@ contract ZeroBalance is FeatureController, IZeroBalance {
      * @param zeroBalanceAddresses The NFT collection addresses for which the zero balance feature needs to be enabled.
      */
     function setZeroBalanceAddresses(address integrationAddress, address[] memory zeroBalanceAddresses)
-        external
-        onlyAuthorizedIntegrationOwner(integrationAddress)
+        external onlyAuthorizedIntegrationOwner(integrationAddress)
     {
         _zeroBalanceAddresses[integrationAddress] = zeroBalanceAddresses;
 
@@ -83,9 +83,6 @@ contract ZeroBalance is FeatureController, IZeroBalance {
         return (true, "Renter has zero balance for all specified collections");
     }
 
-    /**
-     * @dev Checks if the renter's balance is zero for all specified collections.
-     */
     function check(address integrationAddress, CheckObject calldata checkObject)
         external
         view

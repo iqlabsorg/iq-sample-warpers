@@ -11,16 +11,29 @@ import "./IMinimumThreshold.sol";
  * @notice Manages required NFT collection holdings for eligibility criteria.
  * @dev Interacts with the IntegrationWrapper for feature operations and storage.
  */
-contract MinimumThreshold is IMinimumThreshold, FeatureController {
+contract MinimumThreshold is FeatureController, IMinimumThreshold {
 
-    // Stores the NFT collection addresses a user needs to own to be eligible.
+    /**
+     * @dev Emits when integration are set.
+     * @param collectionAddresses List of required collection addresses.
+     * @param minimumThresholds Required NFT counts for each collection.
+     */
+    event IntegrationSet(address[] collectionAddresses, uint256[] minimumThresholds);
+
+    /**
+     * @dev Stores the NFT collection addresses a user needs to own to be eligible.
+     */
     mapping(address => address[]) private _requiredCollectionAddresses;
 
-    // Defines the minimum number of NFTs a user needs to hold from the respective collections.
+    /**
+     * @dev Defines the minimum number of NFTs a user needs to hold from the respective collections.
+     */
     mapping(address => uint256[]) private _requiredCollectionMinimumThresholds;
 
-    /// @notice Maps a renter's address to their respective rental end timestamp.
-    /// @dev Used to track when a renter's current rental agreement expires.
+    /**
+     * @dev Used to track when a renter's current rental agreement expires.
+     * @notice Maps a renter's address to their respective rental end timestamp.
+     */
     mapping(address => uint32) private _currentRentalEndTimestamp;
 
     /**
@@ -64,13 +77,14 @@ contract MinimumThreshold is IMinimumThreshold, FeatureController {
         address integrationAddress,
         address[] memory collectionAddresses,
         uint256[] memory minimumThresholds
-    ) external
-    onlyAuthorizedIntegrationOwner(integrationAddress)
+    ) external onlyAuthorizedIntegrationOwner(integrationAddress)
     {
         require(collectionAddresses.length == minimumThresholds.length, "Mismatched array lengths");
 
         _requiredCollectionAddresses[integrationAddress] = collectionAddresses;
         _requiredCollectionMinimumThresholds[integrationAddress] = minimumThresholds;
+
+        emit IntegrationSet(collectionAddresses, minimumThresholds);
     }
 
     /**
