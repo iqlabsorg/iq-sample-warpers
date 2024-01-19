@@ -28,6 +28,15 @@ task('deploy:feature-toggles:integration-contract', 'Deploy the Integration cont
     console.log('Tx:', transactionHash);
     console.log('Integration address:', address);
 
+    if (hre.network.name !== 'hardhat') {
+      await hre.run('verification:verify', {
+        contractName: 'Integration',
+        contractAddress: address,
+        constructorArguments: [initData],
+        proxyVerification: false,
+      });
+    }
+
     const instance = new Integration__factory(deployer).attach(address);
 
     return instance;
