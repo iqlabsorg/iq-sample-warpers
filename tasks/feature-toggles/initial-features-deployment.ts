@@ -7,30 +7,56 @@ task('deploy:initial-features-deployment', 'Deploy feature toggles contracts')
   .setAction(async ({ metahub, acl }, hre) => {
     console.log();
     console.log('############################################################');
-    console.log('# Deploying all feature toggles contracts #');
+    console.log('# Deploying all Feature Toggles Contracts #');
     console.log('############################################################');
     console.log();
-    // deploy IntegrationFeatureRegistry
+
+    // Deploy Feature Toggles Contracts
     const integrationFeatureRegistry = (await hre.run('deploy:feature-toggles:integration-feature-registry', {
       metahub: metahub,
       acl: acl,
     })) as IntegrationFeatureRegistry;
 
-    console.log('IntegrationFeatureRegistry contract:', integrationFeatureRegistry.address);
-
-    // Deploy ZeroBalance.sol
     const zeroBalance = (await hre.run('deploy:features:zero-balance', {
       integrationFeatureRegistry: integrationFeatureRegistry.address,
     })) as ZeroBalance;
 
-    console.log('ZeroBalance contrac:', zeroBalance.address);
-
-    // Deploy MinimumThreshold contract
     const minimumThreshold = (await hre.run('deploy:features:minimum-threshold', {
       integrationFeatureRegistry: integrationFeatureRegistry.address,
     })) as MinimumThreshold;
 
-    console.log('MinimumThreshold contract:', minimumThreshold.address);
+    // Verify Feature Toggles Contracts
+    if (hre.network.name !== 'hardhat') {
+      await hre.run('verification:verify', {
+        contractName: 'IntegrationFeatureRegistry',
+        contractAddress: integrationFeatureRegistry.address,
+        constructorArguments: [metahub, acl],
+        proxyVerification: false,
+      });
+
+      await hre.run('verification:verify', {
+        contractName: 'ZeroBalance',
+        contractAddress: zeroBalance.address,
+        constructorArguments: [integrationFeatureRegistry.address],
+        proxyVerification: false,
+      });
+
+      await hre.run('verification:verify', {
+        contractName: 'MinimumThreshold',
+        contractAddress: minimumThreshold.address,
+        constructorArguments: [integrationFeatureRegistry.address],
+        proxyVerification: false,
+      });
+    }
+
+    console.log();
+    console.log('############################################################');
+    console.log('# All Feature Toggles Contracts deployed successfully #');
+    console.log('# IntegrationFeatureRegistry address: ', integrationFeatureRegistry.address);
+    console.log('# ZeroBalance Feature address: ', zeroBalance.address);
+    console.log('# MinimumThreshold Feature address: ', minimumThreshold.address);
+    console.log('############################################################');
+    console.log();
 
     return {
       metahub,
