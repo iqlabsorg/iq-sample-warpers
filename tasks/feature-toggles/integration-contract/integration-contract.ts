@@ -5,18 +5,18 @@ import { Integration__factory } from '../../../typechain';
 task('deploy:feature-toggles:integration-contract', 'Deploy the Integration contract')
   .addParam('original', 'Original NFT contract address', undefined, types.string, false)
   .addParam('metahub', 'Metahub contract address', undefined, types.string, false)
-  .addParam('integrationFeatureRegistry', 'IntegrationFeatureRegistry contract address', undefined, types.string, false)
-  .setAction(async ({ original, metahub, integrationFeatureRegistry }, hre) => {
+  .addParam('integrationfeatureregistry', 'IntegrationFeatureRegistry contract address', undefined, types.string, false)
+  .setAction(async ({ original, metahub, integrationfeatureregistry }, hre) => {
     const deployer = await hre.ethers.getNamedSigner('deployer');
 
     //eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
-    console.log('Deploying Integration...', { original, metahub, integrationFeatureRegistry });
+    console.log('Deploying Integration...', { original, metahub, integrationfeatureregistry });
 
     await hre.deployments.delete('Integration');
 
     const initData = defaultAbiCoder.encode(
       ['address', 'address', 'address'],
-      [original, metahub, integrationFeatureRegistry],
+      [original, metahub, integrationfeatureregistry],
     );
 
     console.log('Integration init data: ', initData);
