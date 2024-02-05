@@ -69,10 +69,10 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function registerFeature(bytes4 featureId, address featureController)
-        external
-        onlyAuthorizedIntegratedFeatureAdmin
-    {
+    function registerFeature(
+        bytes4 featureId,
+        address featureController
+    ) external onlyAuthorizedIntegratedFeatureAdmin {
         require(featureControllerInUse[featureController] == false, "Feature controller already in use");
         require(featureControllers[featureId] == address(0), "Feature already registered");
         featureAddresses.add(featureController);
@@ -94,10 +94,11 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function enableFeatureForIntegration(address integrationContract, bytes4 featureId)
-        external
-        // TODO will require unit testing with real integration
-        // onlyAuthorizedIntegrationOwner(integrationContract)
+    function enableFeatureForIntegration(
+        address integrationContract,
+        bytes4 featureId
+    ) external // TODO will require unit testing with real integration
+    // onlyAuthorizedIntegrationOwner(integrationContract)
     {
         require(featureControllers[featureId] != address(0), "Feature does not exist");
         featureEnabled[integrationContract][featureId] = true;
@@ -106,10 +107,11 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function disableFeatureForIntegration(address integrationContract, bytes4 featureId)
-        external
-        // TODO will require unit testing with real integration
-        // onlyAuthorizedIntegrationOwner(integrationContract)
+    function disableFeatureForIntegration(
+        address integrationContract,
+        bytes4 featureId
+    ) external // TODO will require unit testing with real integration
+    // onlyAuthorizedIntegrationOwner(integrationContract)
     {
         require(featureEnabled[integrationContract][featureId], "Feature not enabled");
         featureEnabled[integrationContract][featureId] = false;
@@ -159,11 +161,9 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getAllIntegrationFeatures(address integrationContract)
-        external
-        view
-        returns (bytes4[] memory enabledFeatureIdsArray, address[] memory enabledFeatureControllersArray)
-    {
+    function getAllIntegrationFeatures(
+        address integrationContract
+    ) external view returns (bytes4[] memory enabledFeatureIdsArray, address[] memory enabledFeatureControllersArray) {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
 
@@ -194,11 +194,9 @@ contract IntegrationFeatureRegistry is IIntegrationFeatureRegistry, Context, Con
     /**
      * @inheritdoc IIntegrationFeatureRegistry
      */
-    function getEnabledFeatureIds(address integrationContract)
-        external
-        view
-        returns (bytes4[] memory enabledFeatureIdsArray)
-    {
+    function getEnabledFeatureIds(
+        address integrationContract
+    ) external view returns (bytes4[] memory enabledFeatureIdsArray) {
         uint256 featureCount = featureAddresses.length();
         uint256 enabledFeatureCount = 0;
 
