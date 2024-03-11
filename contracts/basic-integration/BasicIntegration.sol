@@ -21,11 +21,6 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
     bytes4 public immutable LISTING_MANAGER;
 
     /**
-     * @dev Reward address for this universe.
-     */
-    address internal _universeRewardAddress;
-
-    /**
      * @dev RentingManager contract key.
      */
     bytes4 public immutable RENTING_MANAGER;
@@ -50,10 +45,6 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
      */
     constructor(bytes memory config) Auth() warperInitializer {
         super.__initialize(config);
-
-        (, , address universeRewardAddress) = abi.decode(config, (address, address, address));
-
-        setUniverseRewardAddress(universeRewardAddress);
 
         LISTING_MANAGER = Contracts.LISTING_MANAGER;
         RENTING_MANAGER = Contracts.RENTING_MANAGER;
@@ -96,12 +87,6 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
         return (true, "");
     }
 
-    function setUniverseRewardAddress(address universeRewardAddress) public override onlyOwner {
-        _universeRewardAddress = universeRewardAddress;
-
-        emit UniverseRewardAddressSet(universeRewardAddress);
-    }
-
     /**
      * @inheritdoc IBasicIntegration
      */
@@ -139,13 +124,6 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
         returns (IBasicIntegration.RentalDetails memory)
     {
         return _rentalDetails[rentalId];
-    }
-
-    /**
-     * @inheritdoc IBasicIntegration
-     */
-    function getUniverseRewardAddress() public view override returns (address) {
-        return _universeRewardAddress;
     }
 
     /**

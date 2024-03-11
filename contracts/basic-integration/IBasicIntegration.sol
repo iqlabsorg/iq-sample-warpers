@@ -34,18 +34,6 @@ interface IBasicIntegration {
     event OnRentHookEvent(address renter, uint256 tokenId, uint256 rentalId);
 
     /**
-     * @dev Emits when reward address for universe is set.
-     * @param universeRewardAddress Universe reward address.
-     */
-    event UniverseRewardAddressSet(address universeRewardAddress);
-
-    /**
-     * @dev Sets the reward address for the universe.
-     * @param universeRewardAddress Universe reward address.
-     */
-    function setUniverseRewardAddress(address universeRewardAddress) external;
-
-    /**
      * @dev Returns the rental status for a given token ID.
      * @param tokenId Token ID.
      * @return Rental status.
@@ -74,10 +62,4 @@ interface IBasicIntegration {
      * @return RentalDetails.
      */
     function getRentalDetails(uint256 rentalId) external view returns (RentalDetails memory);
-
-    /**
-     * @dev Returns reward address for universe.
-     * @return Universe reward address.
-     */
-    function getUniverseRewardAddress() external view returns (address);
 }
