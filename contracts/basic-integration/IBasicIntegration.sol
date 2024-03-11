@@ -54,7 +54,14 @@ interface IBasicIntegration {
      * @param tokenId Token ID.
      * @return The last active rental ID.
      */
-    function getLastActiveRentalId(address renter, uint256 tokenId) external view returns (uint256);
+    function getLastActiveRenterRentalId(address renter, uint256 tokenId) external view returns (uint256);
+
+    /**
+     * @dev Returns the last active rental ID for token ID.
+     * @param tokenId Token ID.
+     * @return The last active rental ID.
+     */
+    function getLastActiveRentalId(uint256 tokenId) external view returns (uint256);
 
     /**
      * @dev Returns the rental details for a given rental ID.

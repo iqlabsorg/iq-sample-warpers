@@ -28,7 +28,12 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
     /**
      * @dev renter address => tokenId => rentalId.
      */
-    mapping(address => mapping(uint256 => uint256)) internal _lastActiveRental;
+    mapping(address => mapping(uint256 => uint256)) internal _lastActiveRenterRental;
+
+    /**
+     * @dev tokenId => rentalId.
+     */
+    mapping(uint256 => uint256) internal _lastActiveRental;
 
     /**
      * @dev tokenId => rentalEndTime.
@@ -61,7 +66,9 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
         for (uint256 i = 0; i < rentalAgreement.warpedAssets.length; i++) {
             (, uint256 tokenId) = _decodeAssetId(rentalAgreement.warpedAssets[i].id);
             // Latest active rental is persisted.
-            _lastActiveRental[rentalAgreement.renter][tokenId] = rentalId;
+            _lastActiveRenterRental[rentalAgreement.renter][tokenId] = rentalId;
+
+            _lastActiveRental[tokenId] = rentalId;
 
             _tokenRentalEndTime[tokenId] = rentalAgreement.endTime;
 
@@ -110,8 +117,15 @@ contract BasicIntegration is IBasicIntegration, IRentingHookMechanics, ERC721Con
     /**
      * @inheritdoc IBasicIntegration
      */
-    function getLastActiveRentalId(address renter, uint256 tokenId) public view override returns (uint256) {
-        return _lastActiveRental[renter][tokenId];
+    function getLastActiveRenterRentalId(address renter, uint256 tokenId) public view override returns (uint256) {
+        return _lastActiveRenterRental[renter][tokenId];
+    }
+
+    /**
+     * @inheritdoc IBasicIntegration
+     */
+    function getLastActiveRentalId(uint256 tokenId) public view override returns (uint256) {
+        return _lastActiveRental[tokenId];
     }
 
     /**
