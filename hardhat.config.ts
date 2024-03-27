@@ -66,7 +66,7 @@ const config: HardhatUserConfig = {
     [IQSpaceV2SupportedChainNetworks.POLYGON_MAINNET]: {
       url: `https://rpc.ankr.com/polygon/${ankrProjectKey}`,
       accounts,
-      gasPrice: 300_000000000,
+      gasPrice: 400_000000000,
       gasMultiplier: 2,
       timeout: 40000,
     },
