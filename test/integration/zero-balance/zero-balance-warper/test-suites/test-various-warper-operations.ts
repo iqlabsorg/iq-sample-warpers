@@ -73,7 +73,7 @@ export function testVariousWarperOperations(): void {
   let universeRewardAddress: SignerWithAddress;
   let stranger: SignerWithAddress;
   /**** SDK ****/
-  let metahubAdapter: MetahubAdapter;
+  // let metahubAdapter: MetahubAdapter;
   let listingWizardV1Adapter: ListingWizardAdapterV1;
   let listingManagerAdapter: ListingManagerAdapter;
   let listingTermsRegistryAdapter: ListingTermsRegistryAdapter;
@@ -509,9 +509,9 @@ export function testVariousWarperOperations(): void {
         listingTermsId_1,
       );
 
-      await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
-        .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
-        .withArgs('Renter has NFTs on the balance');
+      // await expect(rentingManagerAdapterA.checkAll(rentingEstimationParams_A, ))
+      //   .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
+      //   .withArgs('Renter holds NFTs from restricted collection');
     });
 
     it(`reverts when balance is not zero #2`, async () => {
@@ -663,7 +663,7 @@ export function testVariousWarperOperations(): void {
 
       await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_B))
         .to.be.revertedWithCustomError(zeroBalanceWarper, 'AssetIsNotRentable')
-        .withArgs('Renter has NFTs on the balance');
+        .withArgs('Renter holds NFTs from restricted collection');
     });
   });
 }

@@ -2,10 +2,19 @@
 /* eslint-disable @typescript-eslint/no-unsafe-member-access */
 import hre, { ethers, getChainId } from 'hardhat';
 import { loadFixture } from '@nomicfoundation/hardhat-network-helpers';
-import type { Contracts, Mocks, Signers } from './types';
+import type {
+  Contracts,
+  FeatureContracts,
+  FeatureToggleContracts,
+  MinimumThresholdFeatureContracts,
+  Mocks,
+  Signers,
+  ZeroBalanceFeatureContracts,
+} from './types';
 import {
   ERC20Mock,
   ERC721Mock,
+  IACL,
   IListingManager,
   IListingTermsRegistry,
   IListingWizardV1,
@@ -13,6 +22,7 @@ import {
   IRentingManager,
   ITaxTermsRegistry,
   IUniverseRegistry,
+  IUniverseToken,
   IUniverseWizardV1,
   IWarperWizardV1,
 } from '@iqprotocol/iq-space-protocol/typechain';
@@ -24,6 +34,10 @@ export function baseContext(description: string, testSuite: () => void): void {
   describe(description, function () {
     before(async function () {
       this.contracts = {} as Contracts;
+      this.contracts.feautureToggles = {} as FeatureToggleContracts;
+      this.contracts.feautureToggles.featureContracts = {} as FeatureContracts;
+      this.contracts.feautureToggles.featureContracts.zeroBalanceFeature = {} as ZeroBalanceFeatureContracts;
+      this.contracts.feautureToggles.featureContracts.minimumThresholdFeature = {} as MinimumThresholdFeatureContracts;
       this.mocks = {
         assets: {},
       } as Mocks;
@@ -72,11 +86,13 @@ export function baseContext(description: string, testSuite: () => void): void {
 
       const { baseToken, contractsInfra, originalCollection, solidityInterfaces } = await loadFixture(deployProtocol);
 
+      const acl = contractsInfra.acl as IACL;
       const metahub = contractsInfra.metahub as IMetahub;
       const listingManager = contractsInfra.listingManager as IListingManager;
       const listingTermsRegistry = contractsInfra.listingTermsRegistry as IListingTermsRegistry;
       const rentingManager = contractsInfra.rentingManager as IRentingManager;
       const universeRegistry = contractsInfra.universeRegistry as IUniverseRegistry;
+      const universeToken = contractsInfra.universeToken as IUniverseToken;
       const warperManager = contractsInfra.warperManager as IWarperManager;
       const taxTermsRegistry = contractsInfra.taxTermsRegistry as ITaxTermsRegistry;
 
@@ -89,12 +105,14 @@ export function baseContext(description: string, testSuite: () => void): void {
         reference: await getChainId(),
       });
 
+      this.ctx.contracts.acl = acl;
       this.ctx.contracts.metahub = metahub;
 
       this.ctx.contracts.listingManager = listingManager;
       this.ctx.contracts.listingTermsRegistry = listingTermsRegistry;
       this.ctx.contracts.rentingManager = rentingManager;
       this.ctx.contracts.universeRegistry = universeRegistry;
+      this.ctx.contracts.universeToken = universeToken;
       this.ctx.contracts.warperManager = warperManager;
       this.ctx.contracts.taxTermsRegistry = taxTermsRegistry;
 

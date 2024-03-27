@@ -7,6 +7,7 @@ import { integrationTestMaxDurationRaffle } from './max-duration-raffle';
 import { integrationTestMinimumThreshold } from './minimum-threshold';
 import { integrationTestZeroBalance } from './zero-balance';
 import { integrationTestStandardWarper } from './standard-warper';
+import { integrationTestFeatureToggles } from './feature-toggles';
 
 baseContext('Unit Tests', function () {
   unitTestAuth();
@@ -20,4 +21,5 @@ baseContext('Integration Tests', function () {
   integrationTestMinimumThreshold();
   integrationTestZeroBalance();
   integrationTestStandardWarper();
+  integrationTestFeatureToggles();
 });

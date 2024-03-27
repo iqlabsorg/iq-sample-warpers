@@ -17,6 +17,10 @@ import "../../minimum-threshold-v2/IMinimumThresholdWarperV2.sol";
 import "../../iq-pixelsteins/IIQPixelsteinsArsenalWarper.sol";
 import "../../max-duration-raffle/MaxDurationRaffleWarper.sol";
 
+import "../../feature-toggles/features/minimum-threshold/IMinimumThreshold.sol";
+import "../../feature-toggles/features/zero-balance/IZeroBalance.sol";
+
+
 contract SolidityInterfaces {
     struct Interface {
         string name;
@@ -45,6 +49,9 @@ contract SolidityInterfaces {
         _list.push(Interface("IAssetRentabilityMechanics", type(IAssetRentabilityMechanics).interfaceId));
         _list.push(Interface("IWarper", type(IWarper).interfaceId));
         _list.push(Interface("IERC721Warper", type(IERC721Warper).interfaceId));
+
+        _list.push(Interface("IZeroBalance", type(IZeroBalance).interfaceId));
+        _list.push(Interface("IMinimumThreshold", type(IMinimumThreshold).interfaceId));
     }
 
     function list() external view returns (Interface[] memory) {

@@ -486,7 +486,7 @@ export function testVariousWarperOperations(): void {
 
       await expect(rentingManagerAdapterA.estimateRent(rentingEstimationParams_A))
         .to.be.revertedWithCustomError(multipleNonConcurrentRentalsWarper, 'AssetIsNotRentable')
-        .withArgs('Renter holds NFTs from restricted collections');
+        .withArgs('Renter holds NFTs from restricted collection');
     });
 
     it(`reverts when balance is not zero #2`, async () => {

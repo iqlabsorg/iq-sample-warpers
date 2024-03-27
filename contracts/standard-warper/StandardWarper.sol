@@ -32,13 +32,13 @@ contract StandardWarper is ZeroBalanceWarper, IStandardWarper {
      * @dev Stores current rental end timestamp for each renter.
      * @notice renter => uint256 (renter's current asset rental end timestamp).
      */
-    mapping (address => uint32) internal _currentRentalEndTimestamp;
+    mapping(address => uint32) internal _currentRentalEndTimestamp;
 
     /**
      * @dev Stores if renter has rented this asset before.
      * @notice renter => tokenId => bool (renter has rented this asset before).
      */
-    mapping (address => mapping (uint256 => uint256)) internal _rentalsCount;
+    mapping(address => mapping(uint256 => uint256)) internal _rentalsCount;
 
     /**
      * @dev Stores total rental duration for each renter.
@@ -49,7 +49,10 @@ contract StandardWarper is ZeroBalanceWarper, IStandardWarper {
      * @dev Constructor for the ExternalRewardWarper contract.
      */
     constructor(bytes memory config) ZeroBalanceWarper(config) {
-        (, , , , bool allowMultipleRentals, bool allowConcurrentRentals) = abi.decode(config, (address, address, address, address[], bool, bool));
+        (, , , , bool allowMultipleRentals, bool allowConcurrentRentals) = abi.decode(
+            config,
+            (address, address, address, address[], bool, bool)
+        );
 
         _allowMultipleRentals = allowMultipleRentals;
         _allowConcurrentRentals = allowConcurrentRentals;
@@ -120,7 +123,7 @@ contract StandardWarper is ZeroBalanceWarper, IStandardWarper {
 
         for (uint256 i = 0; i < _zeroBalanceCheckAddresses.length; i++) {
             if (IERC721(_zeroBalanceCheckAddresses[i]).balanceOf(renter) > 0) {
-                return (false, "Renter holds NFTs from restricted collections");
+                return (false, "Renter holds NFTs from restricted collection");
             }
         }
 

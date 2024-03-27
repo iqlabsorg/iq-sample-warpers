@@ -1,0 +1,1 @@
+import './integration-feature-registry';
